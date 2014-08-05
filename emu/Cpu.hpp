@@ -46,6 +46,8 @@ public:
         reset();
     }
 
+    bool isHalted() { return halted; }
+
     void reset();
     void tick();
 };

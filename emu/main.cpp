@@ -4,5 +4,6 @@
 
 int main()
 {
-    Gameboy gb;
+    Gameboy gb("test.bin");
+    gb.run();
 }
