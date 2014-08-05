@@ -1,8 +1,5 @@
 #pragma once
-#include <cstdint>
-
-typedef uint8_t Byte;
-typedef uint16_t Word;
+#include "Platform.hpp"
 
 union Regs
 {
@@ -34,8 +31,10 @@ class Cpu
     Gameboy* gb;
     Regs regs;
     bool halted;
+    bool stopped;
 
-    Byte doAddSub(unsigned lhs, unsigned rhs, bool isSub, bool withCarry);
+    Byte doAddSub(unsigned lhs, unsigned rhs, bool isSub, bool withCarry, bool updateCarry);
+    void executeInsn_0x_3x(Byte opc);
     void executeInsn_4x_6x(Byte opc);
     void executeInsn_7x_Bx(Byte opc);
 
