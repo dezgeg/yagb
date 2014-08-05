@@ -31,6 +31,7 @@ void Cpu::reset()
     regs = Regs();
     halted = false;
     stopped = false;
+    interruptsEnabled = false;
 }
 
 void Cpu::tick()
@@ -249,4 +250,74 @@ void Cpu::executeInsn_7x_Bx(Byte opc)
         case 6: regs.a = lhs | rhs; regs.flags.z = regs.a == 0; regs.flags.n = 0; regs.flags.c = 0; regs.flags.h = 0; break;
         case 7: doAddSub(lhs, rhs, 1, 0); break; // SUB with result not saved
     }
+}
+
+void Cpu::executeInsn_Cx_Fx(Byte opc)
+{
+    INSN_DBG_DECL();
+
+    switch (opc) {
+        case 0xE0: {
+            gb->memWrite8(0xff00 | gb->memRead8(regs.pc++), regs.a);
+            INSN_DBG_TRACE("LDH (a8), A");
+            return;
+        }
+        case 0xF0: {
+            regs.a = gb->memRead8(0xff00 | gb->memRead8(regs.pc++));
+            INSN_DBG_TRACE("LDH A, (a8)");
+            return;
+        }
+        case 0xE8: {
+            unreachable(); // TODO (affects flags)
+            INSN_DBG_TRACE("ADD SP, r8");
+            return;
+        }
+        case 0xF8: {
+            unreachable(); // TODO (affects flags)
+            INSN_DBG_TRACE("LD HL, SP+r8");
+            return;
+        }
+        case 0xF9: {
+            regs.sp = regs.hl;
+            INSN_DBG_TRACE("LD SP, HL");
+            return;
+        }
+        case 0xE2: {
+            gb->memWrite8(0xff00 | regs.c, regs.a);
+            INSN_DBG_TRACE("LDH (C), A");
+            return;
+        }
+        case 0xF2: {
+            regs.a = gb->memRead8(0xff00 | regs.c);
+            INSN_DBG_TRACE("LDH A, (C)");
+            return;
+        }
+        case 0xEA: {
+            gb->memWrite8(gb->memRead16(regs.pc), regs.a);
+            regs.pc += 2;
+            INSN_DBG_TRACE("LDH (a16), A");
+            return;
+        }
+        case 0xFA: {
+            regs.a = gb->memRead8(gb->memRead16(regs.pc));
+            regs.pc += 2;
+            INSN_DBG_TRACE("LDH A, (a16)");
+            return;
+        }
+        case 0xF3: {
+            interruptsEnabled = false;
+            INSN_DBG_TRACE("DI");
+            return;
+        }
+        case 0xCB: {
+            unreachable(); // TODO
+            return;
+        }
+        case 0xFB: {
+            interruptsEnabled = true;
+            INSN_DBG_TRACE("EI");
+            return;
+        }
+    }
+    unreachable();
 }

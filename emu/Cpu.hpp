@@ -32,11 +32,13 @@ class Cpu
     Regs regs;
     bool halted;
     bool stopped;
+    bool interruptsEnabled;
 
     Byte doAddSub(unsigned lhs, unsigned rhs, bool isSub, bool withCarry, bool updateCarry);
     void executeInsn_0x_3x(Byte opc);
     void executeInsn_4x_6x(Byte opc);
     void executeInsn_7x_Bx(Byte opc);
+    void executeInsn_Cx_Fx(Byte opc);
 
 public:
     Cpu(Gameboy* gb) :
