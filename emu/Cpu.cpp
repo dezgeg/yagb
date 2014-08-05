@@ -126,12 +126,18 @@ void Cpu::executeInsn_0x_3x(Byte opc)
     Byte operand = (opc >> 4) & 0x3;
     Byte byteOperand = (operand << 1) | !!(opc & 0x8);
     switch (opc & 0xf) {
-        case 0x0:
-            unreachable(); // TODO
+        case 0x0: case 0x8: {
+            const char * const ccMap[] = { "??", "", "Z, ", "C, " };
+            int cc = opc >> 4;
+            bool notOk = cc == 1 ? 1 : cc == 2 ? regs.flags.z : regs.flags.c;
+
+            int delta = (SByte)gb->memRead8(regs.pc++);
+            if (notOk ^ !!(opc & 0x08))
+                regs.pc += delta;
+
+            INSN_DBG_TRACE("JR %s%sr8", notOk ? "N" : "", ccMap[cc]);
             return;
-        case 0x8:
-            unreachable(); // TODO
-            return;
+        }
         case 0x1: {
             Word val = gb->memRead16(regs.pc);
             regs.pc += 2;
