@@ -48,3 +48,9 @@ xC: CALLcc, undefs
 xD: CALL imm16
 xE: imm8 aluops (2nd)
 xF: RSTs (2nd)
+
+CB prefixed instructions:
+    RLC, RRC, RL, RR, SLA, SRA, SWAP, SRL,
+    BIT 0, BIT 1, ... BIT 7,
+    RES 0, RES 1, ... RES 7,
+    SET 0, SET 1, ... SET 7,

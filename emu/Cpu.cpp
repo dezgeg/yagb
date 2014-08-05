@@ -41,7 +41,7 @@ void Cpu::tick()
         case 0: executeInsn_0x_3x(opc); break;
         case 1: executeInsn_4x_6x(opc); break;
         case 2: executeInsn_7x_Bx(opc); break;
-        case 3: unreachable(); break;
+        case 3: executeInsn_Cx_Fx(opc); break;
     }
 }
 
@@ -310,7 +310,7 @@ void Cpu::executeInsn_Cx_Fx(Byte opc)
             return;
         }
         case 0xCB: {
-            unreachable(); // TODO
+            executeTwoByteInsn();
             return;
         }
         case 0xFB: {
@@ -320,4 +320,36 @@ void Cpu::executeInsn_Cx_Fx(Byte opc)
         }
     }
     unreachable();
+}
+
+void Cpu::executeTwoByteInsn()
+{
+    INSN_DBG_DECL();
+    Byte opc = gb->memRead8(regs.pc++);
+    const char* description;
+
+    int operand = opc & 0x7;
+    int category = opc >> 6;
+    Byte bitMask = 1 << ((opc >> 3) & 0x7);
+    Byte value = LOAD8(operand);
+
+    if (category == 0) {
+        unreachable(); // TODO
+    } else if (category == 1) {
+        regs.flags.n = 0;
+        regs.flags.h = 1;
+        regs.flags.z = (value & bitMask) == bitMask;
+        description = "BIT";
+    } else if (category == 2) {
+        value &= ~bitMask;
+        description = "RES";
+    } else {
+        value |= bitMask;
+        description = "SET";
+    }
+
+    if (category != 1) // no writeback for BIT
+        STORE8(operand, value);
+
+    INSN_DBG_TRACE("%s %s", description, reg8Strings[operand]); // FIXME
 }

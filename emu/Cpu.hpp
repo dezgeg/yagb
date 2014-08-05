@@ -39,6 +39,7 @@ class Cpu
     void executeInsn_4x_6x(Byte opc);
     void executeInsn_7x_Bx(Byte opc);
     void executeInsn_Cx_Fx(Byte opc);
+    void executeTwoByteInsn();
 
 public:
     Cpu(Gameboy* gb) :
