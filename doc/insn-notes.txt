@@ -1,0 +1,50 @@
+Top column-oriented (0x-3x)
+
+x0: NOP, STOP, JR NZ, JR NC
+x1: imm16 loads
+x2: accu stores
+x3: inc16
+x4: inc8
+x5: dec8
+x6: imm8 loads
+x7: RLCA, RLA, DAA, SCF
+
+x8: sp store, JR r8
+x9: add16
+xA: accu loads
+xB: dec16
+xC: inc8 (2nd)
+xD: dec8 (2nd)
+xE: imm8 loads (2nd)
+xF: RLCA, RLA, DAA, SCF
+
+Row-oriented: (4x-Bx), actually 5-bit opcode + 3-bit addr mode, order: B C D E H L (HL) A
+
+4x: loads of B, C
+5x: loads of D, E
+6x: loads of H, L
+7x: stores to (HL), (except 76 = HALT, it would be LD (HL), (HL) otherwise), loads of A
+8x: ADD, ADC
+9x: SUB, SBC
+Ax: AND, XOR
+Bx: OR, CP
+
+Bottom column-oriented (Cx-Fx)
+
+x0: RETcc, LDH
+x1: POPs
+x2: JPcc, load/store accu from/to (C)
+x3: JMP, undef, undef, DI
+x4: CALLcc, undefs
+x5: PUSHs
+x6: imm8 aluops
+x7: RSTs
+
+x8: RETcc, some stack ops
+x9: RET, RETI, JP (HL), LD SP, HL
+xA: JPcc, load/store accu from/to (imm16)
+xB: PREFIX, undef, undef, EI
+xC: CALLcc, undefs
+xD: CALL imm16
+xE: imm8 aluops (2nd)
+xF: RSTs (2nd)
