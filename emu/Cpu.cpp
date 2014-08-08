@@ -12,8 +12,12 @@ static const char* const reg8Strings[] = {
     "B", "C", "D", "E", "H", "L", "(HL)", "A",
 };
 
-static const char* const reg16Strings[] = {
+static const char* const reg16SpStrings[] = {
     "BC", "DE", "HL", "SP",
+};
+
+static const char* const reg16AfStrings[] = {
+    "BC", "DE", "HL", "AF",
 };
 
 static const char* const reg16AutodecStrings[] = {
@@ -142,12 +146,12 @@ void Cpu::executeInsn_0x_3x(Byte opc)
             Word val = gb->memRead16(regs.pc);
             regs.pc += 2;
             regs.words[operand] = val;
-            INSN_DBG_TRACE("LD %s, d16", reg16Strings[operand]);
+            INSN_DBG_TRACE("LD %s, d16", reg16SpStrings[operand]);
             return;
         }
         case 0x9: {
             regs.hl += regs.words[operand];
-            INSN_DBG_TRACE("ADD HL, %s", reg16Strings[operand]);
+            INSN_DBG_TRACE("ADD HL, %s", reg16SpStrings[operand]);
             // TODO: flags?
             return;
         }
@@ -163,12 +167,12 @@ void Cpu::executeInsn_0x_3x(Byte opc)
         }
         case 0x3: {
             regs.words[operand]++;
-            INSN_DBG_TRACE("INC %s", reg16Strings[operand]);
+            INSN_DBG_TRACE("INC %s", reg16SpStrings[operand]);
             return;
         }
         case 0xB: {
             regs.words[operand]--;
-            INSN_DBG_TRACE("DEC %s", reg16Strings[operand]);
+            INSN_DBG_TRACE("DEC %s", reg16SpStrings[operand]);
             return;
         }
         case 0x4: case 0xC: {
@@ -283,6 +287,11 @@ void Cpu::executeInsn_Cx_Fx(Byte opc)
             INSN_DBG_TRACE("LD HL, SP+r8");
             return;
         }
+        case 0xE9: {
+            regs.pc = regs.hl;
+            INSN_DBG_TRACE("JP HL");
+            return;
+        }
         case 0xF9: {
             regs.sp = regs.hl;
             INSN_DBG_TRACE("LD SP, HL");
@@ -322,6 +331,70 @@ void Cpu::executeInsn_Cx_Fx(Byte opc)
         case 0xFB: {
             interruptsEnabled = true;
             INSN_DBG_TRACE("EI");
+            return;
+        }
+
+        case 0xD3: case 0xDB: case 0xDD:
+        case 0xE3: case 0xE4: case 0xEB: case 0xEC: case 0xED:
+        case 0xF4: case 0xFC: case 0xFD:
+            INSN_DBG_TRACE("UNDEF");
+            return;
+    }
+
+    Byte operand = (opc >> 4) & 0x3;
+    bool unconditional = false;
+    switch (opc & 0xf) {
+        case 0x0: case 0x8: case 0x9: {
+            unreachable();
+            return;
+        }
+        case 0x1: {
+            Word value = gb->memRead16(regs.sp);
+            regs.sp += 2;
+            if (operand == 3) {
+                regs.af = value;
+                regs.flags.unimplemented = 0;
+            } else {
+                regs.words[operand] = value;
+            }
+            INSN_DBG_TRACE("POP %s", reg16AfStrings[operand]);
+            return;
+        }
+        case 0x3:
+            unconditional = true; // FALLTHRU
+        case 0x2: case 0xA: {
+            unreachable();
+            return;
+        }
+        case 0xD:
+            unconditional = true; // FALLTHRU
+        case 0x4: case 0xC: {
+            Word addr = gb->memRead16(regs.pc);
+            regs.pc += 2;
+            bool condbit = opc & 0x10 ? regs.flags.c : regs.flags.z;
+            bool negate = !(opc & 0x8);
+            if (negate)
+                condbit = !condbit;
+            if (unconditional || condbit) {
+                regs.sp -= 2;
+                gb->memWrite16(regs.sp, regs.pc);
+                regs.pc = addr;
+            }
+            INSN_DBG_TRACE("CALL %sTODO, a16", negate ? "N" : "");
+            return;
+        }
+        case 0x5: {
+            regs.sp -= 2;
+            gb->memWrite16(regs.sp, operand == 3 ? regs.af : regs.words[operand]);
+            INSN_DBG_TRACE("PUSH %s", reg16AfStrings[operand]);
+            return;
+        }
+        case 0x6: case 0xE: {
+            unreachable();
+            return;
+        }
+        case 0x7: case 0xF: {
+            unreachable();
             return;
         }
     }

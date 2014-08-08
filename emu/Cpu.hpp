@@ -8,10 +8,12 @@ union Regs
         Byte b, c, d, e, h, l, f, a;
     };
     struct {
-        Word bc, de, hl, sp, fa, pc;
+        // XXX: fix the endianness issues
+        Word bc, de, hl, sp, af, pc;
     };
     struct {
-        Word : 8 + 4;
+        Byte _pad[6];
+        Byte unimplemented : 4;
         Byte c : 1;     // Carry
         Byte h : 1;     // Half-carry
         Byte n : 1;     // Add/Sub (for BCD operations)
