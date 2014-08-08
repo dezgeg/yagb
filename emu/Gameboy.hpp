@@ -20,7 +20,7 @@ public:
     Word memRead16(Word address);
     void memWrite16(Word address, Word value);
 
-    void logInsn(const char* fmt, ...);
+    void logInsn(Regs* regs, const char* fmt, ...);
     void warn(const char* fmt, ...);
 
     void run();

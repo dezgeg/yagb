@@ -4,9 +4,9 @@
 
 #define INSN_DBG(x) x
 
-#define INSN_DBG_TRACE(...) (_startPc, gb->logInsn(__VA_ARGS__))
+#define INSN_DBG_TRACE(...) (gb->logInsn(&_savedRegs, __VA_ARGS__))
 
-#define INSN_DBG_DECL() Word _startPc = regs.pc - 1;
+#define INSN_DBG_DECL() Regs _savedRegs = regs; _savedRegs.pc -= 1
 
 static const char* const reg8Strings[] = {
     "B", "C", "D", "E", "H", "L", "(HL)", "A",
