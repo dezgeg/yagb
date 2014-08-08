@@ -435,7 +435,8 @@ void Cpu::executeTwoByteInsn()
 
     int operand = opc & 0x7;
     int category = opc >> 6;
-    Byte bitMask = 1 << ((opc >> 3) & 0x7);
+    int bitIndex = ((opc >> 3) & 0x7);
+    Byte bitMask = 1 << bitIndex;
     Byte value = LOAD8(operand);
 
     if (category == 0) {
@@ -451,6 +452,7 @@ void Cpu::executeTwoByteInsn()
         }
         regs.flags.n = regs.flags.h = 0;
         regs.flags.z = value == 0;
+        bitIndex = -1;
     } else if (category == 1) {
         description = "BIT";
         regs.flags.n = 0;
@@ -467,5 +469,8 @@ void Cpu::executeTwoByteInsn()
     if (category != 1) // no writeback for BIT
         STORE8(operand, value);
 
-    INSN_DBG_TRACE("%s %s", description, reg8Strings[operand]); // FIXME
+    if (bitIndex < 0)
+        INSN_DBG_TRACE("%s %s", description, reg8Strings[operand]); // FIXME
+    else
+        INSN_DBG_TRACE("%s %d, %s", description, bitIndex, reg8Strings[operand]);
 }
