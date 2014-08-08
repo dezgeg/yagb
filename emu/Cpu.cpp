@@ -74,32 +74,22 @@ void Cpu::executeInsn_0x_3x(Byte opc)
             return;
         }
         case 0x07: {
-            regs.flags.c = !!(regs.a & 0x80);
-            regs.a = (regs.a << 1) | !!(regs.a & 0x80);
-            regs.flags.z = regs.flags.n = regs.flags.h = 0;
+            regs.a = doRotLeft(regs.a);
             INSN_DBG_TRACE("RLCA");
             return;
         }
         case 0x17: {
-            bool oldMsb = regs.a & 0x80;
-            regs.a = (regs.a << 1) | regs.flags.c;
-            regs.flags.c = oldMsb;
-            regs.flags.z = regs.flags.n = regs.flags.h = 0;
+            regs.a = doRotLeftWithCarry(regs.a);
             INSN_DBG_TRACE("RLA");
             return;
         }
         case 0x0f: {
-            regs.flags.c = !!(regs.a & 0x01);
-            regs.a = (regs.a >> 1) | !!(regs.a & 0x01);
-            regs.flags.z = regs.flags.n = regs.flags.h = 0;
+            regs.a = doRotRight(regs.a);
             INSN_DBG_TRACE("RRCA");
             return;
         }
         case 0x1f: {
-            bool oldLsb = regs.a & 0x01;
-            regs.a = (regs.a >> 1) | (regs.flags.c << 7);
-            regs.flags.c = oldLsb;
-            regs.flags.z = regs.flags.n = regs.flags.h = 0;
+            regs.a = doRotRightWithCarry(regs.a);
             INSN_DBG_TRACE("RRA");
             return;
         }
@@ -234,6 +224,40 @@ Byte Cpu::doAddSub(unsigned lhs, unsigned rhs, bool isSub, bool withCarry, bool 
     regs.flags.n = isSub;
 
     return sum;
+}
+
+Byte Cpu::doRotLeft(Byte v)
+{
+    regs.flags.z = regs.flags.n = regs.flags.h = 0;
+    regs.flags.c = !!(v & 0x80);
+    return (v << 1) | !!(v & 0x80);
+}
+
+Byte Cpu::doRotLeftWithCarry(Byte v)
+{
+    regs.flags.z = regs.flags.n = regs.flags.h = 0;
+    bool oldMsb = v & 0x80;
+    v = (v << 1) | regs.flags.c;
+    regs.flags.c = oldMsb;
+
+    return v;
+}
+
+Byte Cpu::doRotRight(Byte v)
+{
+    regs.flags.z = regs.flags.n = regs.flags.h = 0;
+    regs.flags.c = !!(v & 0x01);
+    return (v >> 1) | ((v & 0x01) << 7);
+}
+
+Byte Cpu::doRotRightWithCarry(Byte v)
+{
+    regs.flags.z = regs.flags.n = regs.flags.h = 0;
+    bool oldLsb = v & 0x01;
+    v = (v >> 1) | (regs.flags.c << 7);
+    regs.flags.c = oldLsb;
+
+    return v;
 }
 
 static const char* const aluopStrings[] = {

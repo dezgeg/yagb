@@ -34,7 +34,13 @@ class Cpu
     bool stopped;
     bool interruptsEnabled;
 
+    // ALU helpers
     Byte doAddSub(unsigned lhs, unsigned rhs, bool isSub, bool withCarry, bool updateCarry);
+    Byte doRotLeft(Byte v);
+    Byte doRotLeftWithCarry(Byte v);
+    Byte doRotRight(Byte v);
+    Byte doRotRightWithCarry(Byte v);
+
     void executeInsn_0x_3x(Byte opc);
     void executeInsn_4x_6x(Byte opc);
     void executeInsn_7x_Bx(Byte opc);
