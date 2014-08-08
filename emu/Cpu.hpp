@@ -4,15 +4,13 @@
 union Regs
 {
     struct {
-        // This order is dictated by many opcodes (e.g 4x..6x). Note order 'fa', not 'af'.
-        Byte b, c, d, e, h, l, f, a;
+        Byte c, b, e, d, l, h, _pad1, _pad2, f, a;
     };
     struct {
-        // XXX: fix the endianness issues
         Word bc, de, hl, sp, af, pc;
     };
     struct {
-        Byte _pad[6];
+        Byte _pad[8];
         Byte unimplemented : 4;
         Byte c : 1;     // Carry
         Byte h : 1;     // Half-carry

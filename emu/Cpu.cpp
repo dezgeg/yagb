@@ -24,8 +24,10 @@ static const char* const reg16AutodecStrings[] = {
     "(BC)", "(DE)", "(HL)+", "(HL)-",
 };
 
-#define LOAD8(x) ((x) == 6 ? gb->memRead8(regs.hl) : regs.bytes[x])
-#define STORE8(x, v) ((x) == 6 ? gb->memWrite8(regs.hl, v) : (void)(regs.bytes[x] = (v)))
+// 'x' is an instruction encoding for one of the following: B C D E H L (HL) A
+// The '^ 1' does the endian swap for little-endian host
+#define LOAD8(x) ((x) == 6 ? gb->memRead8(regs.hl) : (x) == 7 ? regs.a : regs.bytes[(x) ^ 1])
+#define STORE8(x, v) ((x) == 6 ? gb->memWrite8(regs.hl, v) : (void)(((x) == 7 ? regs.a : regs.bytes[(x) ^ 1]) = (v)))
 
 #define LOAD8_AUTODEC(x) (gb->memRead8((x) == 2 ? regs.hl++ : (x) == 3 ? regs.hl-- : regs.words[x]))
 #define STORE8_AUTODEC(x, v) (gb->memWrite16((x) == 2 ? regs.hl++ : (x) == 3 ? regs.hl-- : regs.words[x], (v)))
