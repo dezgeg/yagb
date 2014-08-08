@@ -439,18 +439,29 @@ void Cpu::executeTwoByteInsn()
     Byte value = LOAD8(operand);
 
     if (category == 0) {
-        unreachable(); // TODO
+        switch ((operand >> 3) & 0x7) {
+            case 0: description = "RLC"; value = doRotLeft(value); break;
+            case 1: description = "RRC"; value = doRotRight(value); break;
+            case 2: description = "RL"; value = doRotLeftWithCarry(value); break;
+            case 3: description = "RR"; value = doRotRightWithCarry(value); break;
+            case 4: description = "SLA"; regs.flags.c = value & 0x80; value <<= 1; break;
+            case 5: description = "SRA"; regs.flags.c = value & 0x01; value = ((SByte)value) >> 1; break;
+            case 6: description = "SWAP"; value = ((value & 0xf) << 4) | (value >> 4); break;
+            case 7: description = "SRL"; regs.flags.c = value & 0x01; value >>= 1; break;
+        }
+        regs.flags.n = regs.flags.h = 0;
+        regs.flags.z = value == 0;
     } else if (category == 1) {
+        description = "BIT";
         regs.flags.n = 0;
         regs.flags.h = 1;
         regs.flags.z = (value & bitMask) == bitMask;
-        description = "BIT";
     } else if (category == 2) {
-        value &= ~bitMask;
         description = "RES";
+        value &= ~bitMask;
     } else {
-        value |= bitMask;
         description = "SET";
+        value |= bitMask;
     }
 
     if (category != 1) // no writeback for BIT
