@@ -46,6 +46,7 @@ class Cpu
     Byte doRotLeftWithCarry(Byte v);
     Byte doRotRight(Byte v);
     Byte doRotRightWithCarry(Byte v);
+    Byte doAluOp(int aluop, Byte lhs, Byte rhs);
 
     void executeInsn_0x_3x(Byte opc);
     void executeInsn_4x_6x(Byte opc);

@@ -278,6 +278,24 @@ Byte Cpu::doRotRightWithCarry(Byte v)
 static const char* const aluopStrings[] = {
     "ADD", "ADC", "SUB", "SBC", "AND", "XOR", "OR", "CP",
 };
+
+Byte Cpu::doAluOp(int aluop, Byte lhs, Byte rhs)
+{
+    Byte v;
+    switch (aluop) {
+        case 0: return doAddSub(lhs, rhs, 0, 0);
+        case 1: return doAddSub(lhs, rhs, 0, 1);
+        case 2: return doAddSub(lhs, rhs, 1, 0);
+        case 3: return doAddSub(lhs, rhs, 1, 1);
+
+        case 4: v = lhs & rhs; regs.flags.z = regs.a == 0; regs.flags.n = 0; regs.flags.c = 0; regs.flags.h = 1; return v;
+        case 5: v = lhs ^ rhs; regs.flags.z = regs.a == 0; regs.flags.n = 0; regs.flags.c = 0; regs.flags.h = 0; return v;
+        case 6: v = lhs | rhs; regs.flags.z = regs.a == 0; regs.flags.n = 0; regs.flags.c = 0; regs.flags.h = 0; return v;
+        case 7: doAddSub(lhs, rhs, 1, 0); return lhs; // SUB with result not saved
+    }
+    unreachable();
+}
+
 // Opcodes 7x..Bx: Accu-based 8-bit alu ops
 // Bottom 3 bits = reg/(HL) operand, next 3 bits ALU op. Order is ADD, ADC, SUB, SBC, AND, XOR, OR, CP
 void Cpu::executeInsn_7x_Bx(Byte opc)
@@ -286,21 +304,9 @@ void Cpu::executeInsn_7x_Bx(Byte opc)
 
     int operand = opc & 0x7;
     int aluop = (opc >> 3) & 0x7;
+
+    regs.a = doAluOp(aluop, regs.a, LOAD8(operand));
     INSN_DBG_TRACE("%s %s", aluopStrings[aluop], reg8Strings[operand]);
-
-    Byte lhs = regs.a;
-    Byte rhs = LOAD8(operand);
-    switch (aluop) {
-        case 0: regs.a = doAddSub(lhs, rhs, 0, 0); break;
-        case 1: regs.a = doAddSub(lhs, rhs, 0, 1); break;
-        case 2: regs.a = doAddSub(lhs, rhs, 1, 0); break;
-        case 3: regs.a = doAddSub(lhs, rhs, 1, 1); break;
-
-        case 4: regs.a = lhs & rhs; regs.flags.z = regs.a == 0; regs.flags.n = 0; regs.flags.c = 0; regs.flags.h = 1; break;
-        case 5: regs.a = lhs ^ rhs; regs.flags.z = regs.a == 0; regs.flags.n = 0; regs.flags.c = 0; regs.flags.h = 0; break;
-        case 6: regs.a = lhs | rhs; regs.flags.z = regs.a == 0; regs.flags.n = 0; regs.flags.c = 0; regs.flags.h = 0; break;
-        case 7: doAddSub(lhs, rhs, 1, 0); break; // SUB with result not saved
-    }
 }
 
 void Cpu::executeInsn_Cx_Fx(Byte opc)
@@ -383,7 +389,7 @@ void Cpu::executeInsn_Cx_Fx(Byte opc)
     }
 
     Byte operand = (opc >> 4) & 0x3;
-    bool unconditional = false;
+    Byte wideOperand = (opc >> 3) & 0x7;
     switch (opc & 0xf) {
         case 0x0: case 0x8: case 0x9: {
             char buf[16];
@@ -407,13 +413,11 @@ void Cpu::executeInsn_Cx_Fx(Byte opc)
             return;
         }
         case 0x3:
-            unconditional = true; // FALLTHRU
         case 0x2: case 0xA: {
             unreachable();
             return;
         }
         case 0xD:
-            unconditional = true; // FALLTHRU
         case 0x4: case 0xC: {
             Word addr = bus->memRead16(regs.pc);
             regs.pc += 2;
@@ -434,7 +438,8 @@ void Cpu::executeInsn_Cx_Fx(Byte opc)
             return;
         }
         case 0x6: case 0xE: {
-            unreachable();
+            regs.a = doAluOp(wideOperand, regs.a, bus->memRead8(regs.pc++));
+            INSN_DBG_TRACE("%s d8", aluopStrings[wideOperand]);
             return;
         }
         case 0x7: case 0xF: {
