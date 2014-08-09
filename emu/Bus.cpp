@@ -2,9 +2,21 @@
 
 void Bus::memAccess(Word address, Byte* pData, bool isWrite)
 {
-    if (address <= 0x7fff)
+    if (address <= 0x7fff) {
         return rom->memAccess(address, pData, isWrite);
-    log->warn("Unhandled %s to address %04X", isWrite ? "write" : "read", address);
+    } else if (address >= 0xc000 && address <= 0xdfff) {
+        if (isWrite)
+            ram[address - 0xc000] = *pData;
+        else
+            *pData = ram[address - 0xc000];
+    } else if (address >= 0xff80 && address <= 0xfffe) {
+        if (isWrite)
+            hram[address - 0xff80] = *pData;
+        else
+            *pData = hram[address - 0xff80];
+    } else {
+        log->warn("Unhandled %s to address %04X", isWrite ? "write" : "read", address);
+    }
 }
 
 Byte Bus::memRead8(Word address)

@@ -9,6 +9,9 @@ class Bus
     Logger* log;
     Rom* rom;
 
+    Byte ram[8192];
+    Byte hram[127];
+
     void memAccess(Word address, Byte* pData, bool isWrite);
 
 public:
