@@ -386,7 +386,12 @@ void Cpu::executeInsn_Cx_Fx(Byte opc)
     bool unconditional = false;
     switch (opc & 0xf) {
         case 0x0: case 0x8: case 0x9: {
-            unreachable();
+            char buf[16];
+            if (evalConditional(opc, buf, "RET")) {
+                regs.pc = bus->memRead16(regs.sp);
+                regs.sp += 2;
+            }
+            INSN_DBG_TRACE("%s", buf);
             return;
         }
         case 0x1: {
