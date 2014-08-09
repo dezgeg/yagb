@@ -4,6 +4,7 @@
 
 int main()
 {
-    Gameboy gb("test.bin");
+    Logger log;
+    Gameboy gb(&log, "test.bin");
     gb.run();
 }

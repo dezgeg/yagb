@@ -6,7 +6,7 @@
 
 #define INSN_DBG(x) x
 
-#define INSN_DBG_TRACE(...) (gb->logInsn(&_savedRegs, __VA_ARGS__))
+#define INSN_DBG_TRACE(...) (log->logInsn(&_savedRegs, __VA_ARGS__))
 
 #define INSN_DBG_DECL() Regs _savedRegs = regs; _savedRegs.pc -= 1
 

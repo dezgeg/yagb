@@ -1,8 +1,11 @@
-#include "Rom.hpp"
 #include "Gameboy.hpp"
+#include "Logger.hpp"
+#include "Rom.hpp"
 
-Rom::Rom(Gameboy* gb, const char* fileName) :
-    gb(gb)
+#include <fstream>
+
+Rom::Rom(Logger* log, const char* fileName) :
+    log(log)
 {
     std::ifstream stream(fileName, std::ios_base::in | std::ios_base::binary);
     stream.seekg(0, std::ios::end);
@@ -18,7 +21,7 @@ Rom::Rom(Gameboy* gb, const char* fileName) :
 void Rom::memAccess(Word address, Byte* pData, bool isWrite)
 {
     if (isWrite) {
-        gb->warn("Write to ROM");
+        log->warn("Write to ROM");
         return;
     }
 
