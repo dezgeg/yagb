@@ -6,22 +6,15 @@
 
 class Gameboy
 {
+    Bus bus;
     Cpu cpu;
-    Rom rom;
-
-    void memAccess(Word address, Byte* pData, bool isWrite);
 
 public:
-    Gameboy(Logger* log, const char* romFileName) :
-        cpu(this, log),
-        rom(log, romFileName)
+    Gameboy(Logger* log, Rom* rom) :
+        bus(log, rom),
+        cpu(log, &bus)
     {
     }
-
-    Byte memRead8(Word address);
-    void memWrite8(Word address, Byte value);
-    Word memRead16(Word address);
-    void memWrite16(Word address, Word value);
 
     void run();
 };

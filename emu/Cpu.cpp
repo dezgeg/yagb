@@ -28,11 +28,11 @@ static const char* const reg16AutodecStrings[] = {
 
 // 'x' is an instruction encoding for one of the following: B C D E H L (HL) A
 // The '^ 1' does the endian swap for little-endian host
-#define LOAD8(x) ((x) == 6 ? gb->memRead8(regs.hl) : (x) == 7 ? regs.a : regs.bytes[(x) ^ 1])
-#define STORE8(x, v) ((x) == 6 ? gb->memWrite8(regs.hl, v) : (void)(((x) == 7 ? regs.a : regs.bytes[(x) ^ 1]) = (v)))
+#define LOAD8(x) ((x) == 6 ? bus->memRead8(regs.hl) : (x) == 7 ? regs.a : regs.bytes[(x) ^ 1])
+#define STORE8(x, v) ((x) == 6 ? bus->memWrite8(regs.hl, v) : (void)(((x) == 7 ? regs.a : regs.bytes[(x) ^ 1]) = (v)))
 
-#define LOAD8_AUTODEC(x) (gb->memRead8((x) == 2 ? regs.hl++ : (x) == 3 ? regs.hl-- : regs.words[x]))
-#define STORE8_AUTODEC(x, v) (gb->memWrite16((x) == 2 ? regs.hl++ : (x) == 3 ? regs.hl-- : regs.words[x], (v)))
+#define LOAD8_AUTODEC(x) (bus->memRead8((x) == 2 ? regs.hl++ : (x) == 3 ? regs.hl-- : regs.words[x]))
+#define STORE8_AUTODEC(x, v) (bus->memWrite16((x) == 2 ? regs.hl++ : (x) == 3 ? regs.hl-- : regs.words[x], (v)))
 
 void Cpu::reset()
 {
@@ -44,7 +44,7 @@ void Cpu::reset()
 
 void Cpu::tick()
 {
-    Byte opc = gb->memRead8(regs.pc++);
+    Byte opc = bus->memRead8(regs.pc++);
     switch (opc >> 6) {
         case 0: executeInsn_0x_3x(opc); break;
         case 1: executeInsn_4x_6x(opc); break;
@@ -69,9 +69,9 @@ void Cpu::executeInsn_0x_3x(Byte opc)
             return;
         }
         case 0x08: {
-            Word addr = gb->memRead16(regs.pc);
+            Word addr = bus->memRead16(regs.pc);
             regs.pc += 2;
-            gb->memWrite16(addr, regs.sp);
+            bus->memWrite16(addr, regs.sp);
             INSN_DBG_TRACE("LD (a16), SP");
             return;
         }
@@ -127,7 +127,7 @@ void Cpu::executeInsn_0x_3x(Byte opc)
         case 0x0: case 0x8: {
             char buf[16];
 
-            int delta = (SByte)gb->memRead8(regs.pc++);
+            int delta = (SByte)bus->memRead8(regs.pc++);
             if (evalConditional(opc, buf, "JR"))
                 regs.pc += delta;
 
@@ -135,7 +135,7 @@ void Cpu::executeInsn_0x_3x(Byte opc)
             return;
         }
         case 0x1: {
-            Word val = gb->memRead16(regs.pc);
+            Word val = bus->memRead16(regs.pc);
             regs.pc += 2;
             regs.words[operand] = val;
             INSN_DBG_TRACE("LD %s, d16", reg16SpStrings[operand]);
@@ -180,7 +180,7 @@ void Cpu::executeInsn_0x_3x(Byte opc)
             return;
         }
         case 0x6: case 0xE: {
-            Byte val = gb->memRead8(regs.pc++);
+            Byte val = bus->memRead8(regs.pc++);
             STORE8(byteOperand, val);
             INSN_DBG_TRACE("LD %s, d8", reg8Strings[byteOperand]);
             return;
@@ -309,12 +309,12 @@ void Cpu::executeInsn_Cx_Fx(Byte opc)
 
     switch (opc) {
         case 0xE0: {
-            gb->memWrite8(0xff00 | gb->memRead8(regs.pc++), regs.a);
+            bus->memWrite8(0xff00 | bus->memRead8(regs.pc++), regs.a);
             INSN_DBG_TRACE("LDH (a8), A");
             return;
         }
         case 0xF0: {
-            regs.a = gb->memRead8(0xff00 | gb->memRead8(regs.pc++));
+            regs.a = bus->memRead8(0xff00 | bus->memRead8(regs.pc++));
             INSN_DBG_TRACE("LDH A, (a8)");
             return;
         }
@@ -339,23 +339,23 @@ void Cpu::executeInsn_Cx_Fx(Byte opc)
             return;
         }
         case 0xE2: {
-            gb->memWrite8(0xff00 | regs.c, regs.a);
+            bus->memWrite8(0xff00 | regs.c, regs.a);
             INSN_DBG_TRACE("LDH (C), A");
             return;
         }
         case 0xF2: {
-            regs.a = gb->memRead8(0xff00 | regs.c);
+            regs.a = bus->memRead8(0xff00 | regs.c);
             INSN_DBG_TRACE("LDH A, (C)");
             return;
         }
         case 0xEA: {
-            gb->memWrite8(gb->memRead16(regs.pc), regs.a);
+            bus->memWrite8(bus->memRead16(regs.pc), regs.a);
             regs.pc += 2;
             INSN_DBG_TRACE("LDH (a16), A");
             return;
         }
         case 0xFA: {
-            regs.a = gb->memRead8(gb->memRead16(regs.pc));
+            regs.a = bus->memRead8(bus->memRead16(regs.pc));
             regs.pc += 2;
             INSN_DBG_TRACE("LDH A, (a16)");
             return;
@@ -390,7 +390,7 @@ void Cpu::executeInsn_Cx_Fx(Byte opc)
             return;
         }
         case 0x1: {
-            Word value = gb->memRead16(regs.sp);
+            Word value = bus->memRead16(regs.sp);
             regs.sp += 2;
             if (operand == 3) {
                 regs.af = value;
@@ -410,13 +410,13 @@ void Cpu::executeInsn_Cx_Fx(Byte opc)
         case 0xD:
             unconditional = true; // FALLTHRU
         case 0x4: case 0xC: {
-            Word addr = gb->memRead16(regs.pc);
+            Word addr = bus->memRead16(regs.pc);
             regs.pc += 2;
 
             char buf[16];
             if (evalConditional(opc, buf, "CALL")) {
                 regs.sp -= 2;
-                gb->memWrite16(regs.sp, regs.pc);
+                bus->memWrite16(regs.sp, regs.pc);
                 regs.pc = addr;
             }
             INSN_DBG_TRACE("%s a16", buf);
@@ -424,7 +424,7 @@ void Cpu::executeInsn_Cx_Fx(Byte opc)
         }
         case 0x5: {
             regs.sp -= 2;
-            gb->memWrite16(regs.sp, operand == 3 ? regs.af : regs.words[operand]);
+            bus->memWrite16(regs.sp, operand == 3 ? regs.af : regs.words[operand]);
             INSN_DBG_TRACE("PUSH %s", reg16AfStrings[operand]);
             return;
         }
@@ -443,7 +443,7 @@ void Cpu::executeInsn_Cx_Fx(Byte opc)
 void Cpu::executeTwoByteInsn()
 {
     INSN_DBG_DECL();
-    Byte opc = gb->memRead8(regs.pc++);
+    Byte opc = bus->memRead8(regs.pc++);
     const char* description;
 
     int operand = opc & 0x7;

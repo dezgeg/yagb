@@ -1,4 +1,5 @@
 #pragma once
+#include "Bus.hpp"
 #include "Logger.hpp"
 #include "Platform.hpp"
 
@@ -29,8 +30,9 @@ union Regs
 class Gameboy;
 class Cpu
 {
-    Gameboy* gb;
     Logger* log;
+    Bus* bus;
+
     Regs regs;
     bool halted;
     bool stopped;
@@ -52,9 +54,9 @@ class Cpu
     void executeTwoByteInsn();
 
 public:
-    Cpu(Gameboy* gb, Logger* log) :
-        gb(gb),
-        log(log)
+    Cpu(Logger* log, Bus* bus) :
+        log(log),
+        bus(bus)
     {
         reset();
     }
