@@ -2,6 +2,8 @@
 #include "Gameboy.hpp"
 #include "Utils.hpp"
 
+#include <string.h>
+
 #define INSN_DBG(x) x
 
 #define INSN_DBG_TRACE(...) (gb->logInsn(&_savedRegs, __VA_ARGS__))
@@ -123,15 +125,13 @@ void Cpu::executeInsn_0x_3x(Byte opc)
     Byte byteOperand = (operand << 1) | !!(opc & 0x8);
     switch (opc & 0xf) {
         case 0x0: case 0x8: {
-            const char * const ccMap[] = { "??", "", "Z, ", "C, " };
-            int cc = opc >> 4;
-            bool notOk = cc == 1 ? 1 : cc == 2 ? regs.flags.z : regs.flags.c;
+            char buf[16];
 
             int delta = (SByte)gb->memRead8(regs.pc++);
-            if (notOk ^ !!(opc & 0x08))
+            if (evalConditional(opc, buf, "JR"))
                 regs.pc += delta;
 
-            INSN_DBG_TRACE("JR %s%sr8", notOk ? "N" : "", ccMap[cc]);
+            INSN_DBG_TRACE("%s r8", buf);
             return;
         }
         case 0x1: {
@@ -208,6 +208,21 @@ void Cpu::executeInsn_4x_6x(Byte opc)
 
     Byte val = LOAD8(src);
     STORE8(dest, val);
+}
+
+bool Cpu::evalConditional(Byte opc, char* outDescr, const char* opcodeStr)
+{
+    // LSB set means unconditional, except JR r8 (0x18) is a special case.
+    if (opc == 0x18 || opc & 1) {
+        snprintf(outDescr, strlen(opcodeStr) + 1, "%s", opcodeStr);
+        return true;
+    }
+
+    bool flagIsCarry = opc & 0x10;
+    bool compareVal = opc & 0x08;
+    snprintf(outDescr, strlen(opcodeStr) + sizeof(" NZ,"), "%s %s%c,", opcodeStr,
+             compareVal ? "" : "N", flagIsCarry ? 'C' : 'Z');
+    return bool(flagIsCarry ? regs.flags.c : regs.flags.z) == compareVal;
 }
 
 // TODO: not sane to have three bool parameters
@@ -397,16 +412,14 @@ void Cpu::executeInsn_Cx_Fx(Byte opc)
         case 0x4: case 0xC: {
             Word addr = gb->memRead16(regs.pc);
             regs.pc += 2;
-            bool condbit = opc & 0x10 ? regs.flags.c : regs.flags.z;
-            bool negate = !(opc & 0x8);
-            if (negate)
-                condbit = !condbit;
-            if (unconditional || condbit) {
+
+            char buf[16];
+            if (evalConditional(opc, buf, "CALL")) {
                 regs.sp -= 2;
                 gb->memWrite16(regs.sp, regs.pc);
                 regs.pc = addr;
             }
-            INSN_DBG_TRACE("CALL %sTODO, a16", negate ? "N" : "");
+            INSN_DBG_TRACE("%s a16", buf);
             return;
         }
         case 0x5: {
@@ -457,7 +470,7 @@ void Cpu::executeTwoByteInsn()
         description = "BIT";
         regs.flags.n = 0;
         regs.flags.h = 1;
-        regs.flags.z = (value & bitMask) == bitMask;
+        regs.flags.z = !(value & bitMask);
     } else if (category == 2) {
         description = "RES";
         value &= ~bitMask;

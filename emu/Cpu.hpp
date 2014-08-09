@@ -34,6 +34,8 @@ class Cpu
     bool stopped;
     bool interruptsEnabled;
 
+    bool evalConditional(Byte opc, char* outDescr, const char* opcodeStr);
+
     // ALU helpers
     Byte doAddSub(unsigned lhs, unsigned rhs, bool isSub, bool withCarry, bool updateCarry);
     Byte doRotLeft(Byte v);
