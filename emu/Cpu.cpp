@@ -6,7 +6,7 @@
 
 #define INSN_DBG(x) x
 
-#define INSN_DONE(...) (log->logInsn(&_savedRegs, __VA_ARGS__), 0)
+#define INSN_DONE(cycles, ...) (log->logInsn(&_savedRegs, __VA_ARGS__), cycles)
 
 #define INSN_DBG_DECL() Regs _savedRegs = regs; _savedRegs.pc -= 1
 
@@ -30,6 +30,8 @@ static const char* const reg16AutodecStrings[] = {
 // The '^ 1' does the endian swap for little-endian host
 #define LOAD8(x) ((x) == 6 ? bus->memRead8(regs.hl) : (x) == 7 ? regs.a : regs.bytes[(x) ^ 1])
 #define STORE8(x, v) ((x) == 6 ? bus->memWrite8(regs.hl, v) : (void)(((x) == 7 ? regs.a : regs.bytes[(x) ^ 1]) = (v)))
+
+#define ldst8ExtraCycles(x) ((x) == 6 ? 4 : 0)
 
 #define LOAD8_AUTODEC(x) (bus->memRead8((x) == 2 ? regs.hl++ : (x) == 3 ? regs.hl-- : regs.words[x]))
 #define STORE8_AUTODEC(x, v) (bus->memWrite16((x) == 2 ? regs.hl++ : (x) == 3 ? regs.hl-- : regs.words[x], (v)))
@@ -61,52 +63,52 @@ int Cpu::executeInsn_0x_3x(Byte opc)
     // First, various special cases.
     switch (opc) {
         case 0x00: {
-            return INSN_DONE("NOP");
+            return INSN_DONE(4, "NOP");
         }
         case 0x10: {
             stopped = true;
-            return INSN_DONE("STOP");
+            return INSN_DONE(4, "STOP");
         }
         case 0x08: {
             Word addr = bus->memRead16(regs.pc);
             regs.pc += 2;
             bus->memWrite16(addr, regs.sp);
-            return INSN_DONE("LD (a16), SP");
+            return INSN_DONE(20, "LD (a16), SP");
         }
         case 0x07: {
             regs.a = doRotLeft(regs.a);
-            return INSN_DONE("RLCA");
+            return INSN_DONE(4, "RLCA");
         }
         case 0x17: {
             regs.a = doRotLeftWithCarry(regs.a);
-            return INSN_DONE("RLA");
+            return INSN_DONE(4, "RLA");
         }
         case 0x0f: {
             regs.a = doRotRight(regs.a);
-            return INSN_DONE("RRCA");
+            return INSN_DONE(4, "RRCA");
         }
         case 0x1f: {
             regs.a = doRotRightWithCarry(regs.a);
-            return INSN_DONE("RRA");
+            return INSN_DONE(4, "RRA");
         }
         case 0x27: {
-            return INSN_DONE("DAA");
+            return INSN_DONE(4, "DAA");
             unreachable();
         }
         case 0x37: {
             regs.flags.c = true;
             regs.flags.n = regs.flags.h = 0;
-            return INSN_DONE("SCF");
+            return INSN_DONE(4, "SCF");
         }
         case 0x2f: {
             regs.a = ~regs.a;
             regs.flags.n = regs.flags.h = 0;
-            return INSN_DONE("CPL");
+            return INSN_DONE(4, "CPL");
         }
         case 0x3f: {
             regs.flags.c = !regs.flags.c;
             regs.flags.n = regs.flags.h = 0;
-            return INSN_DONE("CCF");
+            return INSN_DONE(4, "CCF");
         }
     }
 
@@ -118,52 +120,56 @@ int Cpu::executeInsn_0x_3x(Byte opc)
             char buf[16];
 
             int delta = (SByte)bus->memRead8(regs.pc++);
-            if (evalConditional(opc, buf, "JR"))
+            bool taken = evalConditional(opc, buf, "JR");
+            if (taken)
                 regs.pc += delta;
 
-            return INSN_DONE("%s r8", buf);
+            return INSN_DONE(taken ? 12 : 8, "%s r8", buf);
         }
         case 0x1: {
             Word val = bus->memRead16(regs.pc);
             regs.pc += 2;
             regs.words[operand] = val;
-            return INSN_DONE("LD %s, d16", reg16SpStrings[operand]);
+            return INSN_DONE(12, "LD %s, d16", reg16SpStrings[operand]);
         }
         case 0x9: {
             regs.hl += regs.words[operand];
-            return INSN_DONE("ADD HL, %s", reg16SpStrings[operand]);
+            return INSN_DONE(8, "ADD HL, %s", reg16SpStrings[operand]);
             // TODO: flags?
         }
         case 0x2: {
             STORE8_AUTODEC(operand, regs.a);
-            return INSN_DONE("LD %s, A", reg16AutodecStrings[operand]);
+            return INSN_DONE(8, "LD %s, A", reg16AutodecStrings[operand]);
         }
         case 0xA: {
             regs.a = LOAD8_AUTODEC(operand);
-            return INSN_DONE("LD A, %s", reg16AutodecStrings[operand]);
+            return INSN_DONE(8, "LD A, %s", reg16AutodecStrings[operand]);
         }
         case 0x3: {
             regs.words[operand]++;
-            return INSN_DONE("INC %s", reg16SpStrings[operand]);
+            return INSN_DONE(8, "INC %s", reg16SpStrings[operand]);
         }
         case 0xB: {
             regs.words[operand]--;
-            return INSN_DONE("DEC %s", reg16SpStrings[operand]);
+            return INSN_DONE(8, "DEC %s", reg16SpStrings[operand]);
         }
         case 0x4: case 0xC: {
             Byte tmp = LOAD8(byteOperand);
             STORE8(byteOperand, doAddSub(tmp, 1, false, false, false));
-            return INSN_DONE("INC %s", reg8Strings[byteOperand]);
+            return INSN_DONE(4 + 2 * ldst8ExtraCycles(byteOperand), "INC %s",
+                             reg8Strings[byteOperand]);
         }
         case 0x5: case 0xD: {
             Byte tmp = LOAD8(byteOperand);
             STORE8(byteOperand, doAddSub(tmp, 1, true, false, false));
-            return INSN_DONE("DEC %s", reg8Strings[byteOperand]);
+            return INSN_DONE(4 + 2 * ldst8ExtraCycles(byteOperand), "DEC %s",
+                             reg8Strings[byteOperand]);
         }
         case 0x6: case 0xE: {
             Byte val = bus->memRead8(regs.pc++);
             STORE8(byteOperand, val);
-            return INSN_DONE("LD %s, d8", reg8Strings[byteOperand]);
+            return INSN_DONE(4 + ldst8ExtraCycles(byteOperand), "LD %s, d8",
+                             reg8Strings[byteOperand]);
         }
     }
     unreachable();
@@ -178,7 +184,7 @@ int Cpu::executeInsn_4x_6x(Byte opc)
     // Exception: opc 0x76 == LD (HL), (HL) is HALT instead
     if (opc == 0x76) {
         halted = true;
-        return INSN_DONE("HALT");
+        return INSN_DONE(4, "HALT");
     }
 
     int dest = (opc >> 3) & 0x7;
@@ -186,7 +192,8 @@ int Cpu::executeInsn_4x_6x(Byte opc)
 
     Byte val = LOAD8(src);
     STORE8(dest, val);
-    return INSN_DONE("LD %s, %s", reg8Strings[dest], reg8Strings[src]);
+    return INSN_DONE(4 + ldst8ExtraCycles(src) + ldst8ExtraCycles(dest),
+                     "LD %s, %s", reg8Strings[dest], reg8Strings[src]);
 }
 
 bool Cpu::evalConditional(Byte opc, char* outDescr, const char* opcodeStr)
@@ -285,7 +292,8 @@ int Cpu::executeInsn_7x_Bx(Byte opc)
     int aluop = (opc >> 3) & 0x7;
 
     regs.a = doAluOp(aluop, regs.a, LOAD8(operand));
-    return INSN_DONE("%s %s", aluopStrings[aluop], reg8Strings[operand]);
+    return INSN_DONE(4 + ldst8ExtraCycles(operand),
+                     "%s %s", aluopStrings[aluop], reg8Strings[operand]);
 }
 
 int Cpu::executeInsn_Cx_Fx(Byte opc)
@@ -295,62 +303,63 @@ int Cpu::executeInsn_Cx_Fx(Byte opc)
     switch (opc) {
         case 0xE0: {
             bus->memWrite8(0xff00 | bus->memRead8(regs.pc++), regs.a);
-            return INSN_DONE("LDH (a8), A");
+            return INSN_DONE(12, "LDH (a8), A");
         }
         case 0xF0: {
             regs.a = bus->memRead8(0xff00 | bus->memRead8(regs.pc++));
-            return INSN_DONE("LDH A, (a8)");
+            return INSN_DONE(12, "LDH A, (a8)");
         }
         case 0xE8: {
             unreachable(); // TODO (affects flags)
-            return INSN_DONE("ADD SP, r8");
+            return INSN_DONE(16, "ADD SP, r8");
+            // XXX: cycle count really correct???
         }
         case 0xF8: {
             unreachable(); // TODO (affects flags)
-            return INSN_DONE("LD HL, SP+r8");
+            return INSN_DONE(12, "LD HL, SP+r8");
         }
         case 0xE9: {
             regs.pc = regs.hl;
-            return INSN_DONE("JP HL");
+            return INSN_DONE(4, "JP HL");
         }
         case 0xF9: {
             regs.sp = regs.hl;
-            return INSN_DONE("LD SP, HL");
+            return INSN_DONE(8, "LD SP, HL");
         }
         case 0xE2: {
             bus->memWrite8(0xff00 | regs.c, regs.a);
-            return INSN_DONE("LDH (C), A");
+            return INSN_DONE(8, "LDH (C), A");
         }
         case 0xF2: {
             regs.a = bus->memRead8(0xff00 | regs.c);
-            return INSN_DONE("LDH A, (C)");
+            return INSN_DONE(8, "LDH A, (C)");
         }
         case 0xEA: {
             bus->memWrite8(bus->memRead16(regs.pc), regs.a);
             regs.pc += 2;
-            return INSN_DONE("LDH (a16), A");
+            return INSN_DONE(16, "LDH (a16), A");
         }
         case 0xFA: {
             regs.a = bus->memRead8(bus->memRead16(regs.pc));
             regs.pc += 2;
-            return INSN_DONE("LDH A, (a16)");
+            return INSN_DONE(16, "LDH A, (a16)");
         }
         case 0xF3: {
             interruptsEnabled = false;
-            return INSN_DONE("DI");
+            return INSN_DONE(4, "DI");
         }
         case 0xCB: {
             return executeTwoByteInsn();
         }
         case 0xFB: {
             interruptsEnabled = true;
-            return INSN_DONE("EI");
+            return INSN_DONE(4, "EI");
         }
 
         case 0xD3: case 0xDB: case 0xDD:
         case 0xE3: case 0xE4: case 0xEB: case 0xEC: case 0xED:
         case 0xF4: case 0xFC: case 0xFD:
-            return INSN_DONE("UNDEF");
+            return INSN_DONE(100, "UNDEF");
     }
 
     Byte operand = (opc >> 4) & 0x3;
@@ -358,11 +367,13 @@ int Cpu::executeInsn_Cx_Fx(Byte opc)
     switch (opc & 0xf) {
         case 0x0: case 0x8: case 0x9: {
             char buf[16];
-            if (evalConditional(opc, buf, "RET")) {
+            bool unconditional = opc & 1;
+            bool taken = evalConditional(opc, buf, "RET");
+            if (taken) {
                 regs.pc = bus->memRead16(regs.sp);
                 regs.sp += 2;
             }
-            return INSN_DONE("%s", buf);
+            return INSN_DONE(unconditional ? 16 : taken ? 20 : 8, "%s", buf);
         }
         case 0x1: {
             Word value = bus->memRead16(regs.sp);
@@ -373,7 +384,7 @@ int Cpu::executeInsn_Cx_Fx(Byte opc)
             } else {
                 regs.words[operand] = value;
             }
-            return INSN_DONE("POP %s", reg16AfStrings[operand]);
+            return INSN_DONE(12, "POP %s", reg16AfStrings[operand]);
         }
         case 0x3:
         case 0x2: case 0xA: {
@@ -385,21 +396,22 @@ int Cpu::executeInsn_Cx_Fx(Byte opc)
             regs.pc += 2;
 
             char buf[16];
-            if (evalConditional(opc, buf, "CALL")) {
+            bool taken = evalConditional(opc, buf, "CALL");
+            if (taken) {
                 regs.sp -= 2;
                 bus->memWrite16(regs.sp, regs.pc);
                 regs.pc = addr;
             }
-            return INSN_DONE("%s a16", buf);
+            return INSN_DONE(taken ? 24 : 12, "%s a16", buf);
         }
         case 0x5: {
             regs.sp -= 2;
             bus->memWrite16(regs.sp, operand == 3 ? regs.af : regs.words[operand]);
-            return INSN_DONE("PUSH %s", reg16AfStrings[operand]);
+            return INSN_DONE(16, "PUSH %s", reg16AfStrings[operand]);
         }
         case 0x6: case 0xE: {
             regs.a = doAluOp(wideOperand, regs.a, bus->memRead8(regs.pc++));
-            return INSN_DONE("%s d8", aluopStrings[wideOperand]);
+            return INSN_DONE(8, "%s d8", aluopStrings[wideOperand]);
         }
         case 0x7: case 0xF: {
             unreachable();
@@ -451,7 +463,9 @@ int Cpu::executeTwoByteInsn()
         STORE8(operand, value);
 
     if (bitIndex < 0)
-        return INSN_DONE("%s %s", description, reg8Strings[operand]); // FIXME
+        return INSN_DONE(8 + ldst8ExtraCycles(operand), "%s %s",
+                         description, reg8Strings[operand]);
     else
-        return INSN_DONE("%s %d, %s", description, bitIndex, reg8Strings[operand]);
+        return INSN_DONE(8 + 2 * ldst8ExtraCycles(operand), "%s %d, %s",
+                         description, bitIndex, reg8Strings[operand]);
 }
