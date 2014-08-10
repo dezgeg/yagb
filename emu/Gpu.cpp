@@ -11,6 +11,26 @@
  *  - Each frame is 70224 clks (456 * 144 + 4560)
  */
 
+enum {
+    OamFetchThresholdCycles = 80,
+    VramFetchThresholdCycles = 80 + 172,
+    ScanlineCycles = 456,
+
+    MaxScanline = 153,
+};
+
+void Gpu::tick(long cycles)
+{
+    cycleResidue += cycles;
+    if (cycleResidue >= ScanlineCycles) {
+        // Assumes that cycle delta is not insanely large
+        cycleResidue -= ScanlineCycles;
+        ly++;
+        if (ly > MaxScanline)
+            ly = 0;
+    }
+}
+
 void Gpu::vramAccess(Word offset, Byte* pData, bool isWrite)
 {
     BusUtil::arrayMemAccess(vram, offset, pData, isWrite);
@@ -28,7 +48,7 @@ void Gpu::registerAccess(Word reg, Byte* pData, bool isWrite)
             if (isWrite)
                 log->warn("GPU register write to LY");
             else
-                ly = *pData;
+                *pData = ly;
             return;
         }
         case 0xff45: BusUtil::simpleRegAccess(&lyc, pData, isWrite); return;

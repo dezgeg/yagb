@@ -7,6 +7,8 @@ class Gpu
 {
     Logger* log;
 
+    int cycleResidue;
+
     Byte vram[8192];
     Byte lcdc;
     Byte scy;
@@ -19,9 +21,12 @@ class Gpu
 
 public:
     Gpu(Logger* log) :
-        log(log)
+        log(log),
+        cycleResidue(0)
     {
     }
+
+    int getCurrentScanline() { return ly; }
 
     void vramAccess(Word offset, Byte* pData, bool isWrite);
     void registerAccess(Word reg, Byte* pData, bool isWrite);
