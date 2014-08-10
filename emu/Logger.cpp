@@ -6,15 +6,18 @@
 
 void Logger::logInsn(Regs* regs, int cycles, const char* fmt, ...)
 {
+    if (!insnLoggingEnabled)
+        return;
+
     char buf[256];
     va_list ap;
     va_start(ap, fmt);
     vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
 
-    printf("[insn %08ld/%03d] 0x%04X: %-32s "
+    printf("[insn %05ld/%03d/%08ld] 0x%04X: %-32s "
            "A: 0x%02x | BC: 0x%04x | DE: 0x%04x | HL: 0x%04x | SP: 0x%04x | Flags: %c%c%c%c | Cycles: %d\n",
-           currentCycle, currentScanline,
+           currentFrame, currentScanline, currentCycle,
            regs->pc, buf, regs->a, regs->bc, regs->de, regs->hl, regs->sp,
            regs->flags.z ? 'Z' : '-', regs->flags.n ? 'N' : '-',
            regs->flags.h ? 'H' : '-', regs->flags.c ? 'C' : '-',

@@ -3,8 +3,14 @@
 
 void Gameboy::run()
 {
+    long frame = -1;
     while (!cpu.isHalted()) {
-        log->setTimestamp(currentCycle, gpu.getCurrentScanline());
+        long newFrame = gpu.getCurrentFrame();
+        log->setTimestamp(newFrame, gpu.getCurrentScanline(), currentCycle);
+        if (newFrame != frame) {
+            frame = newFrame;
+            log->warn("Start of frame %ld", frame);
+        }
 
         int cycleDelta = cpu.tick();
         gpu.tick(cycleDelta);

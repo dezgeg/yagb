@@ -3,12 +3,21 @@
 union Regs;
 class Logger
 {
+    bool insnLoggingEnabled;
+
+    long currentFrame;
     long currentCycle;
     int currentScanline;
 
 public:
-    void setTimestamp(long cycle, int scanline)
+    Logger(bool insnLoggingEnabled=false) :
+        insnLoggingEnabled(insnLoggingEnabled)
     {
+    }
+
+    void setTimestamp(long frame, int scanline, long cycle)
+    {
+        currentFrame = frame;
         currentCycle = cycle;
         currentScanline = scanline;
     }

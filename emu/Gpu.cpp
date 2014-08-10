@@ -26,8 +26,10 @@ void Gpu::tick(long cycles)
         // Assumes that cycle delta is not insanely large
         cycleResidue -= ScanlineCycles;
         ly++;
-        if (ly > MaxScanline)
+        if (ly > MaxScanline) {
             ly = 0;
+            frame++;
+        }
     }
 }
 
