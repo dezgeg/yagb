@@ -16,6 +16,8 @@ enum {
     VramFetchThresholdCycles = 80 + 172,
     ScanlineCycles = 456,
 
+    ScreenWidth = 160,
+    ScreenHeight = 144,
     MaxScanline = 153,
 };
 
@@ -23,6 +25,7 @@ void Gpu::tick(long cycles)
 {
     cycleResidue += cycles;
     if (cycleResidue >= ScanlineCycles) {
+        renderScanline();
         // Assumes that cycle delta is not insanely large
         cycleResidue -= ScanlineCycles;
         ly++;
@@ -30,6 +33,27 @@ void Gpu::tick(long cycles)
             ly = 0;
             frame++;
         }
+    }
+}
+
+void Gpu::renderScanline()
+{
+    unsigned bgY = ly + scy;
+    unsigned bgTileY = (bgY / 8) % 32;
+    unsigned bgTileYBit = bgY % 8;
+
+    Byte* bgTileBase = &vram[0x1800]; // TODO: LCDC bit
+    Byte* bgPatternBase = &vram[0x0]; // TODO: LCDC bit
+    for (unsigned i = 0; i < ScreenWidth; i++) {
+        unsigned bgX = i + scy;
+        unsigned bgTileX = (bgX / 8) % 32;
+        unsigned bgTileXBit = bgX % 8;
+
+        Byte tileNum = bgTileBase[bgTileY * 32 + bgTileX];
+        Byte lsbs = bgPatternBase[16 * tileNum + 2 * bgTileYBit];
+        Byte msbs = bgPatternBase[16 * tileNum + 2 * bgTileYBit + 1];
+
+        framebuffer[ly][i] = !!(lsbs & (1 << bgTileXBit)) | (!!(msbs & (1 << bgTileXBit)) << 1);
     }
 }
 

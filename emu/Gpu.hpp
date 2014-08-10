@@ -9,6 +9,7 @@ class Gpu
 
     long frame;
     int cycleResidue;
+    Byte framebuffer[144][160]; // Order Y-X
 
     Byte vram[8192];
     Byte lcdc;
@@ -19,6 +20,8 @@ class Gpu
     Byte bgp;
     Byte wy;
     Byte wx;
+
+    void renderScanline();
 
 public:
     Gpu(Logger* log) :
