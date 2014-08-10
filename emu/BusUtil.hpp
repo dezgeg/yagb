@@ -10,4 +10,12 @@ struct BusUtil
         else
             *pData = array[address];
     }
+
+    static void simpleRegAccess(Byte* pReg, Byte* pData, bool isWrite)
+    {
+        if (isWrite)
+            *pReg = *pData;
+        else
+            *pData = *pReg;
+    }
 };

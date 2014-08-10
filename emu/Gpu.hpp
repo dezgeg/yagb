@@ -6,7 +6,16 @@
 class Gpu
 {
     Logger* log;
+
     Byte vram[8192];
+    Byte lcdc;
+    Byte scy;
+    Byte scx;
+    Byte ly;
+    Byte lyc;
+    Byte bgp;
+    Byte wy;
+    Byte wx;
 
 public:
     Gpu(Logger* log) :
