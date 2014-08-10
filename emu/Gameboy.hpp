@@ -6,13 +6,17 @@
 
 class Gameboy
 {
+    Logger *log;
     Bus bus;
     Cpu cpu;
+    long currentCycle;
 
 public:
     Gameboy(Logger* log, Rom* rom) :
+        log(log),
         bus(log, rom),
-        cpu(log, &bus)
+        cpu(log, &bus),
+        currentCycle(0)
     {
     }
 

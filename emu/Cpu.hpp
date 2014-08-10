@@ -48,11 +48,11 @@ class Cpu
     Byte doRotRightWithCarry(Byte v);
     Byte doAluOp(int aluop, Byte lhs, Byte rhs);
 
-    int executeInsn_0x_3x(Byte opc);
-    int executeInsn_4x_6x(Byte opc);
-    int executeInsn_7x_Bx(Byte opc);
-    int executeInsn_Cx_Fx(Byte opc);
-    int executeTwoByteInsn();
+    long executeInsn_0x_3x(Byte opc);
+    long executeInsn_4x_6x(Byte opc);
+    long executeInsn_7x_Bx(Byte opc);
+    long executeInsn_Cx_Fx(Byte opc);
+    long executeTwoByteInsn();
 
 public:
     Cpu(Logger* log, Bus* bus) :
@@ -65,5 +65,5 @@ public:
     bool isHalted() { return halted; }
 
     void reset();
-    int tick();
+    long tick();
 };

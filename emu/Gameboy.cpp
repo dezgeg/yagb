@@ -3,6 +3,8 @@
 
 void Gameboy::run()
 {
-    while (!cpu.isHalted())
-        cpu.tick();
+    while (!cpu.isHalted()) {
+        log->setCycle(currentCycle);
+        currentCycle += cpu.tick();
+    }
 }

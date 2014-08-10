@@ -6,7 +6,7 @@
 
 #define INSN_DBG(x) x
 
-#define INSN_DONE(cycles, ...) (log->logInsn(&_savedRegs, __VA_ARGS__), cycles)
+#define INSN_DONE(cycles, ...) (log->logInsn(&_savedRegs, cycles, __VA_ARGS__), cycles)
 
 #define INSN_DBG_DECL() Regs _savedRegs = regs; _savedRegs.pc -= 1
 
@@ -44,7 +44,7 @@ void Cpu::reset()
     interruptsEnabled = false;
 }
 
-int Cpu::tick()
+long Cpu::tick()
 {
     Byte opc = bus->memRead8(regs.pc++);
     switch (opc >> 6) {
@@ -56,7 +56,7 @@ int Cpu::tick()
     unreachable();
 }
 
-int Cpu::executeInsn_0x_3x(Byte opc)
+long Cpu::executeInsn_0x_3x(Byte opc)
 {
     INSN_DBG_DECL();
 
@@ -177,7 +177,7 @@ int Cpu::executeInsn_0x_3x(Byte opc)
 
 // Opcodes 4x..6x: Moves between 8-bit regs / (HL)
 // Bottom 3 bits = source, next 3 bits destination. Order is: B C D E H L (HL) A
-int Cpu::executeInsn_4x_6x(Byte opc)
+long Cpu::executeInsn_4x_6x(Byte opc)
 {
     INSN_DBG_DECL();
 
@@ -284,7 +284,7 @@ Byte Cpu::doAluOp(int aluop, Byte lhs, Byte rhs)
 
 // Opcodes 7x..Bx: Accu-based 8-bit alu ops
 // Bottom 3 bits = reg/(HL) operand, next 3 bits ALU op. Order is ADD, ADC, SUB, SBC, AND, XOR, OR, CP
-int Cpu::executeInsn_7x_Bx(Byte opc)
+long Cpu::executeInsn_7x_Bx(Byte opc)
 {
     INSN_DBG_DECL();
 
@@ -296,7 +296,7 @@ int Cpu::executeInsn_7x_Bx(Byte opc)
                      "%s %s", aluopStrings[aluop], reg8Strings[operand]);
 }
 
-int Cpu::executeInsn_Cx_Fx(Byte opc)
+long Cpu::executeInsn_Cx_Fx(Byte opc)
 {
     INSN_DBG_DECL();
 
@@ -420,7 +420,7 @@ int Cpu::executeInsn_Cx_Fx(Byte opc)
     unreachable();
 }
 
-int Cpu::executeTwoByteInsn()
+long Cpu::executeTwoByteInsn()
 {
     INSN_DBG_DECL();
     Byte opc = bus->memRead8(regs.pc++);
