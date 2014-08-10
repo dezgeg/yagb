@@ -1,4 +1,3 @@
-#include "Gameboy.hpp"
 #include "Logger.hpp"
 #include "Rom.hpp"
 

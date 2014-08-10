@@ -1,8 +1,8 @@
 #include "Cpu.hpp"
-#include "Gameboy.hpp"
 #include "Utils.hpp"
 
 #include <string.h>
+#include <stdio.h>
 
 #define INSN_DBG(x) x
 

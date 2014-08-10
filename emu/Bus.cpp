@@ -1,5 +1,7 @@
 #include "Bus.hpp"
 #include "BusUtil.hpp"
+#include "Gpu.hpp"
+#include "Rom.hpp"
 #include "Utils.hpp"
 
 void Bus::memAccess(Word address, Byte* pData, bool isWrite)

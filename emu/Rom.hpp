@@ -4,7 +4,6 @@
 
 #include <string>
 
-class Gameboy;
 class Rom
 {
     Logger* log;

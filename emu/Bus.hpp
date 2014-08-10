@@ -1,8 +1,9 @@
 #pragma once
-#include "Gpu.hpp"
-#include "Logger.hpp"
 #include "Platform.hpp"
-#include "Rom.hpp"
+
+class Gpu;
+class Logger;
+class Rom;
 
 class Bus
 {
