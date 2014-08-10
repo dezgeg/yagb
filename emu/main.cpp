@@ -6,7 +6,7 @@
 
 int main()
 {
-    Logger log;
+    Logger log(false);
     Rom rom(&log, "test.bin");
     Gameboy gb(&log, &rom);
 
@@ -23,7 +23,7 @@ int main()
 
         for (long i = 0; i < ScreenHeight; i++) {
             for (long j = 0; j < ScreenWidth; j++)
-                putchar(framebuffer[ScreenHeight * i + j] + '0');
+                putchar(framebuffer[ScreenWidth * i + j] + '0');
             putchar('\n');
         }
         usleep(20000);

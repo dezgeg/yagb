@@ -34,7 +34,7 @@ static const char* const reg16AutodecStrings[] = {
 #define ldst8ExtraCycles(x) ((x) == 6 ? 4 : 0)
 
 #define LOAD8_AUTODEC(x) (bus->memRead8((x) == 2 ? regs.hl++ : (x) == 3 ? regs.hl-- : regs.words[x]))
-#define STORE8_AUTODEC(x, v) (bus->memWrite16((x) == 2 ? regs.hl++ : (x) == 3 ? regs.hl-- : regs.words[x], (v)))
+#define STORE8_AUTODEC(x, v) (bus->memWrite8((x) == 2 ? regs.hl++ : (x) == 3 ? regs.hl-- : regs.words[x], (v)))
 
 void Cpu::reset()
 {
