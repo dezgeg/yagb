@@ -23,5 +23,7 @@ public:
     {
     }
 
-    void run();
+    Gpu* getGpu() { return &gpu; }
+
+    void runFrame();
 };

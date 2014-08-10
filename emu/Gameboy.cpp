@@ -1,16 +1,15 @@
 #include "Gameboy.hpp"
 #include "Utils.hpp"
 
-void Gameboy::run()
+void Gameboy::runFrame()
 {
-    long frame = -1;
-    while (!cpu.isHalted()) {
+    long frame = gpu.getCurrentFrame();
+    log->warn("Start of frame %ld", frame);
+    while (true) {
         long newFrame = gpu.getCurrentFrame();
         log->setTimestamp(newFrame, gpu.getCurrentScanline(), currentCycle);
-        if (newFrame != frame) {
-            frame = newFrame;
-            log->warn("Start of frame %ld", frame);
-        }
+        if (newFrame != frame)
+            return;
 
         int cycleDelta = cpu.tick();
         gpu.tick(cycleDelta);

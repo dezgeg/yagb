@@ -16,8 +16,6 @@ enum {
     VramFetchThresholdCycles = 80 + 172,
     ScanlineCycles = 456,
 
-    ScreenWidth = 160,
-    ScreenHeight = 144,
     MaxScanline = 153,
 };
 
@@ -25,12 +23,14 @@ void Gpu::tick(long cycles)
 {
     cycleResidue += cycles;
     if (cycleResidue >= ScanlineCycles) {
-        renderScanline();
+        if (regs.ly < ScreenHeight)
+            renderScanline();
+
         // Assumes that cycle delta is not insanely large
         cycleResidue -= ScanlineCycles;
-        ly++;
-        if (ly > MaxScanline) {
-            ly = 0;
+        regs.ly++;
+        if (regs.ly > MaxScanline) {
+            regs.ly = 0;
             frame++;
         }
     }
@@ -38,14 +38,14 @@ void Gpu::tick(long cycles)
 
 void Gpu::renderScanline()
 {
-    unsigned bgY = ly + scy;
+    unsigned bgY = regs.ly + regs.scy;
     unsigned bgTileY = (bgY / 8) % 32;
     unsigned bgTileYBit = bgY % 8;
 
     Byte* bgTileBase = &vram[0x1800]; // TODO: LCDC bit
     Byte* bgPatternBase = &vram[0x0]; // TODO: LCDC bit
     for (unsigned i = 0; i < ScreenWidth; i++) {
-        unsigned bgX = i + scy;
+        unsigned bgX = i + regs.scx;
         unsigned bgTileX = (bgX / 8) % 32;
         unsigned bgTileXBit = bgX % 8;
 
@@ -53,35 +53,40 @@ void Gpu::renderScanline()
         Byte lsbs = bgPatternBase[16 * tileNum + 2 * bgTileYBit];
         Byte msbs = bgPatternBase[16 * tileNum + 2 * bgTileYBit + 1];
 
-        framebuffer[ly][i] = !!(lsbs & (1 << bgTileXBit)) | (!!(msbs & (1 << bgTileXBit)) << 1);
+        framebuffer[regs.ly][i] = !!(lsbs & (1 << bgTileXBit)) | (!!(msbs & (1 << bgTileXBit)) << 1);
     }
 }
 
 void Gpu::vramAccess(Word offset, Byte* pData, bool isWrite)
 {
+    if (isWrite)
+        log->warn("GPU VRAM write [0x%0x] = 0x%02x", 0x8000 + offset, *pData);
     BusUtil::arrayMemAccess(vram, offset, pData, isWrite);
 }
 
 void Gpu::registerAccess(Word reg, Byte* pData, bool isWrite)
 {
+    if (isWrite)
+        log->warn("GPU reg write [0x%0x] = 0x%02x", reg, *pData);
+
     switch (reg) {
-        case 0xff40: BusUtil::simpleRegAccess(&lcdc, pData, isWrite); return;
+        case 0xff40: BusUtil::simpleRegAccess(&regs.lcdc, pData, isWrite); return;
         // case 0xff41: stat - TODO
-        case 0xff42: BusUtil::simpleRegAccess(&scy, pData, isWrite); return;
-        case 0xff43: BusUtil::simpleRegAccess(&scx, pData, isWrite); return;
+        case 0xff42: BusUtil::simpleRegAccess(&regs.scy, pData, isWrite); return;
+        case 0xff43: BusUtil::simpleRegAccess(&regs.scx, pData, isWrite); return;
         case 0xff44: {
             // XXX: what happens on LY write?
             if (isWrite)
                 log->warn("GPU register write to LY");
             else
-                *pData = ly;
+                *pData = regs.ly;
             return;
         }
-        case 0xff45: BusUtil::simpleRegAccess(&lyc, pData, isWrite); return;
+        case 0xff45: BusUtil::simpleRegAccess(&regs.lyc, pData, isWrite); return;
         // case 0xff46: dma - TODO: must be handled by Bus!
-        case 0xff47: BusUtil::simpleRegAccess(&bgp, pData, isWrite); return;
-        case 0xff4a: BusUtil::simpleRegAccess(&wy, pData, isWrite); return;
-        case 0xff4b: BusUtil::simpleRegAccess(&wx, pData, isWrite); return;
+        case 0xff47: BusUtil::simpleRegAccess(&regs.bgp, pData, isWrite); return;
+        case 0xff4a: BusUtil::simpleRegAccess(&regs.wy, pData, isWrite); return;
+        case 0xff4b: BusUtil::simpleRegAccess(&regs.wx, pData, isWrite); return;
     }
     log->warn("Unhandled GPU register %s to register %04X", isWrite ? "write" : "read", reg);
 }
