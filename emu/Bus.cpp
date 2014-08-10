@@ -1,13 +1,18 @@
 #include "Bus.hpp"
+#include "BusUtil.hpp"
 
 void Bus::memAccess(Word address, Byte* pData, bool isWrite)
 {
     if (address <= 0x7fff)
         rom->memAccess(address, pData, isWrite);
+    else if (address <= 0x9fff)
+        gpu->vramAccess(address & 0x1fff, pData, isWrite);
     else if (address >= 0xc000 && address <= 0xfdff)
-        arrayMemAccess(ram, address & 0x1fff, pData, isWrite);
+        BusUtil::arrayMemAccess(ram, address & 0x1fff, pData, isWrite);
+    else if (address >= 0xff40 && address <= 0xff4b)
+        gpu->registerAccess(address, pData, isWrite);
     else if (address >= 0xff80 && address <= 0xfffe)
-        arrayMemAccess(hram, address - 0xff80, pData, isWrite);
+        BusUtil::arrayMemAccess(hram, address - 0xff80, pData, isWrite);
     else
         log->warn("Unhandled %s to address %04X", isWrite ? "write" : "read", address);
 }

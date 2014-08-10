@@ -1,5 +1,5 @@
 #pragma once
-
+#include "Gpu.hpp"
 #include "Logger.hpp"
 #include "Platform.hpp"
 #include "Rom.hpp"
@@ -8,6 +8,7 @@ class Bus
 {
     Logger* log;
     Rom* rom;
+    Gpu* gpu;
 
     Byte ram[8192];
     Byte hram[127];
@@ -15,9 +16,10 @@ class Bus
     void memAccess(Word address, Byte* pData, bool isWrite);
 
 public:
-    Bus(Logger* log, Rom* rom) :
+    Bus(Logger* log, Rom* rom, Gpu* gpu) :
         log(log),
-        rom(rom)
+        rom(rom),
+        gpu(gpu)
     {
     }
 
@@ -25,12 +27,4 @@ public:
     void memWrite8(Word address, Byte value);
     Word memRead16(Word address);
     void memWrite16(Word address, Word value);
-
-    static void arrayMemAccess(Byte* array, Word address, Byte* pData, bool isWrite)
-    {
-        if (isWrite)
-            array[address] = *pData;
-        else
-            *pData = array[address];
-    }
 };
