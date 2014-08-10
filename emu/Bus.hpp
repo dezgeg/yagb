@@ -25,4 +25,12 @@ public:
     void memWrite8(Word address, Byte value);
     Word memRead16(Word address);
     void memWrite16(Word address, Word value);
+
+    static void arrayMemAccess(Byte* array, Word address, Byte* pData, bool isWrite)
+    {
+        if (isWrite)
+            array[address] = *pData;
+        else
+            *pData = array[address];
+    }
 };
