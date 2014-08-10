@@ -6,7 +6,7 @@
 
 #define INSN_DBG(x) x
 
-#define INSN_DBG_TRACE(...) (log->logInsn(&_savedRegs, __VA_ARGS__))
+#define INSN_DONE(...) (log->logInsn(&_savedRegs, __VA_ARGS__), 0)
 
 #define INSN_DBG_DECL() Regs _savedRegs = regs; _savedRegs.pc -= 1
 
@@ -42,81 +42,71 @@ void Cpu::reset()
     interruptsEnabled = false;
 }
 
-void Cpu::tick()
+int Cpu::tick()
 {
     Byte opc = bus->memRead8(regs.pc++);
     switch (opc >> 6) {
-        case 0: executeInsn_0x_3x(opc); break;
-        case 1: executeInsn_4x_6x(opc); break;
-        case 2: executeInsn_7x_Bx(opc); break;
-        case 3: executeInsn_Cx_Fx(opc); break;
+        case 0: return executeInsn_0x_3x(opc);
+        case 1: return executeInsn_4x_6x(opc);
+        case 2: return executeInsn_7x_Bx(opc);
+        case 3: return executeInsn_Cx_Fx(opc);
     }
+    unreachable();
 }
 
-void Cpu::executeInsn_0x_3x(Byte opc)
+int Cpu::executeInsn_0x_3x(Byte opc)
 {
     INSN_DBG_DECL();
 
     // First, various special cases.
     switch (opc) {
         case 0x00: {
-            INSN_DBG_TRACE("NOP");
-            return;
+            return INSN_DONE("NOP");
         }
         case 0x10: {
             stopped = true;
-            INSN_DBG_TRACE("STOP");
-            return;
+            return INSN_DONE("STOP");
         }
         case 0x08: {
             Word addr = bus->memRead16(regs.pc);
             regs.pc += 2;
             bus->memWrite16(addr, regs.sp);
-            INSN_DBG_TRACE("LD (a16), SP");
-            return;
+            return INSN_DONE("LD (a16), SP");
         }
         case 0x07: {
             regs.a = doRotLeft(regs.a);
-            INSN_DBG_TRACE("RLCA");
-            return;
+            return INSN_DONE("RLCA");
         }
         case 0x17: {
             regs.a = doRotLeftWithCarry(regs.a);
-            INSN_DBG_TRACE("RLA");
-            return;
+            return INSN_DONE("RLA");
         }
         case 0x0f: {
             regs.a = doRotRight(regs.a);
-            INSN_DBG_TRACE("RRCA");
-            return;
+            return INSN_DONE("RRCA");
         }
         case 0x1f: {
             regs.a = doRotRightWithCarry(regs.a);
-            INSN_DBG_TRACE("RRA");
-            return;
+            return INSN_DONE("RRA");
         }
         case 0x27: {
-            INSN_DBG_TRACE("DAA");
+            return INSN_DONE("DAA");
             unreachable();
-            return;
         }
         case 0x37: {
             regs.flags.c = true;
             regs.flags.n = regs.flags.h = 0;
-            INSN_DBG_TRACE("SCF");
-            return;
+            return INSN_DONE("SCF");
         }
         case 0x2f: {
             regs.a = ~regs.a;
             regs.flags.n = regs.flags.h = 0;
-            INSN_DBG_TRACE("CPL");
-            return;
+            return INSN_DONE("CPL");
         }
         case 0x3f: {
             regs.flags.c = !regs.flags.c;
             regs.flags.n = regs.flags.h = 0;
-            INSN_DBG_TRACE("CCF");
-            return;
+            return INSN_DONE("CCF");
         }
     }
 
@@ -131,59 +121,49 @@ void Cpu::executeInsn_0x_3x(Byte opc)
             if (evalConditional(opc, buf, "JR"))
                 regs.pc += delta;
 
-            INSN_DBG_TRACE("%s r8", buf);
-            return;
+            return INSN_DONE("%s r8", buf);
         }
         case 0x1: {
             Word val = bus->memRead16(regs.pc);
             regs.pc += 2;
             regs.words[operand] = val;
-            INSN_DBG_TRACE("LD %s, d16", reg16SpStrings[operand]);
-            return;
+            return INSN_DONE("LD %s, d16", reg16SpStrings[operand]);
         }
         case 0x9: {
             regs.hl += regs.words[operand];
-            INSN_DBG_TRACE("ADD HL, %s", reg16SpStrings[operand]);
+            return INSN_DONE("ADD HL, %s", reg16SpStrings[operand]);
             // TODO: flags?
-            return;
         }
         case 0x2: {
             STORE8_AUTODEC(operand, regs.a);
-            INSN_DBG_TRACE("LD %s, A", reg16AutodecStrings[operand]);
-            return;
+            return INSN_DONE("LD %s, A", reg16AutodecStrings[operand]);
         }
         case 0xA: {
             regs.a = LOAD8_AUTODEC(operand);
-            INSN_DBG_TRACE("LD A, %s", reg16AutodecStrings[operand]);
-            return;
+            return INSN_DONE("LD A, %s", reg16AutodecStrings[operand]);
         }
         case 0x3: {
             regs.words[operand]++;
-            INSN_DBG_TRACE("INC %s", reg16SpStrings[operand]);
-            return;
+            return INSN_DONE("INC %s", reg16SpStrings[operand]);
         }
         case 0xB: {
             regs.words[operand]--;
-            INSN_DBG_TRACE("DEC %s", reg16SpStrings[operand]);
-            return;
+            return INSN_DONE("DEC %s", reg16SpStrings[operand]);
         }
         case 0x4: case 0xC: {
             Byte tmp = LOAD8(byteOperand);
             STORE8(byteOperand, doAddSub(tmp, 1, false, false, false));
-            INSN_DBG_TRACE("INC %s", reg8Strings[byteOperand]);
-            return;
+            return INSN_DONE("INC %s", reg8Strings[byteOperand]);
         }
         case 0x5: case 0xD: {
             Byte tmp = LOAD8(byteOperand);
             STORE8(byteOperand, doAddSub(tmp, 1, true, false, false));
-            INSN_DBG_TRACE("DEC %s", reg8Strings[byteOperand]);
-            return;
+            return INSN_DONE("DEC %s", reg8Strings[byteOperand]);
         }
         case 0x6: case 0xE: {
             Byte val = bus->memRead8(regs.pc++);
             STORE8(byteOperand, val);
-            INSN_DBG_TRACE("LD %s, d8", reg8Strings[byteOperand]);
-            return;
+            return INSN_DONE("LD %s, d8", reg8Strings[byteOperand]);
         }
     }
     unreachable();
@@ -191,23 +171,22 @@ void Cpu::executeInsn_0x_3x(Byte opc)
 
 // Opcodes 4x..6x: Moves between 8-bit regs / (HL)
 // Bottom 3 bits = source, next 3 bits destination. Order is: B C D E H L (HL) A
-void Cpu::executeInsn_4x_6x(Byte opc)
+int Cpu::executeInsn_4x_6x(Byte opc)
 {
     INSN_DBG_DECL();
 
     // Exception: opc 0x76 == LD (HL), (HL) is HALT instead
     if (opc == 0x76) {
-        INSN_DBG_TRACE("HALT");
         halted = true;
-        return;
+        return INSN_DONE("HALT");
     }
 
     int dest = (opc >> 3) & 0x7;
     int src = opc & 0x7;
-    INSN_DBG_TRACE("LD %s, %s", reg8Strings[dest], reg8Strings[src]);
 
     Byte val = LOAD8(src);
     STORE8(dest, val);
+    return INSN_DONE("LD %s, %s", reg8Strings[dest], reg8Strings[src]);
 }
 
 bool Cpu::evalConditional(Byte opc, char* outDescr, const char* opcodeStr)
@@ -298,7 +277,7 @@ Byte Cpu::doAluOp(int aluop, Byte lhs, Byte rhs)
 
 // Opcodes 7x..Bx: Accu-based 8-bit alu ops
 // Bottom 3 bits = reg/(HL) operand, next 3 bits ALU op. Order is ADD, ADC, SUB, SBC, AND, XOR, OR, CP
-void Cpu::executeInsn_7x_Bx(Byte opc)
+int Cpu::executeInsn_7x_Bx(Byte opc)
 {
     INSN_DBG_DECL();
 
@@ -306,86 +285,72 @@ void Cpu::executeInsn_7x_Bx(Byte opc)
     int aluop = (opc >> 3) & 0x7;
 
     regs.a = doAluOp(aluop, regs.a, LOAD8(operand));
-    INSN_DBG_TRACE("%s %s", aluopStrings[aluop], reg8Strings[operand]);
+    return INSN_DONE("%s %s", aluopStrings[aluop], reg8Strings[operand]);
 }
 
-void Cpu::executeInsn_Cx_Fx(Byte opc)
+int Cpu::executeInsn_Cx_Fx(Byte opc)
 {
     INSN_DBG_DECL();
 
     switch (opc) {
         case 0xE0: {
             bus->memWrite8(0xff00 | bus->memRead8(regs.pc++), regs.a);
-            INSN_DBG_TRACE("LDH (a8), A");
-            return;
+            return INSN_DONE("LDH (a8), A");
         }
         case 0xF0: {
             regs.a = bus->memRead8(0xff00 | bus->memRead8(regs.pc++));
-            INSN_DBG_TRACE("LDH A, (a8)");
-            return;
+            return INSN_DONE("LDH A, (a8)");
         }
         case 0xE8: {
             unreachable(); // TODO (affects flags)
-            INSN_DBG_TRACE("ADD SP, r8");
-            return;
+            return INSN_DONE("ADD SP, r8");
         }
         case 0xF8: {
             unreachable(); // TODO (affects flags)
-            INSN_DBG_TRACE("LD HL, SP+r8");
-            return;
+            return INSN_DONE("LD HL, SP+r8");
         }
         case 0xE9: {
             regs.pc = regs.hl;
-            INSN_DBG_TRACE("JP HL");
-            return;
+            return INSN_DONE("JP HL");
         }
         case 0xF9: {
             regs.sp = regs.hl;
-            INSN_DBG_TRACE("LD SP, HL");
-            return;
+            return INSN_DONE("LD SP, HL");
         }
         case 0xE2: {
             bus->memWrite8(0xff00 | regs.c, regs.a);
-            INSN_DBG_TRACE("LDH (C), A");
-            return;
+            return INSN_DONE("LDH (C), A");
         }
         case 0xF2: {
             regs.a = bus->memRead8(0xff00 | regs.c);
-            INSN_DBG_TRACE("LDH A, (C)");
-            return;
+            return INSN_DONE("LDH A, (C)");
         }
         case 0xEA: {
             bus->memWrite8(bus->memRead16(regs.pc), regs.a);
             regs.pc += 2;
-            INSN_DBG_TRACE("LDH (a16), A");
-            return;
+            return INSN_DONE("LDH (a16), A");
         }
         case 0xFA: {
             regs.a = bus->memRead8(bus->memRead16(regs.pc));
             regs.pc += 2;
-            INSN_DBG_TRACE("LDH A, (a16)");
-            return;
+            return INSN_DONE("LDH A, (a16)");
         }
         case 0xF3: {
             interruptsEnabled = false;
-            INSN_DBG_TRACE("DI");
-            return;
+            return INSN_DONE("DI");
         }
         case 0xCB: {
-            executeTwoByteInsn();
-            return;
+            return executeTwoByteInsn();
         }
         case 0xFB: {
             interruptsEnabled = true;
-            INSN_DBG_TRACE("EI");
-            return;
+            return INSN_DONE("EI");
         }
 
         case 0xD3: case 0xDB: case 0xDD:
         case 0xE3: case 0xE4: case 0xEB: case 0xEC: case 0xED:
         case 0xF4: case 0xFC: case 0xFD:
-            INSN_DBG_TRACE("UNDEF");
-            return;
+            return INSN_DONE("UNDEF");
     }
 
     Byte operand = (opc >> 4) & 0x3;
@@ -397,8 +362,7 @@ void Cpu::executeInsn_Cx_Fx(Byte opc)
                 regs.pc = bus->memRead16(regs.sp);
                 regs.sp += 2;
             }
-            INSN_DBG_TRACE("%s", buf);
-            return;
+            return INSN_DONE("%s", buf);
         }
         case 0x1: {
             Word value = bus->memRead16(regs.sp);
@@ -409,13 +373,11 @@ void Cpu::executeInsn_Cx_Fx(Byte opc)
             } else {
                 regs.words[operand] = value;
             }
-            INSN_DBG_TRACE("POP %s", reg16AfStrings[operand]);
-            return;
+            return INSN_DONE("POP %s", reg16AfStrings[operand]);
         }
         case 0x3:
         case 0x2: case 0xA: {
             unreachable();
-            return;
         }
         case 0xD:
         case 0x4: case 0xC: {
@@ -428,29 +390,25 @@ void Cpu::executeInsn_Cx_Fx(Byte opc)
                 bus->memWrite16(regs.sp, regs.pc);
                 regs.pc = addr;
             }
-            INSN_DBG_TRACE("%s a16", buf);
-            return;
+            return INSN_DONE("%s a16", buf);
         }
         case 0x5: {
             regs.sp -= 2;
             bus->memWrite16(regs.sp, operand == 3 ? regs.af : regs.words[operand]);
-            INSN_DBG_TRACE("PUSH %s", reg16AfStrings[operand]);
-            return;
+            return INSN_DONE("PUSH %s", reg16AfStrings[operand]);
         }
         case 0x6: case 0xE: {
             regs.a = doAluOp(wideOperand, regs.a, bus->memRead8(regs.pc++));
-            INSN_DBG_TRACE("%s d8", aluopStrings[wideOperand]);
-            return;
+            return INSN_DONE("%s d8", aluopStrings[wideOperand]);
         }
         case 0x7: case 0xF: {
             unreachable();
-            return;
         }
     }
     unreachable();
 }
 
-void Cpu::executeTwoByteInsn()
+int Cpu::executeTwoByteInsn()
 {
     INSN_DBG_DECL();
     Byte opc = bus->memRead8(regs.pc++);
@@ -493,7 +451,7 @@ void Cpu::executeTwoByteInsn()
         STORE8(operand, value);
 
     if (bitIndex < 0)
-        INSN_DBG_TRACE("%s %s", description, reg8Strings[operand]); // FIXME
+        return INSN_DONE("%s %s", description, reg8Strings[operand]); // FIXME
     else
-        INSN_DBG_TRACE("%s %d, %s", description, bitIndex, reg8Strings[operand]);
+        return INSN_DONE("%s %d, %s", description, bitIndex, reg8Strings[operand]);
 }
