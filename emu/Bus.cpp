@@ -15,7 +15,7 @@ void Bus::memAccess(Word address, Byte* pData, bool isWrite)
     else if (address >= 0xff40 && address <= 0xff4b)
         gpu->registerAccess(address, pData, isWrite);
     else if (address == 0xff50)
-        unreachable(); // BootRom disable
+        exit(0); // BootRom disable
     else if (address >= 0xff80 && address <= 0xfffe)
         BusUtil::arrayMemAccess(hram, address - 0xff80, pData, isWrite);
     else
