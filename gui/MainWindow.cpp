@@ -54,7 +54,7 @@ void MainWindow::setupUi()
         ui->irqsFormLayout->addWidget(pendingBtn, i, 2);
     }
 
-    qtFramebuffer.fill(Qt::black);
+    qtFramebuffer.fill(Qt::white);
     QGraphicsScene* scene = new QGraphicsScene(this);
     fbSceneItem = scene->addPixmap(qtFramebuffer);
     scene->setSceneRect(qtFramebuffer.rect());
@@ -80,10 +80,10 @@ MainWindow::MainWindow(QWidget *parent) :
 void MainWindow::tick()
 {
     static const QVector<QRgb> monochromeToRgb = {
-        qRgb(0, 0, 0),
-        qRgb(255/3, 255/3, 255/3),
-        qRgb(2*255/3, 2*255/3, 2*255/3),
         qRgb(255, 255, 255),
+        qRgb(2*255/3, 2*255/3, 2*255/3),
+        qRgb(255/3, 255/3, 255/3),
+        qRgb(0, 0, 0),
     };
 
     gb.runFrame();

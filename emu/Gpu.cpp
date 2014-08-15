@@ -53,8 +53,9 @@ void Gpu::renderScanline()
         Byte lsbs = bgPatternBase[16 * tileNum + 2 * bgTileYBit];
         Byte msbs = bgPatternBase[16 * tileNum + 2 * bgTileYBit + 1];
 
-        framebuffer[regs.ly][i] = !!(lsbs & (0x80 >> bgTileXBit)) |
-                                  ((!!(msbs & (0x80 >> bgTileXBit))) << 1);
+        unsigned colorIndex = !!(lsbs & (0x80 >> bgTileXBit)) |
+                              ((!!(msbs & (0x80 >> bgTileXBit))) << 1);
+        framebuffer[regs.ly][i] = (regs.bgp >> colorIndex * 2) & 0x3;
     }
 }
 
