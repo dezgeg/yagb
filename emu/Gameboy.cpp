@@ -4,7 +4,6 @@
 void Gameboy::runFrame()
 {
     long frame = gpu.getCurrentFrame();
-    log->warn("Start of frame %ld", frame);
     while (true) {
         long newFrame = gpu.getCurrentFrame();
         log->setTimestamp(newFrame, gpu.getCurrentScanline(), currentCycle);

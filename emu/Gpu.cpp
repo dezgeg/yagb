@@ -61,15 +61,19 @@ void Gpu::renderScanline()
 
 void Gpu::vramAccess(Word offset, Byte* pData, bool isWrite)
 {
+#if 0
     if (isWrite)
         log->warn("GPU VRAM write [0x%0x] = 0x%02x", 0x8000 + offset, *pData);
+#endif
     BusUtil::arrayMemAccess(vram, offset, pData, isWrite);
 }
 
 void Gpu::registerAccess(Word reg, Byte* pData, bool isWrite)
 {
+#if 0
     if (isWrite)
         log->warn("GPU reg write [0x%0x] = 0x%02x", reg, *pData);
+#endif
 
     switch (reg) {
         case 0xff40: BusUtil::simpleRegAccess(&regs.lcdc, pData, isWrite); return;
