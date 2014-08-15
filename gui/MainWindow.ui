@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>880</width>
+    <height>573</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>YAGB</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QVBoxLayout" name="outerLayout">
+    <item>
+     <widget class="QWidget" name="topPane" native="true">
+      <layout class="QHBoxLayout" name="topPaneLayout">
+       <item>
+        <widget class="QGraphicsView" name="lcdGraphicsView">
+         <property name="minimumSize">
+          <size>
+           <width>320</width>
+           <height>288</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>320</width>
+           <height>288</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="topPaneColumn1Container" native="true">
+         <layout class="QVBoxLayout" name="topPaneColumn1Layout">
+          <item>
+           <widget class="QGroupBox" name="cpuRegsGroupbox">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="title">
+             <string>CPU</string>
+            </property>
+            <layout class="QFormLayout" name="cpuRegsFormLayout">
+             <item row="0" column="0">
+              <widget class="QLabel" name="cpuRegsAfLabel">
+               <property name="text">
+                <string>AF</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLineEdit" name="cpuRegsAf"/>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="cpuRegsBcLabel">
+               <property name="text">
+                <string>BC</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLineEdit" name="cpuRegsBc"/>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="cpuRegsDeLabel">
+               <property name="text">
+                <string>DE</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLineEdit" name="cpuRegsDe"/>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="cpuRegsHlLabel">
+               <property name="text">
+                <string>HL</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLineEdit" name="cpuRegsHl"/>
+             </item>
+             <item row="4" column="0">
+              <widget class="QLabel" name="cpuRegsSpLabel">
+               <property name="text">
+                <string>SP</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <widget class="QLineEdit" name="cpuRegsSp"/>
+             </item>
+             <item row="5" column="0">
+              <widget class="QLabel" name="cpuRegsPcLabel">
+               <property name="text">
+                <string>PC</string>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="1">
+              <widget class="QLineEdit" name="cpuRegsPc"/>
+             </item>
+             <item row="6" column="0">
+              <widget class="QLabel" name="cpuRegsFlagsLabel">
+               <property name="text">
+                <string>Flags</string>
+               </property>
+              </widget>
+             </item>
+             <item row="6" column="1">
+              <widget class="QWidget" name="cpuRegsFlagsContainer" native="true">
+               <layout class="QHBoxLayout" name="cpuRegsFlagsLayout">
+                <item>
+                 <widget class="QPushButton" name="cpuFlagZ">
+                  <property name="text">
+                   <string>Z</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="cpuFlagC">
+                  <property name="text">
+                   <string>N</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="cpuFlagH">
+                  <property name="text">
+                   <string>H</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="cpuFlagN">
+                  <property name="text">
+                   <string>C</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="irqsGroupbox">
+            <property name="title">
+             <string>IRQ</string>
+            </property>
+            <layout class="QGridLayout" name="irqsFormLayout"/>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="lcdRegsGroupbox">
+         <property name="title">
+          <string>LCD</string>
+         </property>
+         <layout class="QFormLayout" name="lcdRegsFormLayout">
+          <property name="fieldGrowthPolicy">
+           <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+          </property>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPlainTextEdit" name="logTextarea"/>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

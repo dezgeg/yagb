@@ -1,3 +1,4 @@
 Makefile.qt
 /out
 /yagb
+/*.user*

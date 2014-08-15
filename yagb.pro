@@ -1,9 +1,10 @@
 CONFIG += qt debug silent
-QT += gui widgets
+QT += core gui widgets
 QMAKE_CXXFLAGS += -std=c++0x -O0 -gdwarf-2 -Wall -Wextra -Woverloaded-virtual -Werror -Wno-unused-parameter -Wno-unknown-pragmas
 
-HEADERS += emu/*.hpp
+HEADERS += gui/*.hpp emu/*.hpp
 SOURCES += gui/*.cpp emu/*.cpp
+FORMS += gui/*.ui
 
 release:OBJECTS_DIR = out/opt/
 release:MOC_DIR = out/opt/.moc

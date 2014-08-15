@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-int main()
+int main2()
 {
     Logger log(false);
     Rom rom(&log, "test.bin");
@@ -29,4 +29,5 @@ int main()
         usleep(20000);
 #endif
     }
+    return 0;
 }
