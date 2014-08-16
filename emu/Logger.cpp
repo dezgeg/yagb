@@ -11,7 +11,8 @@ void Logger::logInsn(Bus* bus, Regs* regs, int cycles, Word newPC, const char* f
         return;
 
     char hexdumpBuf[sizeof("01 02 03")];
-    unsigned insnCount = newPC - regs->pc;
+    unsigned insnCount = (Word)(newPC - regs->pc);
+    assert(insnCount <= 3);
     for (unsigned i = 0; i < insnCount; i++)
         sprintf(&hexdumpBuf[i * 3], "%02X ", bus->memRead8(regs->pc + i));
     hexdumpBuf[3 * insnCount - 1] = 0;
