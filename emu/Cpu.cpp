@@ -103,8 +103,8 @@ long Cpu::executeInsn_0x_3x(Byte opc)
             return INSN_DONE(4, "RRA");
         }
         case 0x27: {
+            // TODO, just get the instruction test to run
             return INSN_DONE(4, "DAA");
-            unreachable();
         }
         case 0x37: {
             regs.flags.c = true;
@@ -335,7 +335,9 @@ long Cpu::executeInsn_Cx_Fx(Byte opc)
             return INSN_DONE(16, "ADD SP, r8");
         }
         case 0xF8: {
-            unreachable(); // TODO (affects flags)
+            // TODO: not sure about these flags either
+            Byte tmp = bus->memRead8(bus->memRead8(regs.pc++));
+            regs.hl = doAdd16(regs.sp, (Word)(SByte)tmp);
             return INSN_DONE(12, "LD HL, SP+r8");
         }
         case 0xE9: {
