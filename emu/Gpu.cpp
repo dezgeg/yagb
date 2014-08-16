@@ -70,8 +70,8 @@ void Gpu::renderScanline()
     unsigned bgTileY = (bgY / 8) % 32;
     unsigned bgTileYBit = bgY % 8;
 
-    Byte* bgTileBase = regs.bgTileBaseSelect ? &vram[0x1800] : &vram[0x1c00];
-    Byte* bgPatternBase = regs.bgPatternBaseSelect ? &vram[0x800]: &vram[0x0];
+    Byte* bgTileBase = regs.bgTileBaseSelect ? &vram[0x1c00] : &vram[0x1800];    // Bit 3
+    Byte* bgPatternBase = regs.bgPatternBaseSelect ? &vram[0x0]: &vram[0x1000];  // Bit 4
     for (unsigned i = 0; i < ScreenWidth; i++) {
         if (!regs.lcdEnabled || !regs.bgEnabled) {
             framebuffer[regs.ly][i] = 0;
@@ -83,8 +83,9 @@ void Gpu::renderScanline()
         unsigned bgTileXBit = bgX % 8;
 
         Byte tileNum = bgTileBase[bgTileY * 32 + bgTileX];
-        Byte lsbs = bgPatternBase[16 * tileNum + 2 * bgTileYBit];
-        Byte msbs = bgPatternBase[16 * tileNum + 2 * bgTileYBit + 1];
+        long tileOff = regs.bgPatternBaseSelect ? (long)tileNum : (long)(SByte)tileNum;
+        Byte lsbs = bgPatternBase[16 * tileOff + 2 * bgTileYBit];
+        Byte msbs = bgPatternBase[16 * tileOff + 2 * bgTileYBit + 1];
 
         unsigned colorIndex = !!(lsbs & (0x80 >> bgTileXBit)) |
                               ((!!(msbs & (0x80 >> bgTileXBit))) << 1);
