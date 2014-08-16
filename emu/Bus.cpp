@@ -22,6 +22,14 @@ static const Byte bootrom[] =
     "\x21\x04\x01\x11\xa8\x00\x1a\x13\xbe\x20\xfe\x23\x7d\xfe\x34\x20"
     "\xf5\x06\x19\x78\x86\x23\x05\x20\xfb\x86\x20\xfe\x3e\x01\xe0\x50";
 
+void Bus::joypadAccess(Byte* pData, bool isWrite)
+{
+    if (isWrite)
+        joypadLatches = *pData >> 4;
+    else
+        *pData = 0x0f; // TODO: simulate no keys pressed
+}
+
 void Bus::memAccess(Word address, Byte* pData, bool isWrite)
 {
     if (address <= 0xff) {
@@ -31,14 +39,18 @@ void Bus::memAccess(Word address, Byte* pData, bool isWrite)
             else
                 BusUtil::arrayMemAccess(const_cast<Byte*>(bootrom), address, pData, false);
         } else {
-            rom->memAccess(address, pData, isWrite);
+            rom->cartRomAccess(address, pData, isWrite);
         }
     } else if (address <= 0x7fff)
-        rom->memAccess(address, pData, isWrite);
+        rom->cartRomAccess(address, pData, isWrite);
     else if (address <= 0x9fff)
         gpu->vramAccess(address & 0x1fff, pData, isWrite);
+    else if (address >= 0xa000 && address <= 0xbfff)
+        rom->cartRamAccess(address & 0x1fff, pData, isWrite);
     else if (address >= 0xc000 && address <= 0xfdff)
         BusUtil::arrayMemAccess(ram, address & 0x1fff, pData, isWrite);
+    else if (address == 0xff00)
+        joypadAccess(pData, isWrite);
     else if (address >= 0xff40 && address <= 0xff4b)
         gpu->registerAccess(address, pData, isWrite);
     else if (address == 0xff50)

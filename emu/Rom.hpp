@@ -7,10 +7,12 @@
 class Rom
 {
     Logger* log;
-    std::string buf;
+    std::string romData;
+    Byte ramData[8192];
 
 public:
     Rom(Logger* log, const char* fileName);
 
-    void memAccess(Word address, Byte* pData, bool isWrite);
+    void cartRomAccess(Word address, Byte* pData, bool isWrite);
+    void cartRamAccess(Word address, Byte* pData, bool isWrite);
 };

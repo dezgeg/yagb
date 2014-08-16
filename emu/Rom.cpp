@@ -1,7 +1,9 @@
+#include "BusUtil.hpp"
 #include "Logger.hpp"
 #include "Rom.hpp"
 
 #include <fstream>
+#include <cstring>
 
 Rom::Rom(Logger* log, const char* fileName) :
     log(log)
@@ -12,17 +14,24 @@ Rom::Rom(Logger* log, const char* fileName) :
         throw "No such file";
 
     size_t sz = stream.tellg();
-    buf.resize(sz);
+    romData.resize(sz);
     stream.seekg(0, std::ios::beg);
-    stream.read(&buf[0], sz);
+    stream.read(&romData[0], sz);
+
+    std::memset(ramData, 0, sizeof(ramData));
 }
 
-void Rom::memAccess(Word address, Byte* pData, bool isWrite)
+void Rom::cartRomAccess(Word address, Byte* pData, bool isWrite)
 {
     if (isWrite) {
-        log->warn("Write to ROM");
+        log->warn("Write to ROM address 0x%04x", address);
         return;
     }
 
-    *pData = address < buf.size() ? buf[address] : 0;
+    *pData = address < romData.size() ? romData[address] : 0;
+}
+
+void Rom::cartRamAccess(Word address, Byte* pData, bool isWrite)
+{
+    BusUtil::arrayMemAccess(ramData, address, pData, isWrite);
 }
