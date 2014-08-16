@@ -25,6 +25,7 @@ class Bus
 
     void joypadAccess(Byte* pData, bool isWrite);
     void memAccess(Word address, Byte* pData, bool isWrite);
+    void disableBootrom();
 
 public:
     Bus(Logger* log, Rom* rom, Gpu* gpu) :

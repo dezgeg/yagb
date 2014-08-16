@@ -23,6 +23,11 @@ static const Byte bootrom[] =
     "\x21\x04\x01\x11\xa8\x00\x1a\x13\xbe\x20\xfe\x23\x7d\xfe\x34\x20"
     "\xf5\x06\x19\x78\x86\x23\x05\x20\xfb\x86\x20\xfe\x3e\x01\xe0\x50";
 
+void Bus::disableBootrom()
+{
+    bootromEnabled = false;
+}
+
 void Bus::joypadAccess(Byte* pData, bool isWrite)
 {
     if (isWrite)
@@ -59,7 +64,7 @@ void Bus::memAccess(Word address, Byte* pData, bool isWrite)
     else if (address >= 0xff40 && address <= 0xff4b)
         gpu->registerAccess(address, pData, isWrite);
     else if (address == 0xff50)
-        bootromEnabled = false;
+        disableBootrom();
     else if (address >= 0xff80 && address <= 0xfffe)
         BusUtil::arrayMemAccess(hram, address - 0xff80, pData, isWrite);
     else if (address == 0xffff)
