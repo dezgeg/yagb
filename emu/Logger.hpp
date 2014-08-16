@@ -24,5 +24,6 @@ public:
     }
 
     void logInsn(Bus* bus, Regs* regs, int cycles, Word newPC, const char* fmt, ...);
+    void logMemoryAccess(Word addr, Byte data, bool isWrite);
     void warn(const char* fmt, ...);
 };

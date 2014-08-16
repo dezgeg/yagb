@@ -75,6 +75,9 @@ void Bus::memAccess(Word address, Byte* pData, bool isWrite)
         else
             log->warn("Unhandled read from address 0x%04X", address);
     }
+
+    if (!bootromEnabled)
+        log->logMemoryAccess(address, *pData, isWrite);
 }
 
 Byte Bus::memRead8(Word address)

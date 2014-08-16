@@ -31,6 +31,13 @@ void Logger::logInsn(Bus* bus, Regs* regs, int cycles, Word newPC, const char* f
            cycles);
 }
 
+void Logger::logMemoryAccess(Word addr, Byte data, bool isWrite)
+{
+    if (!insnLoggingEnabled)
+        return;
+    printf("[mem %s] 0x%04x: %02x\n", isWrite ? "write" : "read", addr, data);
+}
+
 void Logger::warn(const char* fmt, ...)
 {
     va_list ap;
