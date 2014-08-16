@@ -9,4 +9,6 @@ enum Irq
     Irq_Timer,
     Irq_Serial,
     Irq_Joystick,
+
+    Irq_Max,
 };

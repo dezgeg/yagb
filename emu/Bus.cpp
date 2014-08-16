@@ -106,6 +106,11 @@ void Bus::ackIrq(Irq irq)
     irqsPending &= ~(1 << irq);
 }
 
+Byte Bus::getEnabledIrqs()
+{
+    return irqsEnabled;
+}
+
 Byte Bus::getPendingIrqs()
 {
     return irqsPending & irqsEnabled;

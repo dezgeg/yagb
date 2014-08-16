@@ -47,5 +47,6 @@ public:
 
     void raiseIrq(Irq irq);
     void ackIrq(Irq irq);
+    Byte getEnabledIrqs();
     Byte getPendingIrqs();
 };

@@ -40,13 +40,12 @@ void Cpu::reset()
     regs = Regs();
     halted = false;
     stopped = false;
-    interruptsEnabled = false;
 }
 
 long Cpu::tick()
 {
     Byte irqs = bus->getPendingIrqs();
-    if (interruptsEnabled && irqs) {
+    if (regs.irqsEnabled && irqs) {
         int irq = ffs(irqs ^ (irqs & (irqs - 1))) - 1;
         bus->ackIrq((Irq)irq);
         log->warn("Handling IRQ %d", irq);
@@ -54,7 +53,7 @@ long Cpu::tick()
         regs.sp -= 2;
         bus->memWrite16(regs.sp, regs.pc);
         regs.pc = 0x40 + irq * 0x8;
-        interruptsEnabled = false;
+        regs.irqsEnabled = false;
         return 4; // TODO: what's the delay?
     }
 
@@ -366,14 +365,14 @@ long Cpu::executeInsn_Cx_Fx(Byte opc)
             return INSN_DONE(16, "LDH A, (a16)");
         }
         case 0xF3: {
-            interruptsEnabled = false;
+            regs.irqsEnabled = false;
             return INSN_DONE(4, "DI");
         }
         case 0xCB: {
             return executeTwoByteInsn();
         }
         case 0xFB: {
-            interruptsEnabled = true;
+            regs.irqsEnabled = true;
             return INSN_DONE(4, "EI");
         }
 

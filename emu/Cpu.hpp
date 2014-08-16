@@ -21,6 +21,7 @@ union Regs
     } flags;
     Byte bytes[8];
     Word words[6];
+    Byte irqsEnabled : 1;
 };
 
 #if __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__
@@ -36,7 +37,6 @@ class Cpu
     Regs regs;
     bool halted;
     bool stopped;
-    bool interruptsEnabled;
 
     bool evalConditional(Byte opc, char* outDescr, const char* opcodeStr);
 

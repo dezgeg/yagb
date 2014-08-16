@@ -1,8 +1,10 @@
 #include "emu/Utils.hpp"
 #include "gui/HexTextField.hpp"
 #include "gui/MainWindow.hpp"
+#include "gui/OneCharacterButton.hpp"
 #include "ui_MainWindow.h"
 
+#include <QCheckBox>
 #include <QImage>
 #include <QLabel>
 #include <QLineEdit>
@@ -26,8 +28,8 @@ static const pair<unsigned, QString> lcdRegs[] = {
 };
 
 static const QString irqNames[] = {
-    QStringLiteral("V-Blank"),
-    QStringLiteral("LCD STAT"),
+    QStringLiteral("VBlank"),
+    QStringLiteral("LcdStat"),
     QStringLiteral("Timer"),
     QStringLiteral("Serial"),
     QStringLiteral("Joypad"),
@@ -46,14 +48,16 @@ void MainWindow::fillDynamicRegisterTables()
         ui->lcdRegsFormLayout->setWidget(i, QFormLayout::FieldRole, edit);
     }
 
+    ui->irqsFormLayout->addWidget(new QLabel("Enb"), 0, 1);
+    ui->irqsFormLayout->addWidget(new QLabel("Pend"), 0, 2);
     for (unsigned i = 0; i < arraySize(irqNames); i++) {
-        ui->irqsFormLayout->addWidget(new QLabel(irqNames[i]), i, 0);
+        ui->irqsFormLayout->addWidget(new QLabel(irqNames[i]), i + 1, 0);
 
-        QPushButton* enabledBtn = new QPushButton(QStringLiteral("Enabled"));
-        ui->irqsFormLayout->addWidget(enabledBtn, i, 1);
+        QCheckBox* enabledBtn = new QCheckBox();
+        ui->irqsFormLayout->addWidget(enabledBtn, i + 1, 1);
 
-        QPushButton* pendingBtn = new QPushButton(QStringLiteral("Pending"));
-        ui->irqsFormLayout->addWidget(pendingBtn, i, 2);
+        QCheckBox* pendingBtn = new QCheckBox();
+        ui->irqsFormLayout->addWidget(pendingBtn, i + 1, 2);
     }
 }
 
@@ -128,6 +132,18 @@ void MainWindow::updateRegisters()
         edit->setHex(bus->memRead8(reg));
     }
 
+    Byte irqsEnabled = bus->getEnabledIrqs();
+    Byte irqsPending = bus->getPendingIrqs();
+    for (unsigned i = 0; i < Irq_Max; i++) {
+        unsigned mask = (1 << i);
+        QAbstractButton* enb = (QAbstractButton*)ui->irqsFormLayout->itemAtPosition(i + 1, 1)->widget();
+        QAbstractButton* pend = (QAbstractButton*)ui->irqsFormLayout->itemAtPosition(i + 1, 2)->widget();
+
+        enb->setChecked(irqsEnabled & mask);
+        pend->setEnabled(irqsEnabled & mask);
+        pend->setChecked(irqsPending & mask);
+    }
+
     Regs* regs = gb.getCpu()->getRegs();
     ui->cpuRegsAf->setHex(regs->af);
     ui->cpuRegsBc->setHex(regs->bc);
@@ -135,6 +151,11 @@ void MainWindow::updateRegisters()
     ui->cpuRegsHl->setHex(regs->hl);
     ui->cpuRegsSp->setHex(regs->sp);
     ui->cpuRegsPc->setHex(regs->pc);
+    ui->cpuFlagZ->setChecked(regs->flags.z);
+    ui->cpuFlagN->setChecked(regs->flags.n);
+    ui->cpuFlagH->setChecked(regs->flags.h);
+    ui->cpuFlagC->setChecked(regs->flags.c);
+    ui->cpuFlagIrqs->setChecked(regs->irqsEnabled);
 }
 
 MainWindow::~MainWindow()
