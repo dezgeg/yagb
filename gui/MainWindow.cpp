@@ -79,7 +79,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->lcdWidget, SIGNAL(paintRequested(QPaintEvent*)), this, SLOT(lcdPaintRequested(QPaintEvent*)));
 
     connect(frameTimer, SIGNAL(timeout()), this, SLOT(timerTick()));
-    frameTimer->start(17);
+    frameTimer->start(4);
 
     ui->lcdWidget->setFocus();
     updateRegisters();
