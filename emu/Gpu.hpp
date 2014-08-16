@@ -26,10 +26,10 @@ class Gpu
             Byte lcdc;
             struct {
                 Byte lcdEnabled : 1;
-                Byte winTileMapSelect : 1;
+                Byte winPatternBaseSelect : 1;
                 Byte winEnabled : 1;
-                Byte bgTileDataSelect : 1;
-                Byte bgTileMapSelect : 1;
+                Byte bgTileBaseSelect : 1;
+                Byte bgPatternBaseSelect : 1;
                 Byte objSizeLarge : 1;
                 Byte objEnabled : 1;
                 Byte bgEnabled : 1;

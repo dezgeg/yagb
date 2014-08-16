@@ -1,6 +1,7 @@
 #pragma once
 
 union Regs;
+class Bus;
 class Logger
 {
     bool insnLoggingEnabled;
@@ -22,6 +23,6 @@ public:
         currentScanline = scanline;
     }
 
-    void logInsn(Regs* regs, int cycles, const char* fmt, ...);
+    void logInsn(Bus* bus, Regs* regs, int cycles, Word newPC, const char* fmt, ...);
     void warn(const char* fmt, ...);
 };

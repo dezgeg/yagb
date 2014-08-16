@@ -5,10 +5,9 @@
 #include <stdio.h>
 
 #define INSN_DBG(x) x
-
-#define INSN_DONE(cycles, ...) (log->logInsn(&_savedRegs, cycles, __VA_ARGS__), cycles)
-
-#define INSN_DBG_DECL() Regs _savedRegs = regs; _savedRegs.pc -= 1
+#define INSN_DBG_DECL() bool _branched = false; Word branchPc = 0; Regs _savedRegs = regs; _savedRegs.pc -= 1
+#define INSN_BRANCH(newPc) (_branched = true, branchPc = regs.pc, regs.pc = (newPc))
+#define INSN_DONE(cycles, ...) (log->logInsn(bus, &_savedRegs, cycles, _branched ? branchPc : regs.pc, __VA_ARGS__), cycles)
 
 static const char* const reg8Strings[] = {
     "B", "C", "D", "E", "H", "L", "(HL)", "A",
@@ -122,7 +121,7 @@ long Cpu::executeInsn_0x_3x(Byte opc)
             int delta = (SByte)bus->memRead8(regs.pc++);
             bool taken = evalConditional(opc, buf, "JR");
             if (taken)
-                regs.pc += delta;
+                INSN_BRANCH(regs.pc + delta);
 
             return INSN_DONE(taken ? 12 : 8, "%s r8", buf);
         }
@@ -328,7 +327,7 @@ long Cpu::executeInsn_Cx_Fx(Byte opc)
             return INSN_DONE(12, "LD HL, SP+r8");
         }
         case 0xE9: {
-            regs.pc = regs.hl;
+            INSN_BRANCH(regs.hl);
             return INSN_DONE(4, "JP HL");
         }
         case 0xF9: {
@@ -379,7 +378,7 @@ long Cpu::executeInsn_Cx_Fx(Byte opc)
             bool unconditional = opc & 1;
             bool taken = evalConditional(opc, buf, "RET");
             if (taken) {
-                regs.pc = bus->memRead16(regs.sp);
+                INSN_BRANCH(bus->memRead16(regs.sp));
                 regs.sp += 2;
             }
             return INSN_DONE(unconditional ? 16 : taken ? 20 : 8, "%s", buf);
@@ -402,7 +401,7 @@ long Cpu::executeInsn_Cx_Fx(Byte opc)
 
             char buf[16];
             if(evalConditional(opc, buf, "JP"))
-                regs.pc = addr;
+                INSN_BRANCH(addr);
             return INSN_DONE(16, "%s a16", buf);
         }
         case 0xD:
@@ -415,7 +414,7 @@ long Cpu::executeInsn_Cx_Fx(Byte opc)
             if (taken) {
                 regs.sp -= 2;
                 bus->memWrite16(regs.sp, regs.pc);
-                regs.pc = addr;
+                INSN_BRANCH(addr);
             }
             return INSN_DONE(taken ? 24 : 12, "%s a16", buf);
         }
@@ -431,7 +430,7 @@ long Cpu::executeInsn_Cx_Fx(Byte opc)
         case 0x7: case 0xF: {
             regs.sp -= 2;
             bus->memWrite16(regs.sp, regs.pc);
-            regs.pc = wideOperand * 0x10;
+            INSN_BRANCH(wideOperand * 0x10);
             return INSN_DONE(16, "RST 0x%02x", regs.pc);
         }
     }
