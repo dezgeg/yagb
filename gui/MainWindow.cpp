@@ -83,14 +83,18 @@ void MainWindow::timerTick()
 {
     gb.runFrame();
     ui->lcdWidget->repaint();
+    if (gb.getGpu()->getCurrentFrame() % 60 == 0)
+        updateRegisters();
 }
 
 void MainWindow::lcdFocusChanged(bool in)
 {
-    if (in)
+    if (in) {
         frameTimer->start();
-    else
+    } else {
         frameTimer->stop();
+        updateRegisters();
+    }
 }
 
 void MainWindow::lcdPaintRequested(QPaintEvent*)
@@ -111,6 +115,16 @@ void MainWindow::lcdPaintRequested(QPaintEvent*)
     painter.begin(ui->lcdWidget);
     painter.drawImage(QRectF(QPointF(1, 1), QSizeF(ScreenWidth*2, ScreenHeight*2)), image);
     painter.end();
+}
+
+void MainWindow::updateRegisters()
+{
+    Bus* bus = gb.getBus();
+    for (unsigned i = 0; i < arraySize(lcdRegs); i++) {
+        QLineEdit* edit = static_cast<QLineEdit*>(ui->lcdRegsFormLayout->itemAt(i, QFormLayout::FieldRole)->widget());
+        unsigned reg = lcdRegs[i].first;
+        edit->setText(QString().sprintf("%02X", bus->memRead8(reg)));
+    }
 }
 
 MainWindow::~MainWindow()

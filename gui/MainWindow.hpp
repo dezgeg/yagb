@@ -28,6 +28,7 @@ private:
     std::unique_ptr<Ui::MainWindow> ui;
 
     void fillDynamicRegisterTables();
+    void updateRegisters();
 
 private slots:
     void timerTick();

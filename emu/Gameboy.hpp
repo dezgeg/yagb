@@ -24,6 +24,7 @@ public:
     }
 
     Gpu* getGpu() { return &gpu; }
+    Bus* getBus() { return &bus; }
 
     void runFrame();
 };
