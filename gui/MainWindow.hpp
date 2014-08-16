@@ -37,4 +37,5 @@ private slots:
     void lcdPaintRequested(QPaintEvent*);
 
     void patternViewerPaintRequested(QPaintEvent*);
+    void tileMapViewerPaintRequested(QPaintEvent*);
 };

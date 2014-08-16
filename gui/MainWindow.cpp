@@ -78,7 +78,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->lcdWidget, SIGNAL(focusChanged(bool)), this, SLOT(lcdFocusChanged(bool)));
     connect(ui->lcdWidget, SIGNAL(paintRequested(QPaintEvent*)), this, SLOT(lcdPaintRequested(QPaintEvent*)));
 
-    connect(ui->patternViewerLcdWidget, SIGNAL(paintRequested(QPaintEvent*)), this, SLOT(patternViewerPaintRequested(QPaintEvent*)));
+    connect(ui->patternViewerLcdWidget, SIGNAL(paintRequested(QPaintEvent*)),
+            this, SLOT(patternViewerPaintRequested(QPaintEvent*)));
+    connect(ui->tileMapViewerLcdWidget, SIGNAL(paintRequested(QPaintEvent*)),
+            this, SLOT(tileMapViewerPaintRequested(QPaintEvent*)));
 
     connect(frameTimer, SIGNAL(timeout()), this, SLOT(timerTick()));
     frameTimer->start(4);
@@ -92,6 +95,7 @@ void MainWindow::timerTick()
     gb.runFrame();
     ui->lcdWidget->repaint();
     ui->patternViewerLcdWidget->repaint();
+    ui->tileMapViewerLcdWidget->repaint();
     if (gb.getGpu()->getCurrentFrame() % 60 == 0)
         updateRegisters();
 }
@@ -126,30 +130,51 @@ void MainWindow::lcdPaintRequested(QPaintEvent*)
     painter.end();
 }
 
+static void drawTile(int i, int j, Byte* tile, QPainter* painter)
+{
+    unsigned char tmpBuf[8][8];
+    QImage image((uchar*)tmpBuf, 8, 8, QImage::Format_Indexed8);
+    image.setColorTable(monochromeToRgb); // TODO: copies?
+
+    for (unsigned k = 0; k < 8; k++) {
+        for (unsigned l = 0; l < 8; l++) {
+            tmpBuf[k][l] = !!(tile[2 * k] & (0x80 >> l)) |
+                            ((!!(tile[2 * k + 1] & (0x80 >> l))) << 1);
+        }
+    }
+    painter->drawImage(QRectF(QPointF(17 * i, 17 * j), QSizeF(16, 16)), image,
+                       QRectF(QPointF(0, 0), QSize(8, 8)));
+}
+
 void MainWindow::patternViewerPaintRequested(QPaintEvent*)
 {
     Byte* vram = gb.getGpu()->getVram();
+    QPainter painter;
+    painter.begin(ui->patternViewerLcdWidget);
+    for (unsigned i = 0; i < 16; i++) {
+        for (unsigned j = 0; j < 24; j++) {
+            drawTile(i, j, &vram[16 * (16 * j + i)], &painter);
+        }
+    }
+    painter.end();
+}
+
+void MainWindow::tileMapViewerPaintRequested(QPaintEvent*)
+{
+    Byte* vram = gb.getGpu()->getVram();
+    Byte* tiles = vram + 0x1800;
     unsigned char tmpBuf[8][8];
     QImage image((uchar*)tmpBuf, 8, 8, QImage::Format_Indexed8);
     image.setColorTable(monochromeToRgb); // TODO: copies?
 
     QPainter painter;
-    painter.begin(ui->patternViewerLcdWidget);
-    for (unsigned i = 0; i < 16; i++) {
-        for (unsigned j = 0; j < 24; j++) {
-            Byte* tile = &vram[16 * (16 * j + i)];
-
-            for (unsigned k = 0; k < 8; k++) {
-                for (unsigned l = 0; l < 8; l++) {
-                    tmpBuf[k][l] = !!(tile[2 * k] & (0x80 >> l)) |
-                                   ((!!(tile[2 * k + 1] & (0x80 >> l))) << 1);
-                }
-            }
-
-            painter.drawImage(QRectF(QPointF(17 * i, 17 * j), QSizeF(16, 16)), image,
-                              QRectF(QPointF(0, 0), QSize(8, 8)));
+    painter.begin(ui->tileMapViewerLcdWidget);
+    for (unsigned i = 0; i < 32; i++) {
+        for (unsigned j = 0; j < 32; j++) {
+            drawTile(i, j, &vram[16 * tiles[32 * j + i]], &painter);
         }
     }
+    painter.end();
 }
 
 void MainWindow::updateRegisters()
