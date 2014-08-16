@@ -1,6 +1,8 @@
 #pragma once
 #include "Platform.hpp"
 
+#include <cstring>
+
 class Gpu;
 class Logger;
 class Rom;
@@ -11,6 +13,7 @@ class Bus
     Rom* rom;
     Gpu* gpu;
 
+    bool bootromEnabled;
     Byte ram[8192];
     Byte hram[127];
 
@@ -20,8 +23,11 @@ public:
     Bus(Logger* log, Rom* rom, Gpu* gpu) :
         log(log),
         rom(rom),
-        gpu(gpu)
+        gpu(gpu),
+        bootromEnabled(true)
     {
+        std::memset(ram, 0xAA, sizeof(ram));
+        std::memset(hram, 0xAA, sizeof(ram));
     }
 
     Byte memRead8(Word address);
