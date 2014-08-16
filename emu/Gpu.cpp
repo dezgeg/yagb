@@ -45,6 +45,11 @@ void Gpu::renderScanline()
     Byte* bgTileBase = &vram[0x1800]; // TODO: LCDC bit
     Byte* bgPatternBase = &vram[0x0]; // TODO: LCDC bit
     for (unsigned i = 0; i < ScreenWidth; i++) {
+        if (!regs.lcdEnabled || !regs.bgEnabled) {
+            framebuffer[regs.ly][i] = 0;
+            continue;
+        }
+
         unsigned bgX = i + regs.scx;
         unsigned bgTileX = (bgX / 8) % 32;
         unsigned bgTileXBit = bgX % 8;

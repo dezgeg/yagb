@@ -22,7 +22,19 @@ class Gpu
     Byte oam[0xa0];
     struct GpuRegs
     {
-        Byte lcdc;
+        union {
+            Byte lcdc;
+            struct {
+                Byte lcdEnabled : 1;
+                Byte winTileMapSelect : 1;
+                Byte winEnabled : 1;
+                Byte bgTileDataSelect : 1;
+                Byte bgTileMapSelect : 1;
+                Byte objSizeLarge : 1;
+                Byte objEnabled : 1;
+                Byte bgEnabled : 1;
+            };
+        };
         Byte stat;
         Byte scy;
         Byte scx;
