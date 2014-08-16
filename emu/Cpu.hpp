@@ -42,6 +42,7 @@ class Cpu
 
     // ALU helpers
     Byte doAddSub(unsigned lhs, unsigned rhs, bool isSub, bool withCarry, bool updateCarry);
+    Word doAdd16(unsigned lhs, unsigned rhs);
     Byte doRotLeft(Byte v);
     Byte doRotLeftWithCarry(Byte v);
     Byte doRotRight(Byte v);

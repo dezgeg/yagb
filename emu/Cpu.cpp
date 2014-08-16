@@ -214,7 +214,7 @@ bool Cpu::evalConditional(Byte opc, char* outDescr, const char* opcodeStr)
 // TODO: not sane to have three bool parameters
 Byte Cpu::doAddSub(unsigned lhs, unsigned rhs, bool isSub, bool withCarry, bool updateCarry=true)
 {
-    rhs = withCarry ? rhs + 1 : rhs;
+    rhs = withCarry ? rhs + regs.flags.c : rhs;
     rhs = isSub ? ~rhs + 1 : rhs;
 
     unsigned sum = lhs + rhs;
@@ -225,6 +225,14 @@ Byte Cpu::doAddSub(unsigned lhs, unsigned rhs, bool isSub, bool withCarry, bool 
     regs.flags.n = isSub;
 
     return sum;
+}
+
+Word Cpu::doAdd16(unsigned lhs, unsigned rhs)
+{
+    // set flags according to the MSB sum operation
+    unsigned lsbSum = (lhs & 0xFF) + (rhs & 0xFF);
+    doAddSub(lhs >> 8, (rhs >> 8) + lsbSum > 0xFF, false, false);
+    return lhs + rhs;
 }
 
 Byte Cpu::doRotLeft(Byte v)
@@ -310,9 +318,10 @@ long Cpu::executeInsn_Cx_Fx(Byte opc)
             return INSN_DONE(12, "LDH A, (a8)");
         }
         case 0xE8: {
-            unreachable(); // TODO (affects flags)
+            // TODO: nowhere is really documented how the flags are set in this case.
+            Byte tmp = bus->memRead8(bus->memRead8(regs.pc++));
+            regs.sp = doAdd16(regs.sp, (Word)(SByte)tmp);
             return INSN_DONE(16, "ADD SP, r8");
-            // XXX: cycle count really correct???
         }
         case 0xF8: {
             unreachable(); // TODO (affects flags)
