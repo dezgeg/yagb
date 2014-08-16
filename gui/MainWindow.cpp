@@ -5,6 +5,7 @@
 #include <QImage>
 #include <QLabel>
 #include <QLineEdit>
+#include <QPainter>
 #include <QPushButton>
 #include <QString>
 #include <utility>
@@ -31,7 +32,7 @@ static const QString irqNames[] = {
     QStringLiteral("Joypad"),
 };
 
-void MainWindow::setupUi()
+void MainWindow::fillDynamicRegisterTables()
 {
     QFont font("Monospace");
     font.setStyleHint(QFont::TypeWriter);
@@ -53,13 +54,6 @@ void MainWindow::setupUi()
         QPushButton* pendingBtn = new QPushButton(QStringLiteral("Pending"));
         ui->irqsFormLayout->addWidget(pendingBtn, i, 2);
     }
-
-    qtFramebuffer.fill(Qt::white);
-    QGraphicsScene* scene = new QGraphicsScene(this);
-    fbSceneItem = scene->addPixmap(qtFramebuffer);
-    scene->setSceneRect(qtFramebuffer.rect());
-    ui->lcdGraphicsView->setScene(scene);
-    ui->lcdGraphicsView->scale(2, 2);
 }
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -68,16 +62,30 @@ MainWindow::MainWindow(QWidget *parent) :
     rom(&log, "test.bin"),
     gb(&log, &rom),
     frameTimer(new QTimer(this)),
-    qtFramebuffer(160, 144),
+    qtFramebuffer(ScreenWidth*2, ScreenHeight*2),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    setupUi();
-    connect(frameTimer, SIGNAL(timeout()), this, SLOT(tick()));
+    fillDynamicRegisterTables();
+
+    connect(ui->lcdWidget, SIGNAL(focusChanged(bool)), this, SLOT(lcdFocusChanged(bool)));
+    connect(ui->lcdWidget, SIGNAL(paintRequested(QPaintEvent*)), this, SLOT(lcdPaintRequested(QPaintEvent*)));
+
+    connect(frameTimer, SIGNAL(timeout()), this, SLOT(timerTick()));
     frameTimer->start(17);
 }
 
-void MainWindow::tick()
+void MainWindow::timerTick()
+{
+    gb.runFrame();
+    ui->lcdWidget->repaint();
+}
+
+void MainWindow::lcdFocusChanged(bool)
+{
+}
+
+void MainWindow::lcdPaintRequested(QPaintEvent*)
 {
     static const QVector<QRgb> monochromeToRgb = {
         qRgb(255, 255, 255),
@@ -86,14 +94,15 @@ void MainWindow::tick()
         qRgb(0, 0, 0),
     };
 
-    gb.runFrame();
-
     QImage image((const uchar*)gb.getGpu()->getFramebuffer(),
                  ScreenWidth, ScreenHeight, QImage::Format_Indexed8);
     image.setColorTable(monochromeToRgb); // TODO: copies?
-    qtFramebuffer.convertFromImage(image);
 
-    fbSceneItem->setPixmap(qtFramebuffer); // TODO: does this recopy etc...?
+    // TODO: draw border
+    QPainter painter;
+    painter.begin(ui->lcdWidget);
+    painter.drawImage(QRectF(QPointF(1, 1), QSizeF(ScreenWidth*2, ScreenHeight*2)), image);
+    painter.end();
 }
 
 MainWindow::~MainWindow()

@@ -1,0 +1,31 @@
+#pragma once
+#include <QWidget>
+
+class LcdWidget : public QWidget
+{
+    Q_OBJECT
+
+protected:
+    virtual void focusInEvent(QFocusEvent*) override
+    {
+        emit focusChanged(true);
+    }
+    virtual void focusOutEvent(QFocusEvent*) override
+    {
+        emit focusChanged(false);
+    }
+    virtual void paintEvent(QPaintEvent* e) override
+    {
+        emit paintRequested(e);
+    }
+
+public:
+    explicit LcdWidget(QWidget* parent = nullptr, Qt::WindowFlags flags = 0) : QWidget(parent, flags)
+    {
+        setAttribute(Qt::WA_OpaquePaintEvent);
+    }
+
+signals:
+    void focusChanged(bool in);
+    void paintRequested(QPaintEvent*);
+};

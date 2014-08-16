@@ -19,7 +19,7 @@
      <widget class="QWidget" name="topPane" native="true">
       <layout class="QHBoxLayout" name="topPaneLayout">
        <item>
-        <widget class="QGraphicsView" name="lcdGraphicsView">
+        <widget class="LcdWidget" name="lcdWidget" native="true">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -28,21 +28,15 @@
          </property>
          <property name="minimumSize">
           <size>
-           <width>320</width>
-           <height>288</height>
+           <width>322</width>
+           <height>290</height>
           </size>
          </property>
          <property name="maximumSize">
           <size>
-           <width>320</width>
-           <height>288</height>
+           <width>322</width>
+           <height>290</height>
           </size>
-         </property>
-         <property name="verticalScrollBarPolicy">
-          <enum>Qt::ScrollBarAlwaysOff</enum>
-         </property>
-         <property name="horizontalScrollBarPolicy">
-          <enum>Qt::ScrollBarAlwaysOff</enum>
          </property>
         </widget>
        </item>
@@ -197,6 +191,14 @@
    </layout>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>LcdWidget</class>
+   <extends>QWidget</extends>
+   <header>gui/LcdWidget.hpp</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

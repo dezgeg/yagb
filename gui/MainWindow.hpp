@@ -3,8 +3,6 @@
 #include "emu/Logger.hpp"
 #include "emu/Rom.hpp"
 
-#include <QGraphicsPixmapItem>
-#include <QGraphicsScene>
 #include <QMainWindow>
 #include <QPixmap>
 #include <QTimer>
@@ -27,11 +25,12 @@ private:
 
     QTimer* frameTimer;
     QPixmap qtFramebuffer;
-    QGraphicsPixmapItem* fbSceneItem;
     std::unique_ptr<Ui::MainWindow> ui;
 
-    void setupUi();
+    void fillDynamicRegisterTables();
 
 private slots:
-    void tick();
+    void timerTick();
+    void lcdFocusChanged(bool);
+    void lcdPaintRequested(QPaintEvent*);
 };
