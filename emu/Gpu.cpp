@@ -77,7 +77,21 @@ void Gpu::registerAccess(Word reg, Byte* pData, bool isWrite)
 
     switch (reg) {
         case 0xff40: BusUtil::simpleRegAccess(&regs.lcdc, pData, isWrite); return;
-        // case 0xff41: stat - TODO
+        case 0xff41: {
+            if (isWrite) {
+                regs.stat = *pData & 0xf8;
+            } else {
+                Byte tmp = regs.stat;
+                unsigned mode = cycleResidue >= VramFetchThresholdCycles ? 0 // HBlank
+                              : regs.ly >= ScreenHeight ? 1                  // VBlank
+                              : cycleResidue >= OamFetchThresholdCycles ? 2  // OAM access
+                              : 3;                                           // VRAM access
+                tmp |= !!(regs.ly == regs.lyc) << 2;
+                tmp |= mode;
+
+                *pData = mode;
+            }
+        }
         case 0xff42: BusUtil::simpleRegAccess(&regs.scy, pData, isWrite); return;
         case 0xff43: BusUtil::simpleRegAccess(&regs.scx, pData, isWrite); return;
         case 0xff44: {
@@ -91,6 +105,8 @@ void Gpu::registerAccess(Word reg, Byte* pData, bool isWrite)
         case 0xff45: BusUtil::simpleRegAccess(&regs.lyc, pData, isWrite); return;
         // case 0xff46: dma - TODO: must be handled by Bus!
         case 0xff47: BusUtil::simpleRegAccess(&regs.bgp, pData, isWrite); return;
+        case 0xff48: BusUtil::simpleRegAccess(&regs.obp0, pData, isWrite); return;
+        case 0xff49: BusUtil::simpleRegAccess(&regs.obp1, pData, isWrite); return;
         case 0xff4a: BusUtil::simpleRegAccess(&regs.wy, pData, isWrite); return;
         case 0xff4b: BusUtil::simpleRegAccess(&regs.wx, pData, isWrite); return;
     }

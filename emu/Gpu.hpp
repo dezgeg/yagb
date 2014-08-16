@@ -22,11 +22,14 @@ class Gpu
     struct GpuRegs
     {
         Byte lcdc;
+        Byte stat;
         Byte scy;
         Byte scx;
         Byte ly;
         Byte lyc;
         Byte bgp;
+        Byte obp0;
+        Byte obp1;
         Byte wy;
         Byte wx;
     } regs;
