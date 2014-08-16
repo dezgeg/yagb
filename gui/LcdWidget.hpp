@@ -23,6 +23,7 @@ public:
     explicit LcdWidget(QWidget* parent = nullptr, Qt::WindowFlags flags = 0) : QWidget(parent, flags)
     {
         setAttribute(Qt::WA_OpaquePaintEvent);
+        setFocusPolicy(Qt::StrongFocus);
     }
 
 signals:

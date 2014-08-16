@@ -65,6 +65,8 @@ MainWindow::MainWindow(QWidget *parent) :
     qtFramebuffer(ScreenWidth*2, ScreenHeight*2),
     ui(new Ui::MainWindow)
 {
+    setFocusPolicy(Qt::StrongFocus);
+
     ui->setupUi(this);
     fillDynamicRegisterTables();
 
@@ -73,6 +75,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(frameTimer, SIGNAL(timeout()), this, SLOT(timerTick()));
     frameTimer->start(17);
+
+    ui->lcdWidget->setFocus();
 }
 
 void MainWindow::timerTick()
@@ -81,8 +85,12 @@ void MainWindow::timerTick()
     ui->lcdWidget->repaint();
 }
 
-void MainWindow::lcdFocusChanged(bool)
+void MainWindow::lcdFocusChanged(bool in)
 {
+    if (in)
+        frameTimer->start();
+    else
+        frameTimer->stop();
 }
 
 void MainWindow::lcdPaintRequested(QPaintEvent*)
