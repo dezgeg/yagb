@@ -26,26 +26,25 @@ class Gpu
         union {
             Byte lcdc;
             struct {
-                Byte lcdEnabled : 1;
-                Byte winPatternBaseSelect : 1;
-                Byte winEnabled : 1;
-                Byte bgTileBaseSelect : 1;
-                Byte bgPatternBaseSelect : 1;
-                Byte objSizeLarge : 1;
-                Byte objEnabled : 1;
                 Byte bgEnabled : 1;
+                Byte objEnabled : 1;
+                Byte objSizeLarge : 1;
+                Byte bgPatternBaseSelect : 1;
+                Byte bgTileBaseSelect : 1;
+                Byte winEnabled : 1;
+                Byte winPatternBaseSelect : 1;
+                Byte lcdEnabled : 1;
             };
         };
         union {
             Byte stat;
             struct {
-                Byte _pad : 1;
-                Byte coincidenceIrqEnabled : 1;
-                Byte oamIrqEnabled : 1;
-                Byte vBlankIrqEnabled : 1;
-                Byte hBlankIrqEnabled : 1;
-                Byte coincidence : 1;
                 Byte mode : 2;
+                Byte coincidence : 1;
+                Byte hBlankIrqEnabled : 1;
+                Byte vBlankIrqEnabled : 1;
+                Byte oamIrqEnabled : 1;
+                Byte coincidenceIrqEnabled : 1;
             };
         };
         Byte scy;

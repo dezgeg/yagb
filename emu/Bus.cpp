@@ -103,6 +103,8 @@ void Bus::raiseIrq(Irq irq)
 
 void Bus::ackIrq(Irq irq)
 {
+    if (!(irqsPending & (1 << irq)))
+        log->warn("IRQ %d not pending?", irq);
     irqsPending &= ~(1 << irq);
 }
 

@@ -42,16 +42,23 @@ Irq Gpu::tick(long cycles)
             regs.ly = 0;
             frame++;
         } else if (regs.ly == ScreenHeight && regs.vBlankIrqEnabled) {
-            irq = Irq_LcdStat;
+            // log->warn("Raising VBlank IRQ");
+            irq = Irq_VBlank;
         }
 
-        if (regs.ly == regs.lyc && regs.coincidenceIrqEnabled)
+        if (regs.ly == regs.lyc && regs.coincidenceIrqEnabled) {
+            // log->warn("Raising LYC=LY IRQ");
             irq = Irq_LcdStat;
+        }
     } else {
-        if (nowInOamFetch && !wasInOamFetch && regs.oamIrqEnabled)
+        if (nowInOamFetch && !wasInOamFetch && regs.oamIrqEnabled) {
+            // log->warn("Raising OAM IRQ");
             irq = Irq_LcdStat;
-        if (nowInHBlank && ! wasInHBlank && regs.hBlankIrqEnabled)
+        }
+        if (nowInHBlank && ! wasInHBlank && regs.hBlankIrqEnabled) {
+            // log->warn("Raising HBlank IRQ");
             irq = Irq_LcdStat;
+        }
     }
 
     return irq;
@@ -63,8 +70,8 @@ void Gpu::renderScanline()
     unsigned bgTileY = (bgY / 8) % 32;
     unsigned bgTileYBit = bgY % 8;
 
-    Byte* bgTileBase = regs.bgTileBaseSelect ? &vram[0x1c00] : &vram[0x1800];
-    Byte* bgPatternBase = regs.bgPatternBaseSelect ? &vram[0x0]: &vram[0x800];
+    Byte* bgTileBase = regs.bgTileBaseSelect ? &vram[0x1800] : &vram[0x1c00];
+    Byte* bgPatternBase = regs.bgPatternBaseSelect ? &vram[0x800]: &vram[0x0];
     for (unsigned i = 0; i < ScreenWidth; i++) {
         if (!regs.lcdEnabled || !regs.bgEnabled) {
             framebuffer[regs.ly][i] = 0;
@@ -114,6 +121,7 @@ void Gpu::registerAccess(Word reg, Byte* pData, bool isWrite)
         case 0xff40: BusUtil::simpleRegAccess(&regs.lcdc, pData, isWrite); return;
         case 0xff41: {
             if (isWrite) {
+                log->warn("STAT write = %02x", *pData);
                 regs.stat = *pData & 0xf8;
             } else {
                 Byte tmp = regs.stat;
