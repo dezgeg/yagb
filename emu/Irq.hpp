@@ -1,4 +1,6 @@
 #pragma once
+#include "Platform.hpp"
+#include "Utils.hpp"
 
 enum Irq
 {
@@ -12,3 +14,5 @@ enum Irq
 
     Irq_Max,
 };
+
+typedef Byte IrqSet;

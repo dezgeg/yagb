@@ -19,9 +19,9 @@ enum {
     MaxScanline = 153,
 };
 
-Irq Gpu::tick(long cycles)
+IrqSet Gpu::tick(long cycles)
 {
-    Irq irq = Irq_None;
+    IrqSet irqs = 0;
 
     bool wasInOamFetch = cycleResidue < OamFetchThresholdCycles;
     bool wasInHBlank = cycleResidue >= VramFetchThresholdCycles;
@@ -41,27 +41,25 @@ Irq Gpu::tick(long cycles)
         if (regs.ly > MaxScanline) {
             regs.ly = 0;
             frame++;
-        } else if (regs.ly == ScreenHeight && regs.vBlankIrqEnabled) {
-            // log->warn("Raising VBlank IRQ");
-            irq = Irq_VBlank;
+        } else if (regs.ly == ScreenHeight) {
+            irqs |= bit(Irq_VBlank);
+            if (regs.vBlankIrqEnabled)
+                irqs |= bit(Irq_LcdStat);
         }
 
         if (regs.ly == regs.lyc && regs.coincidenceIrqEnabled) {
-            // log->warn("Raising LYC=LY IRQ");
-            irq = Irq_LcdStat;
+            irqs |= bit(Irq_LcdStat);
         }
     } else {
         if (nowInOamFetch && !wasInOamFetch && regs.oamIrqEnabled) {
-            // log->warn("Raising OAM IRQ");
-            irq = Irq_LcdStat;
+            irqs |= bit(Irq_LcdStat);
         }
         if (nowInHBlank && ! wasInHBlank && regs.hBlankIrqEnabled) {
-            // log->warn("Raising HBlank IRQ");
-            irq = Irq_LcdStat;
+            irqs |= bit(Irq_LcdStat);
         }
     }
 
-    return irq;
+    return irqs;
 }
 
 void Gpu::renderScanline()

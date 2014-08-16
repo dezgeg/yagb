@@ -81,5 +81,5 @@ public:
     void oamAccess(Word offset, Byte* pData, bool isWrite);
     void registerAccess(Word reg, Byte* pData, bool isWrite);
 
-    Irq tick(long cycles);
+    IrqSet tick(long cycles);
 };

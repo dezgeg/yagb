@@ -17,8 +17,8 @@ class Bus
     bool bootromEnabled;
 
     Byte joypadLatches;
-    Byte irqsEnabled;
-    Byte irqsPending;
+    IrqSet irqsEnabled;
+    IrqSet irqsPending;
 
     Byte ram[8192];
     Byte hram[127];
@@ -46,8 +46,8 @@ public:
     Word memRead16(Word address);
     void memWrite16(Word address, Word value);
 
-    void raiseIrq(Irq irq);
+    void raiseIrq(IrqSet irqs);
     void ackIrq(Irq irq);
-    Byte getEnabledIrqs();
-    Byte getPendingIrqs();
+    IrqSet getEnabledIrqs();
+    IrqSet getPendingIrqs();
 };

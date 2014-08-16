@@ -10,3 +10,8 @@ std::size_t arraySize(const T (&array)[count])
     (void) array;
     return count;
 }
+
+inline unsigned long bit(unsigned long b)
+{
+    return 1 << b;
+}

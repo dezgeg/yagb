@@ -103,10 +103,9 @@ void Bus::memWrite16(Word address, Word value)
     memWrite8(address + 1, (Byte)(value >> 8));
 }
 
-void Bus::raiseIrq(Irq irq)
+void Bus::raiseIrq(IrqSet irqs)
 {
-    if (irqsEnabled & (1 << irq))
-        irqsPending |= (1 << irq);
+    irqsPending |= irqs & irqsEnabled;
 }
 
 void Bus::ackIrq(Irq irq)
@@ -116,12 +115,12 @@ void Bus::ackIrq(Irq irq)
     irqsPending &= ~(1 << irq);
 }
 
-Byte Bus::getEnabledIrqs()
+IrqSet Bus::getEnabledIrqs()
 {
     return irqsEnabled;
 }
 
-Byte Bus::getPendingIrqs()
+IrqSet Bus::getPendingIrqs()
 {
     return irqsPending & irqsEnabled;
 }
