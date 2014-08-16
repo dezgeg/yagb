@@ -23,6 +23,7 @@ public:
     {
     }
 
+    Cpu* getCpu() { return &cpu; }
     Gpu* getGpu() { return &gpu; }
     Bus* getBus() { return &bus; }
 

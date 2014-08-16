@@ -1,6 +1,7 @@
-#include "MainWindow.hpp"
-#include "ui_MainWindow.h"
 #include "emu/Utils.hpp"
+#include "gui/HexTextField.hpp"
+#include "gui/MainWindow.hpp"
+#include "ui_MainWindow.h"
 
 #include <QImage>
 #include <QLabel>
@@ -40,7 +41,7 @@ void MainWindow::fillDynamicRegisterTables()
     for (unsigned i = 0; i < arraySize(lcdRegs); i++) {
         QLabel* label = new QLabel(lcdRegs[i].second);
         ui->lcdRegsFormLayout->setWidget(i, QFormLayout::LabelRole, label);
-        QLineEdit* edit = new QLineEdit(QStringLiteral("F0"));
+        HexTextField* edit = new HexTextField();
         edit->setFont(font);
         ui->lcdRegsFormLayout->setWidget(i, QFormLayout::FieldRole, edit);
     }
@@ -77,6 +78,7 @@ MainWindow::MainWindow(QWidget *parent) :
     frameTimer->start(17);
 
     ui->lcdWidget->setFocus();
+    updateRegisters();
 }
 
 void MainWindow::timerTick()
@@ -121,10 +123,18 @@ void MainWindow::updateRegisters()
 {
     Bus* bus = gb.getBus();
     for (unsigned i = 0; i < arraySize(lcdRegs); i++) {
-        QLineEdit* edit = static_cast<QLineEdit*>(ui->lcdRegsFormLayout->itemAt(i, QFormLayout::FieldRole)->widget());
+        HexTextField* edit = static_cast<HexTextField*>(ui->lcdRegsFormLayout->itemAt(i, QFormLayout::FieldRole)->widget());
         unsigned reg = lcdRegs[i].first;
-        edit->setText(QString().sprintf("%02X", bus->memRead8(reg)));
+        edit->setHex(bus->memRead8(reg));
     }
+
+    Regs* regs = gb.getCpu()->getRegs();
+    ui->cpuRegsAf->setHex(regs->af);
+    ui->cpuRegsBc->setHex(regs->bc);
+    ui->cpuRegsDe->setHex(regs->de);
+    ui->cpuRegsHl->setHex(regs->hl);
+    ui->cpuRegsSp->setHex(regs->sp);
+    ui->cpuRegsPc->setHex(regs->pc);
 }
 
 MainWindow::~MainWindow()

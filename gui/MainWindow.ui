@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>880</width>
+    <width>882</width>
     <height>573</height>
    </rect>
   </property>
@@ -63,7 +63,7 @@
               </widget>
              </item>
              <item row="0" column="1">
-              <widget class="QLineEdit" name="cpuRegsAf"/>
+              <widget class="HexTextField4" name="cpuRegsAf"/>
              </item>
              <item row="1" column="0">
               <widget class="QLabel" name="cpuRegsBcLabel">
@@ -73,7 +73,7 @@
               </widget>
              </item>
              <item row="1" column="1">
-              <widget class="QLineEdit" name="cpuRegsBc"/>
+              <widget class="HexTextField4" name="cpuRegsBc"/>
              </item>
              <item row="2" column="0">
               <widget class="QLabel" name="cpuRegsDeLabel">
@@ -83,7 +83,7 @@
               </widget>
              </item>
              <item row="2" column="1">
-              <widget class="QLineEdit" name="cpuRegsDe"/>
+              <widget class="HexTextField4" name="cpuRegsDe"/>
              </item>
              <item row="3" column="0">
               <widget class="QLabel" name="cpuRegsHlLabel">
@@ -93,7 +93,7 @@
               </widget>
              </item>
              <item row="3" column="1">
-              <widget class="QLineEdit" name="cpuRegsHl"/>
+              <widget class="HexTextField4" name="cpuRegsHl"/>
              </item>
              <item row="4" column="0">
               <widget class="QLabel" name="cpuRegsSpLabel">
@@ -103,7 +103,7 @@
               </widget>
              </item>
              <item row="4" column="1">
-              <widget class="QLineEdit" name="cpuRegsSp"/>
+              <widget class="HexTextField4" name="cpuRegsSp"/>
              </item>
              <item row="5" column="0">
               <widget class="QLabel" name="cpuRegsPcLabel">
@@ -113,7 +113,7 @@
               </widget>
              </item>
              <item row="5" column="1">
-              <widget class="QLineEdit" name="cpuRegsPc"/>
+              <widget class="HexTextField4" name="cpuRegsPc"/>
              </item>
              <item row="6" column="0">
               <widget class="QLabel" name="cpuRegsFlagsLabel">
@@ -124,9 +124,21 @@
              </item>
              <item row="6" column="1">
               <widget class="QWidget" name="cpuRegsFlagsContainer" native="true">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <layout class="QHBoxLayout" name="cpuRegsFlagsLayout">
                 <item>
                  <widget class="QPushButton" name="cpuFlagZ">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="text">
                    <string>Z</string>
                   </property>
@@ -134,6 +146,12 @@
                 </item>
                 <item>
                  <widget class="QPushButton" name="cpuFlagC">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="text">
                    <string>N</string>
                   </property>
@@ -141,6 +159,12 @@
                 </item>
                 <item>
                  <widget class="QPushButton" name="cpuFlagH">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="text">
                    <string>H</string>
                   </property>
@@ -148,6 +172,12 @@
                 </item>
                 <item>
                  <widget class="QPushButton" name="cpuFlagN">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="text">
                    <string>C</string>
                   </property>
@@ -197,6 +227,11 @@
    <extends>QWidget</extends>
    <header>gui/LcdWidget.hpp</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>HexTextField4</class>
+   <extends>QLineEdit</extends>
+   <header>gui/HexTextField.hpp</header>
   </customwidget>
  </customwidgets>
  <resources/>

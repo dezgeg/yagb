@@ -64,6 +64,7 @@ public:
     }
 
     bool isHalted() { return halted; }
+    Regs* getRegs() { return &regs; }
 
     void reset();
     long tick();
