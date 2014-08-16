@@ -45,6 +45,19 @@ void Cpu::reset()
 
 long Cpu::tick()
 {
+    Byte irqs = bus->getPendingIrqs();
+    if (interruptsEnabled && irqs) {
+        int irq = ffs(irqs ^ (irqs & (irqs - 1))) - 1;
+        bus->ackIrq((Irq)irq);
+        log->warn("Handling IRQ %d", irq);
+
+        regs.sp -= 2;
+        bus->memWrite16(regs.sp, regs.pc);
+        regs.pc = 0x40 + irq * 0x8;
+        interruptsEnabled = false;
+        return 4; // TODO: what's the delay?
+    }
+
     Byte opc = bus->memRead8(regs.pc++);
     switch (opc >> 6) {
         case 0: return executeInsn_0x_3x(opc);

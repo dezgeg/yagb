@@ -1,4 +1,5 @@
 #pragma once
+#include "Irq.hpp"
 #include "Platform.hpp"
 
 #include <cstring>
@@ -14,7 +15,10 @@ class Bus
     Gpu* gpu;
 
     bool bootromEnabled;
+
     Byte joypadLatches;
+    Byte irqsEnabled;
+    Byte irqsPending;
 
     Byte ram[8192];
     Byte hram[127];
@@ -28,7 +32,9 @@ public:
         rom(rom),
         gpu(gpu),
         bootromEnabled(true),
-        joypadLatches(0x3)
+        joypadLatches(0x3),
+        irqsEnabled(0),
+        irqsPending(0)
     {
         std::memset(ram, 0xAA, sizeof(ram));
         std::memset(hram, 0xAA, sizeof(ram));
@@ -38,4 +44,8 @@ public:
     void memWrite8(Word address, Byte value);
     Word memRead16(Word address);
     void memWrite16(Word address, Word value);
+
+    void raiseIrq(Irq irq);
+    void ackIrq(Irq irq);
+    Byte getPendingIrqs();
 };

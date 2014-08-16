@@ -11,7 +11,9 @@ void Gameboy::runFrame()
             return;
 
         int cycleDelta = cpu.tick();
-        gpu.tick(cycleDelta);
+        Irq gpuIrq = gpu.tick(cycleDelta);
+        if (gpuIrq != Irq_None)
+            bus.raiseIrq(gpuIrq);
         currentCycle += cycleDelta;
     }
 }

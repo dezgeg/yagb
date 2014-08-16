@@ -1,6 +1,7 @@
 #include "Bus.hpp"
 #include "BusUtil.hpp"
 #include "Gpu.hpp"
+#include "Irq.hpp"
 #include "Rom.hpp"
 #include "Utils.hpp"
 
@@ -53,12 +54,16 @@ void Bus::memAccess(Word address, Byte* pData, bool isWrite)
         gpu->oamAccess(address & 0xff, pData, isWrite);
     else if (address == 0xff00)
         joypadAccess(pData, isWrite);
+    else if (address == 0xff0f)
+        BusUtil::simpleRegAccess(&irqsPending, pData, isWrite, 0x1f);
     else if (address >= 0xff40 && address <= 0xff4b)
         gpu->registerAccess(address, pData, isWrite);
     else if (address == 0xff50)
         bootromEnabled = false;
     else if (address >= 0xff80 && address <= 0xfffe)
         BusUtil::arrayMemAccess(hram, address - 0xff80, pData, isWrite);
+    else if (address == 0xffff)
+        BusUtil::simpleRegAccess(&irqsEnabled, pData, isWrite, 0x1f);
     else {
         if (isWrite)
             log->warn("Unhandled write (0x%02x) to address 0x%04X", *pData, address);
@@ -88,4 +93,20 @@ void Bus::memWrite16(Word address, Word value)
 {
     memWrite8(address, (Byte)(value));
     memWrite8(address + 1, (Byte)(value >> 8));
+}
+
+void Bus::raiseIrq(Irq irq)
+{
+    if (irqsEnabled & (1 << irq))
+        irqsPending |= (1 << irq);
+}
+
+void Bus::ackIrq(Irq irq)
+{
+    irqsPending &= ~(1 << irq);
+}
+
+Byte Bus::getPendingIrqs()
+{
+    return irqsPending & irqsEnabled;
 }

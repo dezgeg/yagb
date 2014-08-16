@@ -1,5 +1,6 @@
 #pragma once
 #include "BusUtil.hpp"
+#include "Irq.hpp"
 #include "Logger.hpp"
 #include "Platform.hpp"
 
@@ -35,7 +36,18 @@ class Gpu
                 Byte bgEnabled : 1;
             };
         };
-        Byte stat;
+        union {
+            Byte stat;
+            struct {
+                Byte _pad : 1;
+                Byte coincidenceIrqEnabled : 1;
+                Byte oamIrqEnabled : 1;
+                Byte vBlankIrqEnabled : 1;
+                Byte hBlankIrqEnabled : 1;
+                Byte coincidence : 1;
+                Byte mode : 2;
+            };
+        };
         Byte scy;
         Byte scx;
         Byte ly;
@@ -69,5 +81,5 @@ public:
     void oamAccess(Word offset, Byte* pData, bool isWrite);
     void registerAccess(Word reg, Byte* pData, bool isWrite);
 
-    void tick(long cycles);
+    Irq tick(long cycles);
 };

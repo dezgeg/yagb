@@ -19,9 +19,18 @@ enum {
     MaxScanline = 153,
 };
 
-void Gpu::tick(long cycles)
+Irq Gpu::tick(long cycles)
 {
+    Irq irq = Irq_None;
+
+    bool wasInOamFetch = cycleResidue < OamFetchThresholdCycles;
+    bool wasInHBlank = cycleResidue >= VramFetchThresholdCycles;
+
     cycleResidue += cycles;
+
+    bool nowInOamFetch = cycleResidue < OamFetchThresholdCycles;
+    bool nowInHBlank = cycleResidue >= VramFetchThresholdCycles;
+
     if (cycleResidue >= ScanlineCycles) {
         if (regs.ly < ScreenHeight)
             renderScanline();
@@ -32,8 +41,20 @@ void Gpu::tick(long cycles)
         if (regs.ly > MaxScanline) {
             regs.ly = 0;
             frame++;
+        } else if (regs.ly == ScreenHeight && regs.vBlankIrqEnabled) {
+            irq = Irq_LcdStat;
         }
+
+        if (regs.ly == regs.lyc && regs.coincidenceIrqEnabled)
+            irq = Irq_LcdStat;
+    } else {
+        if (nowInOamFetch && !wasInOamFetch && regs.oamIrqEnabled)
+            irq = Irq_LcdStat;
+        if (nowInHBlank && ! wasInHBlank && regs.hBlankIrqEnabled)
+            irq = Irq_LcdStat;
     }
+
+    return irq;
 }
 
 void Gpu::renderScanline()
