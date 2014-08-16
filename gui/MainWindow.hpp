@@ -32,6 +32,9 @@ private:
 
 private slots:
     void timerTick();
+
     void lcdFocusChanged(bool);
     void lcdPaintRequested(QPaintEvent*);
+
+    void patternViewerPaintRequested(QPaintEvent*);
 };

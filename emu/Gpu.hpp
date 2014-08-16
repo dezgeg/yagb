@@ -75,6 +75,7 @@ public:
     int getCurrentScanline() { return regs.ly; }
     int getCurrentFrame() { return frame; }
     Byte* getFramebuffer() { return &framebuffer[0][0]; }
+    Byte* getVram() { return vram; }
 
     void vramAccess(Word offset, Byte* pData, bool isWrite);
     void oamAccess(Word offset, Byte* pData, bool isWrite);

@@ -78,6 +78,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->lcdWidget, SIGNAL(focusChanged(bool)), this, SLOT(lcdFocusChanged(bool)));
     connect(ui->lcdWidget, SIGNAL(paintRequested(QPaintEvent*)), this, SLOT(lcdPaintRequested(QPaintEvent*)));
 
+    connect(ui->patternViewerLcdWidget, SIGNAL(paintRequested(QPaintEvent*)), this, SLOT(patternViewerPaintRequested(QPaintEvent*)));
+
     connect(frameTimer, SIGNAL(timeout()), this, SLOT(timerTick()));
     frameTimer->start(4);
 
@@ -89,6 +91,7 @@ void MainWindow::timerTick()
 {
     gb.runFrame();
     ui->lcdWidget->repaint();
+    ui->patternViewerLcdWidget->repaint();
     if (gb.getGpu()->getCurrentFrame() % 60 == 0)
         updateRegisters();
 }
@@ -103,15 +106,15 @@ void MainWindow::lcdFocusChanged(bool in)
     }
 }
 
+static const QVector<QRgb> monochromeToRgb = {
+    qRgb(255, 255, 255),
+    qRgb(2*255/3, 2*255/3, 2*255/3),
+    qRgb(255/3, 255/3, 255/3),
+    qRgb(0, 0, 0),
+};
+
 void MainWindow::lcdPaintRequested(QPaintEvent*)
 {
-    static const QVector<QRgb> monochromeToRgb = {
-        qRgb(255, 255, 255),
-        qRgb(2*255/3, 2*255/3, 2*255/3),
-        qRgb(255/3, 255/3, 255/3),
-        qRgb(0, 0, 0),
-    };
-
     QImage image((const uchar*)gb.getGpu()->getFramebuffer(),
                  ScreenWidth, ScreenHeight, QImage::Format_Indexed8);
     image.setColorTable(monochromeToRgb); // TODO: copies?
@@ -121,6 +124,32 @@ void MainWindow::lcdPaintRequested(QPaintEvent*)
     painter.begin(ui->lcdWidget);
     painter.drawImage(QRectF(QPointF(1, 1), QSizeF(ScreenWidth*2, ScreenHeight*2)), image);
     painter.end();
+}
+
+void MainWindow::patternViewerPaintRequested(QPaintEvent*)
+{
+    Byte* vram = gb.getGpu()->getVram();
+    unsigned char tmpBuf[8][8];
+    QImage image((uchar*)tmpBuf, 8, 8, QImage::Format_Indexed8);
+    image.setColorTable(monochromeToRgb); // TODO: copies?
+
+    QPainter painter;
+    painter.begin(ui->patternViewerLcdWidget);
+    for (unsigned i = 0; i < 16; i++) {
+        for (unsigned j = 0; j < 24; j++) {
+            Byte* tile = &vram[16 * (16 * j + i)];
+
+            for (unsigned k = 0; k < 8; k++) {
+                for (unsigned l = 0; l < 8; l++) {
+                    tmpBuf[k][l] = !!(tile[2 * k] & (0x80 >> l)) |
+                                   ((!!(tile[2 * k + 1] & (0x80 >> l))) << 1);
+                }
+            }
+
+            painter.drawImage(QRectF(QPointF(17 * i, 17 * j), QSizeF(16, 16)), image,
+                              QRectF(QPointF(0, 0), QSize(8, 8)));
+        }
+    }
 }
 
 void MainWindow::updateRegisters()
