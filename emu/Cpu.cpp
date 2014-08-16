@@ -388,7 +388,13 @@ long Cpu::executeInsn_Cx_Fx(Byte opc)
         }
         case 0x3:
         case 0x2: case 0xA: {
-            unreachable();
+            Word addr = bus->memRead16(regs.pc);
+            regs.pc += 2;
+
+            char buf[16];
+            if(evalConditional(opc, buf, "JP"))
+                regs.pc = addr;
+            return INSN_DONE(16, "%s a16", buf);
         }
         case 0xD:
         case 0x4: case 0xC: {
@@ -414,7 +420,10 @@ long Cpu::executeInsn_Cx_Fx(Byte opc)
             return INSN_DONE(8, "%s d8", aluopStrings[wideOperand]);
         }
         case 0x7: case 0xF: {
-            unreachable();
+            regs.sp -= 2;
+            bus->memWrite16(regs.sp, regs.pc);
+            regs.pc = wideOperand * 0x10;
+            return INSN_DONE(16, "RST 0x%02x", regs.pc);
         }
     }
     unreachable();
