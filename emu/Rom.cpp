@@ -24,7 +24,7 @@ Rom::Rom(Logger* log, const char* fileName) :
 void Rom::cartRomAccess(Word address, Byte* pData, bool isWrite)
 {
     if (isWrite) {
-        log->warn("Write to ROM address 0x%04x", address);
+        log->warn("Write (0x%02x) to ROM address 0x%04x", *pData, address);
         return;
     }
 

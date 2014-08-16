@@ -45,10 +45,12 @@ void Bus::memAccess(Word address, Byte* pData, bool isWrite)
         rom->cartRomAccess(address, pData, isWrite);
     else if (address <= 0x9fff)
         gpu->vramAccess(address & 0x1fff, pData, isWrite);
-    else if (address >= 0xa000 && address <= 0xbfff)
+    else if (address <= 0xbfff)
         rom->cartRamAccess(address & 0x1fff, pData, isWrite);
-    else if (address >= 0xc000 && address <= 0xfdff)
+    else if (address <= 0xfdff)
         BusUtil::arrayMemAccess(ram, address & 0x1fff, pData, isWrite);
+    else if (address <= 0xfe9f)
+        gpu->oamAccess(address & 0xff, pData, isWrite);
     else if (address == 0xff00)
         joypadAccess(pData, isWrite);
     else if (address >= 0xff40 && address <= 0xff4b)
@@ -57,8 +59,12 @@ void Bus::memAccess(Word address, Byte* pData, bool isWrite)
         bootromEnabled = false;
     else if (address >= 0xff80 && address <= 0xfffe)
         BusUtil::arrayMemAccess(hram, address - 0xff80, pData, isWrite);
-    else
-        log->warn("Unhandled %s to address %04X", isWrite ? "write" : "read", address);
+    else {
+        if (isWrite)
+            log->warn("Unhandled write (0x%02x) to address 0x%04X", *pData, address);
+        else
+            log->warn("Unhandled read from address 0x%04X", address);
+    }
 }
 
 Byte Bus::memRead8(Word address)

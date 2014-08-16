@@ -68,6 +68,15 @@ void Gpu::vramAccess(Word offset, Byte* pData, bool isWrite)
     BusUtil::arrayMemAccess(vram, offset, pData, isWrite);
 }
 
+void Gpu::oamAccess(Word offset, Byte* pData, bool isWrite)
+{
+#if 0
+    if (isWrite)
+        log->warn("GPU OAM write [0x%0x] = 0x%02x", 0xfe00 + offset, *pData);
+#endif
+    BusUtil::arrayMemAccess(oam, offset, pData, isWrite);
+}
+
 void Gpu::registerAccess(Word reg, Byte* pData, bool isWrite)
 {
 #if 0

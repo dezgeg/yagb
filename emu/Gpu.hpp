@@ -19,6 +19,7 @@ class Gpu
     Byte framebuffer[ScreenHeight][ScreenWidth];
 
     Byte vram[8192];
+    Byte oam[0xa0];
     struct GpuRegs
     {
         Byte lcdc;
@@ -44,6 +45,7 @@ public:
     {
         std::memset(&framebuffer[0][0], 0, sizeof(framebuffer));
         std::memset(&vram[0], 0, sizeof(vram));
+        std::memset(&oam[0], 0, sizeof(oam));
         std::memset(&regs, 0, sizeof(regs));
     }
 
@@ -52,6 +54,7 @@ public:
     Byte* getFramebuffer() { return &framebuffer[0][0]; }
 
     void vramAccess(Word offset, Byte* pData, bool isWrite);
+    void oamAccess(Word offset, Byte* pData, bool isWrite);
     void registerAccess(Word reg, Byte* pData, bool isWrite);
 
     void tick(long cycles);
