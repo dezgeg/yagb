@@ -395,6 +395,10 @@ long Cpu::executeInsn_Cx_Fx(Byte opc)
                 INSN_BRANCH(bus->memRead16(regs.sp));
                 regs.sp += 2;
             }
+            if (opc == 0xd9) {
+                regs.irqsEnabled = true;
+                strcpy(buf, "RETI");
+            }
             return INSN_DONE(unconditional ? 16 : taken ? 20 : 8, "%s", buf);
         }
         case 0x1: {
