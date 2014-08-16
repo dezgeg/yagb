@@ -6,7 +6,8 @@
 union Regs
 {
     struct {
-        Byte c, b, e, d, l, h, _pad1, _pad2, f, a;
+        Byte c, b, e, d, l, h, _pad1, _pad2, f, a, _pad3, _pad4;
+        Byte irqsEnabled : 1;
     };
     struct {
         Word bc, de, hl, sp, af, pc;
@@ -21,7 +22,6 @@ union Regs
     } flags;
     Byte bytes[8];
     Word words[6];
-    Byte irqsEnabled : 1;
 };
 
 #if __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__
