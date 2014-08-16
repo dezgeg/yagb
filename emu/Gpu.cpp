@@ -103,8 +103,9 @@ void Gpu::registerAccess(Word reg, Byte* pData, bool isWrite)
                 tmp |= !!(regs.ly == regs.lyc) << 2;
                 tmp |= mode;
 
-                *pData = mode;
+                *pData = tmp;
             }
+            return;
         }
         case 0xff42: BusUtil::simpleRegAccess(&regs.scy, pData, isWrite); return;
         case 0xff43: BusUtil::simpleRegAccess(&regs.scx, pData, isWrite); return;
