@@ -8,6 +8,7 @@ class Gpu;
 class Logger;
 class Rom;
 class Timer;
+class Joypad;
 
 class Bus
 {
@@ -15,10 +16,10 @@ class Bus
     Rom* rom;
     Gpu* gpu;
     Timer* timer;
+    Joypad* joypad;
 
     bool bootromEnabled;
 
-    Byte joypadLatches;
     IrqSet irqsEnabled;
     IrqSet irqsPending;
 
@@ -30,13 +31,13 @@ class Bus
     void disableBootrom();
 
 public:
-    Bus(Logger* log, Rom* rom, Gpu* gpu, Timer* timer) :
+    Bus(Logger* log, Rom* rom, Gpu* gpu, Timer* timer, Joypad* joypad) :
         log(log),
         rom(rom),
         gpu(gpu),
         timer(timer),
+        joypad(joypad),
         bootromEnabled(true),
-        joypadLatches(0x3),
         irqsEnabled(0),
         irqsPending(0)
     {

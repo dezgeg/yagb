@@ -77,6 +77,7 @@ MainWindow::MainWindow(const char* romFile, bool insnTrace, QWidget *parent) :
 
     connect(ui->lcdWidget, SIGNAL(focusChanged(bool)), this, SLOT(lcdFocusChanged(bool)));
     connect(ui->lcdWidget, SIGNAL(paintRequested(QPaintEvent*)), this, SLOT(lcdPaintRequested(QPaintEvent*)));
+    connect(ui->lcdWidget, SIGNAL(keyEvent(QKeyEvent*)), this, SLOT(lcdKeyEvent(QKeyEvent*)));
 
     connect(ui->patternViewerLcdWidget, SIGNAL(paintRequested(QPaintEvent*)),
             this, SLOT(patternViewerPaintRequested(QPaintEvent*)));
@@ -108,6 +109,27 @@ void MainWindow::lcdFocusChanged(bool in)
         frameTimer->stop();
         updateRegisters();
     }
+}
+
+void MainWindow::lcdKeyEvent(QKeyEvent* e)
+{
+    Byte keys;
+    switch (e->key()) {
+        case Qt::Key_Right:     keys = Pad_Right;   break;
+        case Qt::Key_Left:      keys = Pad_Left;    break;
+        case Qt::Key_Up:        keys = Pad_Up;      break;
+        case Qt::Key_Down:      keys = Pad_Down;    break;
+        case Qt::Key_Return:    keys = Pad_Start;   break;
+        case Qt::Key_Backspace: keys = Pad_Select;  break;
+        case Qt::Key_Control:   keys = Pad_A;       break;
+        case Qt::Key_Shift:     keys = Pad_B;       break;
+        default: return;
+    }
+
+    if (e->type() == QEvent::KeyPress)
+        gb.getJoypad()->keysPressed(keys);
+    else
+        gb.getJoypad()->keysReleased(keys);
 }
 
 static const QVector<QRgb> monochromeToRgb = {

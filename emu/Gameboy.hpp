@@ -2,6 +2,7 @@
 
 #include "Cpu.hpp"
 #include "Gpu.hpp"
+#include "Joypad.hpp"
 #include "Logger.hpp"
 #include "Rom.hpp"
 #include "Timer.hpp"
@@ -13,15 +14,17 @@ class Gameboy
     Gpu gpu;
     Cpu cpu;
     Timer timer;
+    Joypad joypad;
     long currentCycle;
 
 public:
     Gameboy(Logger* log, Rom* rom) :
         log(log),
-        bus(log, rom, &gpu, &timer),
+        bus(log, rom, &gpu, &timer, &joypad),
         gpu(log),
         cpu(log, &bus),
         timer(),
+        joypad(),
         currentCycle(0)
     {
     }
@@ -30,6 +33,7 @@ public:
     Cpu* getCpu() { return &cpu; }
     Gpu* getGpu() { return &gpu; }
     Timer* getTimer() { return &timer; }
+    Joypad* getJoypad() { return &joypad; }
 
     void runFrame();
 };

@@ -48,7 +48,7 @@ long Cpu::tick()
     if (regs.irqsEnabled && irqs) {
         int irq = ffs(irqs ^ (irqs & (irqs - 1))) - 1;
         bus->ackIrq((Irq)irq);
-        log->warn("Handling IRQ %d", irq);
+        // log->warn("Handling IRQ %d", irq);
 
         regs.sp -= 2;
         bus->memWrite16(regs.sp, regs.pc);

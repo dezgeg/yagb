@@ -2,6 +2,7 @@
 #include "BusUtil.hpp"
 #include "Gpu.hpp"
 #include "Irq.hpp"
+#include "Joypad.hpp"
 #include "Rom.hpp"
 #include "Timer.hpp"
 #include "Utils.hpp"
@@ -29,14 +30,6 @@ void Bus::disableBootrom()
     bootromEnabled = false;
 }
 
-void Bus::joypadAccess(Byte* pData, bool isWrite)
-{
-    if (isWrite)
-        joypadLatches = *pData >> 4;
-    else
-        *pData = 0x0f; // TODO: simulate no keys pressed
-}
-
 void Bus::memAccess(Word address, Byte* pData, bool isWrite)
 {
     if (address <= 0xff) {
@@ -59,7 +52,7 @@ void Bus::memAccess(Word address, Byte* pData, bool isWrite)
     else if (address <= 0xfe9f)
         gpu->oamAccess(address & 0xff, pData, isWrite);
     else if (address == 0xff00)
-        joypadAccess(pData, isWrite);
+        joypad->regAccess(pData, isWrite); // log->warn("JoyPad: %s %02x", isWrite ? "WR" : "RD", *pData);
     else if (address >= 0xff04 && address <= 0xff07)
         timer->regAccess(address, pData, isWrite);
     else if (address == 0xff0f)

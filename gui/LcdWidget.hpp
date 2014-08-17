@@ -18,6 +18,14 @@ protected:
     {
         emit paintRequested(e);
     }
+    virtual void keyPressEvent(QKeyEvent* e) override
+    {
+        emit keyEvent(e);
+    }
+    virtual void keyReleaseEvent(QKeyEvent* e) override
+    {
+        emit keyEvent(e);
+    }
 
 public:
     explicit LcdWidget(QWidget* parent = nullptr, Qt::WindowFlags flags = 0) : QWidget(parent, flags)
@@ -29,4 +37,5 @@ public:
 signals:
     void focusChanged(bool in);
     void paintRequested(QPaintEvent*);
+    void keyEvent(QKeyEvent*);
 };

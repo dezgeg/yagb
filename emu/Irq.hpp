@@ -10,7 +10,7 @@ enum Irq
     Irq_LcdStat,
     Irq_Timer,
     Irq_Serial,
-    Irq_Joystick,
+    Irq_Joypad,
 
     Irq_Max,
 };
