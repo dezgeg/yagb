@@ -4,6 +4,7 @@
 #include "Gpu.hpp"
 #include "Logger.hpp"
 #include "Rom.hpp"
+#include "Timer.hpp"
 
 class Gameboy
 {
@@ -11,21 +12,24 @@ class Gameboy
     Bus bus;
     Gpu gpu;
     Cpu cpu;
+    Timer timer;
     long currentCycle;
 
 public:
     Gameboy(Logger* log, Rom* rom) :
         log(log),
-        bus(log, rom, &gpu),
+        bus(log, rom, &gpu, &timer),
         gpu(log),
         cpu(log, &bus),
+        timer(),
         currentCycle(0)
     {
     }
 
+    Bus* getBus() { return &bus; }
     Cpu* getCpu() { return &cpu; }
     Gpu* getGpu() { return &gpu; }
-    Bus* getBus() { return &bus; }
+    Timer* getTimer() { return &timer; }
 
     void runFrame();
 };

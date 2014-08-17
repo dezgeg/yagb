@@ -3,6 +3,7 @@
 #include "Gpu.hpp"
 #include "Irq.hpp"
 #include "Rom.hpp"
+#include "Timer.hpp"
 #include "Utils.hpp"
 
 static const Byte bootrom[] =
@@ -59,6 +60,8 @@ void Bus::memAccess(Word address, Byte* pData, bool isWrite)
         gpu->oamAccess(address & 0xff, pData, isWrite);
     else if (address == 0xff00)
         joypadAccess(pData, isWrite);
+    else if (address >= 0xff04 && address <= 0xff07)
+        timer->regAccess(address, pData, isWrite);
     else if (address == 0xff0f)
         BusUtil::simpleRegAccess(&irqsPending, pData, isWrite, 0x1f);
     else if (address >= 0xff40 && address <= 0xff4b)
