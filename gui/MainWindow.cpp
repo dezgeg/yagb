@@ -61,10 +61,10 @@ void MainWindow::fillDynamicRegisterTables()
     }
 }
 
-MainWindow::MainWindow(QWidget *parent) :
+MainWindow::MainWindow(const char* romFile, bool insnTrace, QWidget *parent) :
     QMainWindow(parent),
-    log(false),
-    rom(&log, "test.bin"),
+    log(insnTrace),
+    rom(&log, romFile),
     gb(&log, &rom),
     frameTimer(new QTimer(this)),
     qtFramebuffer(ScreenWidth*2, ScreenHeight*2),
