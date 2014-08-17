@@ -468,7 +468,7 @@ long Cpu::executeTwoByteInsn()
     Byte value = LOAD8(operand);
 
     if (category == 0) {
-        switch ((operand >> 3) & 0x7) {
+        switch ((opc >> 3) & 0x7) {
             case 0: description = "RLC"; value = doRotLeft(value); break;
             case 1: description = "RRC"; value = doRotRight(value); break;
             case 2: description = "RL"; value = doRotLeftWithCarry(value); break;
