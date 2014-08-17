@@ -293,9 +293,9 @@ Byte Cpu::doAluOp(int aluop, Byte lhs, Byte rhs)
         case 2: return doAddSub(lhs, rhs, 1, 0);
         case 3: return doAddSub(lhs, rhs, 1, 1);
 
-        case 4: v = lhs & rhs; regs.flags.z = regs.a == 0; regs.flags.n = 0; regs.flags.c = 0; regs.flags.h = 1; return v;
-        case 5: v = lhs ^ rhs; regs.flags.z = regs.a == 0; regs.flags.n = 0; regs.flags.c = 0; regs.flags.h = 0; return v;
-        case 6: v = lhs | rhs; regs.flags.z = regs.a == 0; regs.flags.n = 0; regs.flags.c = 0; regs.flags.h = 0; return v;
+        case 4: v = lhs & rhs; regs.flags.z = v == 0; regs.flags.n = 0; regs.flags.c = 0; regs.flags.h = 1; return v;
+        case 5: v = lhs ^ rhs; regs.flags.z = v == 0; regs.flags.n = 0; regs.flags.c = 0; regs.flags.h = 0; return v;
+        case 6: v = lhs | rhs; regs.flags.z = v == 0; regs.flags.n = 0; regs.flags.c = 0; regs.flags.h = 0; return v;
         case 7: doAddSub(lhs, rhs, 1, 0); return lhs; // SUB with result not saved
     }
     unreachable();
