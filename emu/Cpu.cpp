@@ -222,7 +222,7 @@ long Cpu::executeInsn_0x_3x(Byte opc)
         }
         case 0x2f: {
             regs.a = ~regs.a;
-            regs.flags.n = regs.flags.h = 0;
+            regs.flags.n = regs.flags.h = 1;
             return INSN_DONE(4, "CPL");
         }
         case 0x3f: {
@@ -487,9 +487,9 @@ long Cpu::executeTwoByteInsn()
             case 1: description = "RRC"; value = doRotRight(value); break;
             case 2: description = "RL"; value = doRotLeftWithCarry(value); break;
             case 3: description = "RR"; value = doRotRightWithCarry(value); break;
-            case 4: description = "SLA"; regs.flags.c = value & 0x80; value <<= 1; break;
+            case 4: description = "SLA"; regs.flags.c = !!(value & 0x80); value <<= 1; break;
             case 5: description = "SRA"; regs.flags.c = value & 0x01; value = ((SByte)value) >> 1; break;
-            case 6: description = "SWAP"; value = ((value & 0xf) << 4) | (value >> 4); break;
+            case 6: description = "SWAP"; value = ((value & 0xf) << 4) | (value >> 4); regs.flags.c = 0; break;
             case 7: description = "SRL"; regs.flags.c = value & 0x01; value >>= 1; break;
         }
         regs.flags.n = regs.flags.h = 0;
