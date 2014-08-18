@@ -1,5 +1,7 @@
 #pragma once
 
+typedef const char* MemAccessType; // Just in case we want an enum instead someday...
+
 union Regs;
 class Bus;
 class Logger
@@ -24,6 +26,6 @@ public:
     }
 
     void logInsn(Bus* bus, Regs* regs, int cycles, Word newPC, const char* fmt, ...);
-    void logMemoryAccess(Word addr, Byte data, bool isWrite);
+    void logMemoryAccess(Word addr, Byte data, bool isWrite, MemAccessType accessType);
     void warn(const char* fmt, ...);
 };

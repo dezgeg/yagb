@@ -36,11 +36,13 @@ void Bus::tickDma(int cycles)
     const int maxCycles = 4 * 4 * 40; // XXX: does it really take 4 cycles for each byte?
     int nextCycles = std::min(dmaCycles + cycles, maxCycles);
 
-    for (int i = dmaCycles; i < nextCycles; i++) {
+    for (int i = dmaCycles / 4; i < nextCycles / 4; i++) {
         Byte data = 0;
-        memAccess((dmaSourcePage << 8) | (i / 4), &data, false, false);
+        memAccess((dmaSourcePage << 8) | i, &data, false, "DMA");
         gpu->oamAccess(i / 4, &data, true);
     }
+
+    dmaCycles = nextCycles;
     if (nextCycles == maxCycles)
         dmaInProgress = false;
 }
@@ -61,7 +63,7 @@ void Bus::disableBootrom()
     bootromEnabled = false;
 }
 
-void Bus::memAccess(Word address, Byte* pData, bool isWrite, bool emulatorInternal)
+void Bus::memAccess(Word address, Byte* pData, bool isWrite, MemAccessType accessType)
 {
     if (address <= 0xff) {
         if (bootromEnabled) {
@@ -105,31 +107,31 @@ void Bus::memAccess(Word address, Byte* pData, bool isWrite, bool emulatorIntern
             log->warn("Unhandled read from address 0x%04X", address);
     }
 
-    if (!bootromEnabled && !emulatorInternal)
-        log->logMemoryAccess(address, *pData, isWrite);
+    if (!bootromEnabled && accessType)
+        log->logMemoryAccess(address, *pData, isWrite, accessType);
 }
 
-Byte Bus::memRead8(Word address, bool emulatorInternal)
+Byte Bus::memRead8(Word address, MemAccessType accessType)
 {
     Byte value = 0;
-    memAccess(address, &value, false, emulatorInternal);
+    memAccess(address, &value, false, accessType);
     return value;
 }
 
-void Bus::memWrite8(Word address, Byte value, bool emulatorInternal)
+void Bus::memWrite8(Word address, Byte value, MemAccessType accessType)
 {
-    memAccess(address, &value, true, emulatorInternal);
+    memAccess(address, &value, true, accessType);
 }
 
-Word Bus::memRead16(Word address, bool emulatorInternal)
+Word Bus::memRead16(Word address, MemAccessType accessType)
 {
-    return memRead8(address, emulatorInternal) | (memRead8(address + 1, emulatorInternal) << 8);
+    return memRead8(address, accessType) | (memRead8(address + 1, accessType) << 8);
 }
 
-void Bus::memWrite16(Word address, Word value, bool emulatorInternal)
+void Bus::memWrite16(Word address, Word value, MemAccessType accessType)
 {
-    memWrite8(address, (Byte)(value), emulatorInternal);
-    memWrite8(address + 1, (Byte)(value >> 8), emulatorInternal);
+    memWrite8(address, (Byte)(value), accessType);
+    memWrite8(address + 1, (Byte)(value >> 8), accessType);
 }
 
 void Bus::raiseIrq(IrqSet irqs)

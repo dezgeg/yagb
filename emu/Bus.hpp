@@ -1,11 +1,11 @@
 #pragma once
 #include "Irq.hpp"
+#include "Logger.hpp"
 #include "Platform.hpp"
 
 #include <cstring>
 
 class Gpu;
-class Logger;
 class Rom;
 class Timer;
 class Joypad;
@@ -30,7 +30,7 @@ class Bus
     Byte hram[127];
 
     void dmaRegAccess(Byte* pData, bool isWrite);
-    void memAccess(Word address, Byte* pData, bool isWrite, bool emulatorInternal);
+    void memAccess(Word address, Byte* pData, bool isWrite, MemAccessType accessType);
     void disableBootrom();
 
 public:
@@ -53,10 +53,10 @@ public:
 
     void tickDma(int cycles);
 
-    Byte memRead8(Word address, bool emulatorInternal=false);
-    void memWrite8(Word address, Byte value, bool emulatorInternal=false);
-    Word memRead16(Word address, bool emulatorInternal=false);
-    void memWrite16(Word address, Word value, bool emulatorInternal=false);
+    Byte memRead8(Word address, MemAccessType accessType="CPU");
+    void memWrite8(Word address, Byte value, MemAccessType accessType="CPU");
+    Word memRead16(Word address, MemAccessType accessType="CPU");
+    void memWrite16(Word address, Word value, MemAccessType accessType="CPU");
 
     void raiseIrq(IrqSet irqs);
     void ackIrq(Irq irq);

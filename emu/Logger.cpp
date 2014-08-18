@@ -14,7 +14,7 @@ void Logger::logInsn(Bus* bus, Regs* regs, int cycles, Word newPC, const char* f
     unsigned insnCount = (Word)(newPC - regs->pc);
     assert(insnCount <= 3);
     for (unsigned i = 0; i < insnCount; i++)
-        sprintf(&hexdumpBuf[i * 3], "%02X ", bus->memRead8(regs->pc + i, true));
+        sprintf(&hexdumpBuf[i * 3], "%02X ", bus->memRead8(regs->pc + i, NULL));
     hexdumpBuf[3 * insnCount - 1] = 0;
 
     char buf[256];
@@ -33,11 +33,11 @@ void Logger::logInsn(Bus* bus, Regs* regs, int cycles, Word newPC, const char* f
            cycles);
 }
 
-void Logger::logMemoryAccess(Word addr, Byte data, bool isWrite)
+void Logger::logMemoryAccess(Word addr, Byte data, bool isWrite, MemAccessType accessType)
 {
     if (!insnLoggingEnabled)
         return;
-    printf("[mem %s] 0x%04x: %02x\n", isWrite ? "write" : "read", addr, data);
+    printf("[mem %s (%s)] 0x%04x: %02x\n", isWrite ? "wr" : "rd", accessType, addr, data);
 }
 
 void Logger::warn(const char* fmt, ...)
