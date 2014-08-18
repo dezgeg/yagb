@@ -41,7 +41,7 @@ class Cpu
     bool evalConditional(Byte opc, char* outDescr, const char* opcodeStr);
 
     // ALU helpers
-    Byte doAddSub(unsigned lhs, unsigned rhs, bool isSub, bool withCarry, bool updateCarry);
+    Byte doAddSub(unsigned lhs, unsigned rhs, unsigned addSubFlags);
     Word doAdd16(unsigned lhs, unsigned rhs);
     Byte doRotLeft(Byte v);
     Byte doRotLeftWithCarry(Byte v);

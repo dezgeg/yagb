@@ -67,6 +67,115 @@ long Cpu::tick()
     unreachable();
 }
 
+bool Cpu::evalConditional(Byte opc, char* outDescr, const char* opcodeStr)
+{
+    // LSB set means unconditional, except JR r8 (0x18) is a special case.
+    if (opc == 0x18 || opc & 1) {
+        snprintf(outDescr, strlen(opcodeStr) + 1, "%s", opcodeStr);
+        return true;
+    }
+
+    bool flagIsCarry = opc & 0x10;
+    bool compareVal = opc & 0x08;
+    snprintf(outDescr, strlen(opcodeStr) + sizeof(" NZ,"), "%s %s%c,", opcodeStr,
+             compareVal ? "" : "N", flagIsCarry ? 'C' : 'Z');
+    return bool(flagIsCarry ? regs.flags.c : regs.flags.z) == compareVal;
+}
+
+enum AddSubFlags
+{
+    AS_IsSub        = 1 << 0,
+    AS_WithCarry    = 1 << 1,
+    AS_UpdateCarry  = 1 << 2,
+    AS_UpdateZero   = 1 << 3,
+};
+
+// TODO: not sane to have three bool parameters
+Byte Cpu::doAddSub(unsigned lhs, unsigned rhs, unsigned flags)
+{
+    unsigned carry = (flags & AS_WithCarry) && regs.flags.c;
+    unsigned result;
+    if (!(flags & AS_IsSub)) {
+        regs.flags.h = (lhs & 0xf) + (rhs & 0xf) + carry > 0xf;
+        result = lhs + rhs + carry;
+    } else {
+        regs.flags.h = (lhs & 0xf) - (rhs & 0xf) - carry > 0xf;
+        result = lhs - rhs - carry;
+    }
+
+    if (flags & AS_UpdateCarry)
+        regs.flags.c = result > 0xff;
+    if (flags & AS_UpdateZero)
+        regs.flags.z = Byte(result) == 0;
+    regs.flags.n = !!(flags & AS_IsSub);
+
+    return result;
+}
+
+Word Cpu::doAdd16(unsigned lhs, unsigned rhs)
+{
+    // set flags according to the MSB sum operation
+    unsigned lsbSum = (lhs & 0xFF) + (rhs & 0xFF);
+    regs.flags.c = lsbSum > 0xFF; // Slight hack?
+    doAddSub(lhs >> 8, rhs >> 8, AS_WithCarry | AS_UpdateCarry);
+    return lhs + rhs;
+}
+
+Byte Cpu::doRotLeft(Byte v)
+{
+    regs.flags.z = regs.flags.n = regs.flags.h = 0;
+    regs.flags.c = !!(v & 0x80);
+    return (v << 1) | !!(v & 0x80);
+}
+
+Byte Cpu::doRotLeftWithCarry(Byte v)
+{
+    regs.flags.z = regs.flags.n = regs.flags.h = 0;
+    bool oldMsb = v & 0x80;
+    v = (v << 1) | regs.flags.c;
+    regs.flags.c = oldMsb;
+
+    return v;
+}
+
+Byte Cpu::doRotRight(Byte v)
+{
+    regs.flags.z = regs.flags.n = regs.flags.h = 0;
+    regs.flags.c = !!(v & 0x01);
+    return (v >> 1) | ((v & 0x01) << 7);
+}
+
+Byte Cpu::doRotRightWithCarry(Byte v)
+{
+    regs.flags.z = regs.flags.n = regs.flags.h = 0;
+    bool oldLsb = v & 0x01;
+    v = (v >> 1) | (regs.flags.c << 7);
+    regs.flags.c = oldLsb;
+
+    return v;
+}
+
+static const char* const aluopStrings[] = {
+    "ADD", "ADC", "SUB", "SBC", "AND", "XOR", "OR", "CP",
+};
+
+Byte Cpu::doAluOp(int aluop, Byte lhs, Byte rhs)
+{
+    Byte v;
+    switch (aluop) {
+        case 0: return doAddSub(lhs, rhs, AS_UpdateCarry | AS_UpdateZero);
+        case 1: return doAddSub(lhs, rhs, AS_UpdateCarry | AS_UpdateZero | AS_WithCarry);
+        case 2: return doAddSub(lhs, rhs, AS_UpdateCarry | AS_UpdateZero | AS_IsSub);
+        case 3: return doAddSub(lhs, rhs, AS_UpdateCarry | AS_UpdateZero | AS_IsSub | AS_WithCarry);
+
+        case 4: v = lhs & rhs; regs.flags.z = v == 0; regs.flags.n = 0; regs.flags.c = 0; regs.flags.h = 1; return v;
+        case 5: v = lhs ^ rhs; regs.flags.z = v == 0; regs.flags.n = 0; regs.flags.c = 0; regs.flags.h = 0; return v;
+        case 6: v = lhs | rhs; regs.flags.z = v == 0; regs.flags.n = 0; regs.flags.c = 0; regs.flags.h = 0; return v;
+        case 7: doAddSub(lhs, rhs, AS_IsSub | AS_UpdateCarry | AS_UpdateZero); return lhs; // SUB with result not saved
+    }
+    unreachable();
+}
+
 long Cpu::executeInsn_0x_3x(Byte opc)
 {
     INSN_DBG_DECL();
@@ -144,9 +253,8 @@ long Cpu::executeInsn_0x_3x(Byte opc)
             return INSN_DONE(12, "LD %s, d16", reg16SpStrings[operand]);
         }
         case 0x9: {
-            regs.hl += regs.words[operand];
+            regs.hl = doAdd16(regs.hl, regs.words[operand]); // TODO: are flags really correct?
             return INSN_DONE(8, "ADD HL, %s", reg16SpStrings[operand]);
-            // TODO: flags?
         }
         case 0x2: {
             STORE8_AUTODEC(operand, regs.a);
@@ -166,13 +274,13 @@ long Cpu::executeInsn_0x_3x(Byte opc)
         }
         case 0x4: case 0xC: {
             Byte tmp = LOAD8(byteOperand);
-            STORE8(byteOperand, doAddSub(tmp, 1, false, false, false));
+            STORE8(byteOperand, doAddSub(tmp, 1, AS_UpdateZero));
             return INSN_DONE(4 + 2 * ldst8ExtraCycles(byteOperand), "INC %s",
                              reg8Strings[byteOperand]);
         }
         case 0x5: case 0xD: {
             Byte tmp = LOAD8(byteOperand);
-            STORE8(byteOperand, doAddSub(tmp, 1, true, false, false));
+            STORE8(byteOperand, doAddSub(tmp, 1, AS_IsSub | AS_UpdateZero));
             return INSN_DONE(4 + 2 * ldst8ExtraCycles(byteOperand), "DEC %s",
                              reg8Strings[byteOperand]);
         }
@@ -205,105 +313,6 @@ long Cpu::executeInsn_4x_6x(Byte opc)
     STORE8(dest, val);
     return INSN_DONE(4 + ldst8ExtraCycles(src) + ldst8ExtraCycles(dest),
                      "LD %s, %s", reg8Strings[dest], reg8Strings[src]);
-}
-
-bool Cpu::evalConditional(Byte opc, char* outDescr, const char* opcodeStr)
-{
-    // LSB set means unconditional, except JR r8 (0x18) is a special case.
-    if (opc == 0x18 || opc & 1) {
-        snprintf(outDescr, strlen(opcodeStr) + 1, "%s", opcodeStr);
-        return true;
-    }
-
-    bool flagIsCarry = opc & 0x10;
-    bool compareVal = opc & 0x08;
-    snprintf(outDescr, strlen(opcodeStr) + sizeof(" NZ,"), "%s %s%c,", opcodeStr,
-             compareVal ? "" : "N", flagIsCarry ? 'C' : 'Z');
-    return bool(flagIsCarry ? regs.flags.c : regs.flags.z) == compareVal;
-}
-
-// TODO: not sane to have three bool parameters
-Byte Cpu::doAddSub(unsigned lhs, unsigned rhs, bool isSub, bool withCarry, bool updateCarry=true)
-{
-    unsigned carry = withCarry && regs.flags.c;
-    unsigned result;
-    if (!isSub) {
-        regs.flags.h = (lhs & 0xf) + (rhs & 0xf) + carry > 0xf;
-        result = lhs + rhs + carry;
-    } else {
-        regs.flags.h = (lhs & 0xf) - (rhs & 0xf) - carry > 0xf;
-        result = lhs - rhs - carry;
-    }
-
-    if (updateCarry)
-        regs.flags.c = result > 0xff;
-    regs.flags.z = Byte(result) == 0;
-    regs.flags.n = isSub;
-
-    return result;
-}
-
-Word Cpu::doAdd16(unsigned lhs, unsigned rhs)
-{
-    // set flags according to the MSB sum operation
-    unsigned lsbSum = (lhs & 0xFF) + (rhs & 0xFF);
-    doAddSub(lhs >> 8, (rhs >> 8) + lsbSum > 0xFF, false, false);
-    return lhs + rhs;
-}
-
-Byte Cpu::doRotLeft(Byte v)
-{
-    regs.flags.z = regs.flags.n = regs.flags.h = 0;
-    regs.flags.c = !!(v & 0x80);
-    return (v << 1) | !!(v & 0x80);
-}
-
-Byte Cpu::doRotLeftWithCarry(Byte v)
-{
-    regs.flags.z = regs.flags.n = regs.flags.h = 0;
-    bool oldMsb = v & 0x80;
-    v = (v << 1) | regs.flags.c;
-    regs.flags.c = oldMsb;
-
-    return v;
-}
-
-Byte Cpu::doRotRight(Byte v)
-{
-    regs.flags.z = regs.flags.n = regs.flags.h = 0;
-    regs.flags.c = !!(v & 0x01);
-    return (v >> 1) | ((v & 0x01) << 7);
-}
-
-Byte Cpu::doRotRightWithCarry(Byte v)
-{
-    regs.flags.z = regs.flags.n = regs.flags.h = 0;
-    bool oldLsb = v & 0x01;
-    v = (v >> 1) | (regs.flags.c << 7);
-    regs.flags.c = oldLsb;
-
-    return v;
-}
-
-static const char* const aluopStrings[] = {
-    "ADD", "ADC", "SUB", "SBC", "AND", "XOR", "OR", "CP",
-};
-
-Byte Cpu::doAluOp(int aluop, Byte lhs, Byte rhs)
-{
-    Byte v;
-    switch (aluop) {
-        case 0: return doAddSub(lhs, rhs, 0, 0);
-        case 1: return doAddSub(lhs, rhs, 0, 1);
-        case 2: return doAddSub(lhs, rhs, 1, 0);
-        case 3: return doAddSub(lhs, rhs, 1, 1);
-
-        case 4: v = lhs & rhs; regs.flags.z = v == 0; regs.flags.n = 0; regs.flags.c = 0; regs.flags.h = 1; return v;
-        case 5: v = lhs ^ rhs; regs.flags.z = v == 0; regs.flags.n = 0; regs.flags.c = 0; regs.flags.h = 0; return v;
-        case 6: v = lhs | rhs; regs.flags.z = v == 0; regs.flags.n = 0; regs.flags.c = 0; regs.flags.h = 0; return v;
-        case 7: doAddSub(lhs, rhs, 1, 0); return lhs; // SUB with result not saved
-    }
-    unreachable();
 }
 
 // Opcodes 7x..Bx: Accu-based 8-bit alu ops
