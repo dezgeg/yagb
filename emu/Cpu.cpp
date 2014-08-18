@@ -225,17 +225,22 @@ bool Cpu::evalConditional(Byte opc, char* outDescr, const char* opcodeStr)
 // TODO: not sane to have three bool parameters
 Byte Cpu::doAddSub(unsigned lhs, unsigned rhs, bool isSub, bool withCarry, bool updateCarry=true)
 {
-    rhs = withCarry ? rhs + regs.flags.c : rhs;
-    rhs = isSub ? ~rhs + 1 : rhs;
+    unsigned carry = withCarry && regs.flags.c;
+    unsigned result;
+    if (!isSub) {
+        regs.flags.h = (lhs & 0xf) + (rhs & 0xf) + carry > 0xf;
+        result = lhs + rhs + carry;
+    } else {
+        regs.flags.h = (lhs & 0xf) - (rhs & 0xf) - carry > 0xf;
+        result = lhs - rhs - carry;
+    }
 
-    unsigned sum = lhs + rhs;
-    regs.flags.h = (lhs & 0xf) + (rhs & 0xf) > 0xf;
     if (updateCarry)
-        regs.flags.c = sum > 0xff;
-    regs.flags.z = Byte(sum) == 0;
+        regs.flags.c = result > 0xff;
+    regs.flags.z = Byte(result) == 0;
     regs.flags.n = isSub;
 
-    return sum;
+    return result;
 }
 
 Word Cpu::doAdd16(unsigned lhs, unsigned rhs)
