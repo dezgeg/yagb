@@ -462,7 +462,7 @@ long Cpu::executeInsn_Cx_Fx(Byte opc)
         case 0x7: case 0xF: {
             regs.sp -= 2;
             bus->memWrite16(regs.sp, regs.pc);
-            INSN_BRANCH(wideOperand * 0x10);
+            INSN_BRANCH(wideOperand * 0x08);
             return INSN_DONE(16, "RST 0x%02x", regs.pc);
         }
     }
