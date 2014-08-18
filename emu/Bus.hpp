@@ -27,7 +27,7 @@ class Bus
     Byte hram[127];
 
     void joypadAccess(Byte* pData, bool isWrite);
-    void memAccess(Word address, Byte* pData, bool isWrite);
+    void memAccess(Word address, Byte* pData, bool isWrite, bool emulatorInternal);
     void disableBootrom();
 
 public:
@@ -45,13 +45,15 @@ public:
         std::memset(hram, 0xAA, sizeof(ram));
     }
 
-    Byte memRead8(Word address);
-    void memWrite8(Word address, Byte value);
-    Word memRead16(Word address);
-    void memWrite16(Word address, Word value);
+    Byte memRead8(Word address, bool emulatorInternal=false);
+    void memWrite8(Word address, Byte value, bool emulatorInternal=false);
+    Word memRead16(Word address, bool emulatorInternal=false);
+    void memWrite16(Word address, Word value, bool emulatorInternal=false);
 
     void raiseIrq(IrqSet irqs);
     void ackIrq(Irq irq);
     IrqSet getEnabledIrqs();
     IrqSet getPendingIrqs();
+
+    bool isBootromEnabled();
 };

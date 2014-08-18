@@ -30,7 +30,7 @@ void Bus::disableBootrom()
     bootromEnabled = false;
 }
 
-void Bus::memAccess(Word address, Byte* pData, bool isWrite)
+void Bus::memAccess(Word address, Byte* pData, bool isWrite, bool emulatorInternal)
 {
     if (address <= 0xff) {
         if (bootromEnabled) {
@@ -72,31 +72,31 @@ void Bus::memAccess(Word address, Byte* pData, bool isWrite)
             log->warn("Unhandled read from address 0x%04X", address);
     }
 
-    if (!bootromEnabled)
+    if (!bootromEnabled && !emulatorInternal)
         log->logMemoryAccess(address, *pData, isWrite);
 }
 
-Byte Bus::memRead8(Word address)
+Byte Bus::memRead8(Word address, bool emulatorInternal)
 {
     Byte value = 0;
-    memAccess(address, &value, false);
+    memAccess(address, &value, false, emulatorInternal);
     return value;
 }
 
-void Bus::memWrite8(Word address, Byte value)
+void Bus::memWrite8(Word address, Byte value, bool emulatorInternal)
 {
-    memAccess(address, &value, true);
+    memAccess(address, &value, true, emulatorInternal);
 }
 
-Word Bus::memRead16(Word address)
+Word Bus::memRead16(Word address, bool emulatorInternal)
 {
-    return memRead8(address) | (memRead8(address + 1) << 8);
+    return memRead8(address, emulatorInternal) | (memRead8(address + 1, emulatorInternal) << 8);
 }
 
-void Bus::memWrite16(Word address, Word value)
+void Bus::memWrite16(Word address, Word value, bool emulatorInternal)
 {
-    memWrite8(address, (Byte)(value));
-    memWrite8(address + 1, (Byte)(value >> 8));
+    memWrite8(address, (Byte)(value), emulatorInternal);
+    memWrite8(address + 1, (Byte)(value >> 8), emulatorInternal);
 }
 
 void Bus::raiseIrq(IrqSet irqs)
@@ -119,4 +119,9 @@ IrqSet Bus::getEnabledIrqs()
 IrqSet Bus::getPendingIrqs()
 {
     return irqsPending & irqsEnabled;
+}
+
+bool Bus::isBootromEnabled()
+{
+    return bootromEnabled;
 }
