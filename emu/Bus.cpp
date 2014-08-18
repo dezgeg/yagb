@@ -7,6 +7,8 @@
 #include "Timer.hpp"
 #include "Utils.hpp"
 
+#include <algorithm>
+
 static const Byte bootrom[] =
     "\x31\xfe\xff\xaf\x21\xff\x9f\x32\xcb\x7c\x20\xfb\x21\x26\xff\x0e"
     "\x11\x3e\x80\x32\xe2\x0c\x3e\xf3\xe2\x32\x3e\x77\x77\x3e\xfc\xe0"
@@ -24,6 +26,35 @@ static const Byte bootrom[] =
     "\xdd\xdc\x99\x9f\xbb\xb9\x33\x3e\x3c\x42\xb9\xa5\xb9\xa5\x42\x3c"
     "\x21\x04\x01\x11\xa8\x00\x1a\x13\xbe\x20\xfe\x23\x7d\xfe\x34\x20"
     "\xf5\x06\x19\x78\x86\x23\x05\x20\xfb\x86\x20\xfe\x3e\x01\xe0\x50";
+
+void Bus::tickDma(int cycles)
+{
+    if (!dmaInProgress)
+        return;
+
+    assert(cycles % 4 == 0);
+    const int maxCycles = 4 * 4 * 40; // XXX: does it really take 4 cycles for each byte?
+    int nextCycles = std::min(dmaCycles + cycles, maxCycles);
+
+    for (int i = dmaCycles; i < nextCycles; i++) {
+        Byte data = 0;
+        memAccess((dmaSourcePage << 8) | (i / 4), &data, false, false);
+        gpu->oamAccess(i / 4, &data, true);
+    }
+    if (nextCycles == maxCycles)
+        dmaInProgress = false;
+}
+
+void Bus::dmaRegAccess(Byte* pData, bool isWrite)
+{
+    if (isWrite) {
+        dmaInProgress = true;
+        dmaCycles = 0;
+        dmaSourcePage = *pData;
+    } else {
+        *pData = dmaSourcePage;
+    }
+}
 
 void Bus::disableBootrom()
 {
@@ -57,6 +88,8 @@ void Bus::memAccess(Word address, Byte* pData, bool isWrite, bool emulatorIntern
         timer->regAccess(address, pData, isWrite);
     else if (address == 0xff0f)
         BusUtil::simpleRegAccess(&irqsPending, pData, isWrite, 0x1f);
+    else if (address == 0xff46)
+        dmaRegAccess(pData, isWrite);
     else if (address >= 0xff40 && address <= 0xff4b)
         gpu->registerAccess(address, pData, isWrite);
     else if (address == 0xff50)

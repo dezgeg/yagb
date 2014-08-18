@@ -13,6 +13,7 @@ void Gameboy::runFrame()
         if (joypad.tick())
             bus.raiseIrq(Irq_Joypad);
         int cycleDelta = cpu.tick();
+        bus.tickDma(cycleDelta);
         IrqSet gpuIrqs = gpu.tick(cycleDelta);
         bus.raiseIrq(gpuIrqs);
         currentCycle += cycleDelta;

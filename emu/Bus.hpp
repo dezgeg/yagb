@@ -19,6 +19,9 @@ class Bus
     Joypad* joypad;
 
     bool bootromEnabled;
+    bool dmaInProgress;
+    int dmaCycles;
+    Byte dmaSourcePage;
 
     IrqSet irqsEnabled;
     IrqSet irqsPending;
@@ -26,7 +29,7 @@ class Bus
     Byte ram[8192];
     Byte hram[127];
 
-    void joypadAccess(Byte* pData, bool isWrite);
+    void dmaRegAccess(Byte* pData, bool isWrite);
     void memAccess(Word address, Byte* pData, bool isWrite, bool emulatorInternal);
     void disableBootrom();
 
@@ -38,12 +41,17 @@ public:
         timer(timer),
         joypad(joypad),
         bootromEnabled(true),
+        dmaInProgress(false),
+        dmaCycles(0),
+        dmaSourcePage(0),
         irqsEnabled(0),
         irqsPending(0)
     {
         std::memset(ram, 0xAA, sizeof(ram));
         std::memset(hram, 0xAA, sizeof(ram));
     }
+
+    void tickDma(int cycles);
 
     Byte memRead8(Word address, bool emulatorInternal=false);
     void memWrite8(Word address, Byte value, bool emulatorInternal=false);
