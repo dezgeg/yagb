@@ -344,14 +344,16 @@ long Cpu::executeInsn_Cx_Fx(Byte opc)
         }
         case 0xE8: {
             // TODO: nowhere is really documented how the flags are set in this case.
-            Byte tmp = bus->memRead8(bus->memRead8(regs.pc++));
+            Byte tmp = bus->memRead8(regs.pc++);
             regs.sp = doAdd16(regs.sp, (Word)(SByte)tmp);
+            regs.flags.z = 0;
             return INSN_DONE(16, "ADD SP, r8");
         }
         case 0xF8: {
             // TODO: not sure about these flags either
-            Byte tmp = bus->memRead8(bus->memRead8(regs.pc++));
+            Byte tmp = bus->memRead8(regs.pc++);
             regs.hl = doAdd16(regs.sp, (Word)(SByte)tmp);
+            regs.flags.z = 0;
             return INSN_DONE(12, "LD HL, SP+r8");
         }
         case 0xE9: {
