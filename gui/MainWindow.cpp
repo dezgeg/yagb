@@ -23,6 +23,8 @@ static const pair<unsigned, QString> lcdRegs[] = {
     { 0xff45, QStringLiteral("LYC") },
     { 0xff46, QStringLiteral("DMA") },
     { 0xff47, QStringLiteral("BGP") },
+    { 0xff48, QStringLiteral("OBP0") },
+    { 0xff49, QStringLiteral("OBP1") },
     { 0xff4a, QStringLiteral("WY") },
     { 0xff4b, QStringLiteral("WX") },
 };
