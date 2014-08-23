@@ -89,11 +89,6 @@ void Gpu::captureSpriteState()
 
 void Gpu::renderScanline()
 {
-    unsigned bgY = regs.ly + regs.scy;
-    unsigned bgTileY = (bgY / 8) % 32;
-    unsigned bgTileYBit = bgY % 8;
-
-    Byte* bgTileBase = regs.bgTileBaseSelect ? &vram[0x1c00] : &vram[0x1800];    // Bit 3
     Byte* bgPatternBase = regs.bgPatternBaseSelect ? &vram[0x0]: &vram[0x1000];  // Bit 4
 
     unsigned spriteIndex = 0;
@@ -103,10 +98,29 @@ void Gpu::renderScanline()
             continue;
         }
 
+        int scrollX, scrollY;
+        bool bgOrWinEnabled;
+        bool tileBaseSelector;
+        if (regs.winEnabled && regs.ly >= regs.wy && (int)i >= regs.wx - 7) {
+            scrollX = regs.wx - 7;
+            scrollY = regs.wy;
+            bgOrWinEnabled = true;
+            tileBaseSelector = regs.winTileBaseSelect; // Bit 6
+        } else {
+            scrollX = regs.scx;
+            scrollY = regs.scy;
+            bgOrWinEnabled = regs.bgEnabled;
+            tileBaseSelector = regs.bgTileBaseSelect; // Bit 3
+        }
+        Byte* bgTileBase = tileBaseSelector ? &vram[0x1c00] : &vram[0x1800];    // Bit 3/6
+        unsigned bgY = regs.ly + scrollY;
+        unsigned bgTileY = (bgY / 8) % 32;
+        unsigned bgTileYBit = bgY % 8;
+
         Byte bgColor = 0;
         Byte pixel = 0;
-        if (regs.bgEnabled) {
-            unsigned bgX = i + regs.scx;
+        if (bgOrWinEnabled) {
+            unsigned bgX = i + scrollX;
             unsigned bgTileX = (bgX / 8) % 32;
             unsigned bgTileXBit = bgX % 8;
 

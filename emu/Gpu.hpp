@@ -53,7 +53,7 @@ class Gpu
                 Byte bgTileBaseSelect : 1;
                 Byte bgPatternBaseSelect : 1;
                 Byte winEnabled : 1;
-                Byte winPatternBaseSelect : 1;
+                Byte winTileBaseSelect : 1;
                 Byte lcdEnabled : 1;
             };
         };
