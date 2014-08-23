@@ -130,11 +130,12 @@ trySpriteAgain:
             }
             int tileY = regs.ly - (oamEntry->y - 16);
             assert(tileY >= 0 && tileX < 16);
-            Byte palette = oamEntry->palette ? regs.obp1 : regs.obp0;
+            Byte palette = oamEntry->flags.palette ? regs.obp1 : regs.obp0;
 
-            Byte spriteColor = drawTilePixel(&vram[16 * oamEntry->tile], tileX, tileY);
+            Byte spriteColor = drawTilePixel(&vram[16 * oamEntry->tile], tileX, tileY,
+                                             regs.objSizeLarge, oamEntry->flags);
             Byte spritePixel = applyPalette(palette, spriteColor);
-            if (spriteColor != 0 && (!oamEntry->lowPriority || bgColor == 0))
+            if (spriteColor != 0 && (!oamEntry->flags.lowPriority || bgColor == 0))
                 pixel = spritePixel;
         }
 noSprite:

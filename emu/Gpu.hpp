@@ -16,8 +16,8 @@ struct OamEntry
     Byte y;
     Byte x;
     Byte tile;
-    union {
-        Byte flags;
+    union OamFlags {
+        Byte byteVal;
         struct {
             Byte unused : 4;
             Byte palette : 1;
@@ -25,7 +25,7 @@ struct OamEntry
             Byte yFlip : 1;
             Byte lowPriority : 1;
         };
-    };
+    } flags;
 };
 
 class Gpu
@@ -101,10 +101,14 @@ public:
     }
 
     /* Inline so GUI code can reuse this and be optimized. */
-    static inline Byte drawTilePixel(Byte* tile, unsigned x, unsigned y, Byte palette = 0xe4)
+    static inline Byte drawTilePixel(Byte* tile, unsigned x, unsigned y, bool large = false,
+                                     OamEntry::OamFlags flags = OamEntry::OamFlags(), Byte palette = 0xe4)
     {
-        Byte lsbs = tile[2 * y + 0];
-        Byte msbs = tile[2 * y + 1];
+        Byte height = large ? 16 : 8;
+        unsigned base = 2 * (flags.yFlip ? height - y - 1 : y);
+
+        Byte lsbs = flags.xFlip ? reverseBits(tile[base + 0]) : tile[base + 0];
+        Byte msbs = flags.xFlip ? reverseBits(tile[base + 1]) : tile[base + 1];
 
         unsigned colorIndex = !!(lsbs & (0x80 >> x)) |
                               ((!!(msbs & (0x80 >> x))) << 1);
