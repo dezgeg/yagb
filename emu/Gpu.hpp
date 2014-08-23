@@ -72,6 +72,17 @@ public:
         std::memset(&regs, 0, sizeof(regs));
     }
 
+    /* Inline so GUI code can reuse this and be optimized. */
+    static inline Byte drawTilePixel(Byte* tile, unsigned x, unsigned y, Byte palette)
+    {
+        Byte lsbs = tile[2 * y + 0];
+        Byte msbs = tile[2 * y + 1];
+
+        unsigned colorIndex = !!(lsbs & (0x80 >> x)) |
+                              ((!!(msbs & (0x80 >> x))) << 1);
+        return (palette >> colorIndex * 2) & 0x3;
+    }
+
     int getCurrentScanline() { return regs.ly; }
     int getCurrentFrame() { return frame; }
     Byte* getFramebuffer() { return &framebuffer[0][0]; }

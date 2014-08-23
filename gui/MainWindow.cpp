@@ -160,12 +160,10 @@ static void drawTile(int i, int j, Byte* tile, QPainter* painter)
     QImage image((uchar*)tmpBuf, 8, 8, QImage::Format_Indexed8);
     image.setColorTable(monochromeToRgb); // TODO: copies?
 
-    for (unsigned k = 0; k < 8; k++) {
-        for (unsigned l = 0; l < 8; l++) {
-            tmpBuf[k][l] = !!(tile[2 * k] & (0x80 >> l)) |
-                            ((!!(tile[2 * k + 1] & (0x80 >> l))) << 1);
-        }
-    }
+    for (unsigned x = 0; x < 8; x++)
+        for (unsigned y = 0; y < 8; y++)
+            tmpBuf[y][x] = Gpu::drawTilePixel(tile, x, y, 0xe4);
+
     painter->drawImage(QRectF(QPointF(17 * i, 17 * j), QSizeF(16, 16)), image,
                        QRectF(QPointF(0, 0), QSize(8, 8)));
 }

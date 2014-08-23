@@ -82,12 +82,8 @@ void Gpu::renderScanline()
 
         Byte tileNum = bgTileBase[bgTileY * 32 + bgTileX];
         long tileOff = regs.bgPatternBaseSelect ? (long)tileNum : (long)(SByte)tileNum;
-        Byte lsbs = bgPatternBase[16 * tileOff + 2 * bgTileYBit];
-        Byte msbs = bgPatternBase[16 * tileOff + 2 * bgTileYBit + 1];
 
-        unsigned colorIndex = !!(lsbs & (0x80 >> bgTileXBit)) |
-                              ((!!(msbs & (0x80 >> bgTileXBit))) << 1);
-        framebuffer[regs.ly][i] = (regs.bgp >> colorIndex * 2) & 0x3;
+        framebuffer[regs.ly][i] = drawTilePixel(bgPatternBase + 16 * tileOff, bgTileXBit, bgTileYBit, regs.bgp);
     }
 }
 
