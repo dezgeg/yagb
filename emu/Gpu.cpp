@@ -102,8 +102,8 @@ void Gpu::renderScanline()
         bool bgOrWinEnabled;
         bool tileBaseSelector;
         if (regs.winEnabled && regs.ly >= regs.wy && (int)i >= regs.wx - 7) {
-            scrollX = regs.wx - 7;
-            scrollY = regs.wy;
+            scrollX = -regs.wx + 7;
+            scrollY = -regs.wy;
             bgOrWinEnabled = true;
             tileBaseSelector = regs.winTileBaseSelect; // Bit 6
         } else {
