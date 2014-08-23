@@ -39,7 +39,7 @@ void Bus::tickDma(int cycles)
     for (int i = dmaCycles / 4; i < nextCycles / 4; i++) {
         Byte data = 0;
         memAccess((dmaSourcePage << 8) | i, &data, false, "DMA");
-        gpu->oamAccess(i / 4, &data, true);
+        gpu->oamAccess(i, &data, true);
     }
 
     dmaCycles = nextCycles;

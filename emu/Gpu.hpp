@@ -11,6 +11,23 @@ enum {
     ScreenHeight = 144,
 };
 
+struct OamEntry
+{
+    Byte y;
+    Byte x;
+    Byte tile;
+    union {
+        Byte flags;
+        struct {
+            Byte unused : 4;
+            Byte palette : 1;
+            Byte xFlip : 1;
+            Byte yFlip : 1;
+            Byte lowPriority : 1;
+        };
+    };
+};
+
 class Gpu
 {
     Logger* log;
@@ -18,9 +35,13 @@ class Gpu
     long frame;
     int cycleResidue;
     Byte framebuffer[ScreenHeight][ScreenWidth];
+    SByte visibleSprites[10];
 
     Byte vram[8192];
-    Byte oam[0xa0];
+    union {
+        Byte oam[0xa0];
+        OamEntry sprites[40];
+    };
     struct GpuRegs
     {
         union {
@@ -59,6 +80,7 @@ class Gpu
     } regs;
 
     void renderScanline();
+    void captureSpriteState();
 
 public:
     Gpu(Logger* log) :
@@ -70,6 +92,7 @@ public:
         std::memset(&vram[0], 0, sizeof(vram));
         std::memset(&oam[0], 0, sizeof(oam));
         std::memset(&regs, 0, sizeof(regs));
+        std::memset(&visibleSprites[0], 0, sizeof(visibleSprites));
     }
 
     /* Inline so GUI code can reuse this and be optimized. */

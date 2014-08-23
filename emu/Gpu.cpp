@@ -51,8 +51,10 @@ IrqSet Gpu::tick(long cycles)
             irqs |= bit(Irq_LcdStat);
         }
     } else {
-        if (nowInOamFetch && !wasInOamFetch && regs.oamIrqEnabled) {
-            irqs |= bit(Irq_LcdStat);
+        if (!nowInOamFetch && wasInOamFetch) { // TODO - bug
+            captureSpriteState();
+            if (regs.oamIrqEnabled)
+                irqs |= bit(Irq_LcdStat);
         }
         if (nowInHBlank && ! wasInHBlank && regs.hBlankIrqEnabled) {
             irqs |= bit(Irq_LcdStat);
@@ -60,6 +62,29 @@ IrqSet Gpu::tick(long cycles)
     }
 
     return irqs;
+}
+
+void Gpu::captureSpriteState()
+{
+    int prevSpriteXPos = -1000;
+    for (unsigned i = 0; i < 10; i++) {
+        int bestSpriteNum = -1;
+        int bestXPos = 1000;
+
+        for (unsigned j = 0; j < 40; j++) {
+            int spriteTop = sprites[j].y - 16;
+            int spriteBottom = spriteTop + (regs.objSizeLarge ? 16 : 8);
+
+            if (!(regs.ly >= spriteTop && regs.ly < spriteBottom))
+                continue; // not visible this scanline
+            if (sprites[j].x > prevSpriteXPos && sprites[j].x < bestXPos) {
+                bestSpriteNum = j;
+                bestXPos = sprites[j].x;
+            }
+        }
+        visibleSprites[i] = bestSpriteNum;
+        prevSpriteXPos = bestXPos;
+    }
 }
 
 void Gpu::renderScanline()
@@ -70,20 +95,47 @@ void Gpu::renderScanline()
 
     Byte* bgTileBase = regs.bgTileBaseSelect ? &vram[0x1c00] : &vram[0x1800];    // Bit 3
     Byte* bgPatternBase = regs.bgPatternBaseSelect ? &vram[0x0]: &vram[0x1000];  // Bit 4
+
+    unsigned spriteIndex = 0;
     for (unsigned i = 0; i < ScreenWidth; i++) {
         if (!regs.lcdEnabled || !regs.bgEnabled) {
             framebuffer[regs.ly][i] = 0;
             continue;
         }
 
-        unsigned bgX = i + regs.scx;
-        unsigned bgTileX = (bgX / 8) % 32;
-        unsigned bgTileXBit = bgX % 8;
+        Byte pixel = 0;
+        if (regs.bgEnabled) {
+            unsigned bgX = i + regs.scx;
+            unsigned bgTileX = (bgX / 8) % 32;
+            unsigned bgTileXBit = bgX % 8;
 
-        Byte tileNum = bgTileBase[bgTileY * 32 + bgTileX];
-        long tileOff = regs.bgPatternBaseSelect ? (long)tileNum : (long)(SByte)tileNum;
+            Byte tileNum = bgTileBase[bgTileY * 32 + bgTileX];
+            long tileOff = regs.bgPatternBaseSelect ? (long)tileNum : (long)(SByte)tileNum;
+            pixel = drawTilePixel(bgPatternBase + 16 * tileOff, bgTileXBit, bgTileYBit, regs.bgp);
+        }
 
-        framebuffer[regs.ly][i] = drawTilePixel(bgPatternBase + 16 * tileOff, bgTileXBit, bgTileYBit, regs.bgp);
+trySpriteAgain:
+        if (regs.objEnabled && spriteIndex < 10 && visibleSprites[spriteIndex] >= 0) {
+            OamEntry* oamEntry = &sprites[visibleSprites[spriteIndex]];
+
+            int tileX = i - (oamEntry->x - 8);
+            if (tileX < 0)
+                goto noSprite;
+            assert(tileX <= 8);
+            if (tileX == 8) {
+                spriteIndex++;
+                goto trySpriteAgain;
+            }
+            int tileY = regs.ly - (oamEntry->y - 16);
+            assert(tileY >= 0 && tileX < 16);
+            Byte palette = oamEntry->palette ? regs.obp1 : regs.obp0;
+
+            Byte spritePixel = drawTilePixel(&vram[16 * oamEntry->tile], tileX, tileY, palette);
+            pixel = spritePixel; // TODO: priority
+        }
+noSprite:
+
+        framebuffer[regs.ly][i] = pixel;
     }
 }
 
