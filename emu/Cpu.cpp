@@ -54,8 +54,11 @@ long Cpu::tick()
         bus->memWrite16(regs.sp, regs.pc);
         regs.pc = 0x40 + irq * 0x8;
         regs.irqsEnabled = false;
-        return 4; // TODO: what's the delay?
+        halted = stopped = false;
+        return 12; // TODO: what's the delay?
     }
+    if (halted || stopped)
+        return 4;
 
     Byte opc = bus->memRead8(regs.pc++);
     switch (opc >> 6) {
