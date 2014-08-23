@@ -95,15 +95,20 @@ public:
         std::memset(&visibleSprites[0], 0, sizeof(visibleSprites));
     }
 
+    static inline Byte applyPalette(Byte palette, Byte colorIndex)
+    {
+        return (palette >> colorIndex * 2) & 0x3;
+    }
+
     /* Inline so GUI code can reuse this and be optimized. */
-    static inline Byte drawTilePixel(Byte* tile, unsigned x, unsigned y, Byte palette)
+    static inline Byte drawTilePixel(Byte* tile, unsigned x, unsigned y, Byte palette = 0xe4)
     {
         Byte lsbs = tile[2 * y + 0];
         Byte msbs = tile[2 * y + 1];
 
         unsigned colorIndex = !!(lsbs & (0x80 >> x)) |
                               ((!!(msbs & (0x80 >> x))) << 1);
-        return (palette >> colorIndex * 2) & 0x3;
+        return applyPalette(palette, colorIndex);
     }
 
     int getCurrentScanline() { return regs.ly; }

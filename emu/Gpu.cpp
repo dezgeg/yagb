@@ -103,6 +103,7 @@ void Gpu::renderScanline()
             continue;
         }
 
+        Byte bgColor = 0;
         Byte pixel = 0;
         if (regs.bgEnabled) {
             unsigned bgX = i + regs.scx;
@@ -111,7 +112,8 @@ void Gpu::renderScanline()
 
             Byte tileNum = bgTileBase[bgTileY * 32 + bgTileX];
             long tileOff = regs.bgPatternBaseSelect ? (long)tileNum : (long)(SByte)tileNum;
-            pixel = drawTilePixel(bgPatternBase + 16 * tileOff, bgTileXBit, bgTileYBit, regs.bgp);
+            bgColor = drawTilePixel(bgPatternBase + 16 * tileOff, bgTileXBit, bgTileYBit);
+            pixel = applyPalette(regs.bgp, bgColor);
         }
 
 trySpriteAgain:
@@ -130,8 +132,10 @@ trySpriteAgain:
             assert(tileY >= 0 && tileX < 16);
             Byte palette = oamEntry->palette ? regs.obp1 : regs.obp0;
 
-            Byte spritePixel = drawTilePixel(&vram[16 * oamEntry->tile], tileX, tileY, palette);
-            pixel = spritePixel; // TODO: priority
+            Byte spriteColor = drawTilePixel(&vram[16 * oamEntry->tile], tileX, tileY);
+            Byte spritePixel = applyPalette(palette, spriteColor);
+            if (spriteColor != 0 && (!oamEntry->lowPriority || bgColor == 0))
+                pixel = spritePixel;
         }
 noSprite:
 
