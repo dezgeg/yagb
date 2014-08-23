@@ -4,12 +4,18 @@
 
 #include <string>
 
+enum Mapper {
+    Mapper_None,
+    Mapper_MBC1,
+    Mapper_MBC3,
+};
+
 class Rom
 {
     Logger* log;
     std::string romData;
     Byte ramData[8192];
-    Byte mapper;
+    Mapper mapper;
 
     struct MapperRegs {
         bool ramEnabled;

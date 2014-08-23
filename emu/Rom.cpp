@@ -23,11 +23,20 @@ Rom::Rom(Logger* log, const char* fileName) :
     stream.seekg(0, std::ios::beg);
     stream.read(&romData[0], sz);
 
-    mapper = romData[MapperOffset];
     std::memset(ramData, 0, sizeof(ramData));
 
     std::memset(&mapperRegs, 0, sizeof(mapperRegs));
     mapperRegs.romBankLowBits = 1;
+
+    Byte mapperByte = romData[MapperOffset];
+    if (mapperByte == 0x00)
+        mapper = Mapper_None;
+    else if (mapperByte >= 0x01 && mapperByte <= 0x03)
+        mapper = Mapper_MBC1;
+    else if (mapperByte >= 0x0f && mapperByte <= 0x13)
+        mapper = Mapper_MBC3;
+    else
+        assert(!"Unknown mapper");
 }
 
 void Rom::cartRomAccess(Word address, Byte* pData, bool isWrite)
@@ -43,7 +52,13 @@ void Rom::cartRomAccess(Word address, Byte* pData, bool isWrite)
                 mapperRegs.ramEnabled = (*pData & 0x0f) == 0x0a;
                 break;
             case 1: // 2000-3FFF
-                mapperRegs.romBankLowBits = *pData & 0x1f;
+                if (mapper == Mapper_MBC1)
+                    mapperRegs.romBankLowBits = *pData & 0x1f;
+                else if (mapper == Mapper_MBC3)
+                    mapperRegs.romBankLowBits = *pData & 0x7f;
+                else
+                    assert(0);
+
                 if (!mapperRegs.romBankLowBits)
                     mapperRegs.romBankLowBits = 1;
                 break;
@@ -58,8 +73,15 @@ void Rom::cartRomAccess(Word address, Byte* pData, bool isWrite)
         if (!mapper || address < 0x4000) {
             *pData = address < romData.size() ? romData[address] : 0;
         } else {
-            unsigned highBits = mapperRegs.bankingMode ? 0 : mapperRegs.bankHighBits;
-            unsigned bank = (highBits << 5) | mapperRegs.romBankLowBits;
+            unsigned bank;
+            if (mapper == Mapper_MBC1) {
+                unsigned highBits = mapperRegs.bankingMode ? 0 : mapperRegs.bankHighBits;
+                bank = (highBits << 5) | mapperRegs.romBankLowBits;
+            } else if (mapper == Mapper_MBC3) {
+                bank = mapperRegs.romBankLowBits;
+            } else {
+                assert(0);
+            }
             assert(bank);
             *pData = romData[bank * 0x4000 + address - 0x4000];
         }
