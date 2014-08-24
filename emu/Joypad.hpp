@@ -51,7 +51,7 @@ public:
     void regAccess(Byte* pData, bool isWrite)
     {
         if (isWrite) {
-            latches = *pData >> 4;
+            latches = (*pData >> 4) & 0x3;
         } else {
             *pData = getStateFor(latestKeys) | (latches << 4);
         }

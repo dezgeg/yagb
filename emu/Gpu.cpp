@@ -187,7 +187,6 @@ void Gpu::registerAccess(Word reg, Byte* pData, bool isWrite)
         case 0xff40: BusUtil::simpleRegAccess(&regs.lcdc, pData, isWrite); return;
         case 0xff41: {
             if (isWrite) {
-                log->warn("STAT write = %02x", *pData);
                 regs.stat = *pData & 0xf8;
             } else {
                 Byte tmp = regs.stat;

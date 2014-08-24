@@ -6,9 +6,10 @@
 #include <cstring>
 
 class Gpu;
-class Rom;
-class Timer;
 class Joypad;
+class Rom;
+class Serial;
+class Timer;
 
 class Bus
 {
@@ -17,6 +18,7 @@ class Bus
     Gpu* gpu;
     Timer* timer;
     Joypad* joypad;
+    Serial* serial;
 
     bool bootromEnabled;
     bool dmaInProgress;
@@ -29,17 +31,19 @@ class Bus
     Byte ram[8192];
     Byte hram[127];
 
+    void dummySerialAccess(Word address, Byte* pData, bool isWrite);
     void dmaRegAccess(Byte* pData, bool isWrite);
     void memAccess(Word address, Byte* pData, bool isWrite, MemAccessType accessType);
     void disableBootrom();
 
 public:
-    Bus(Logger* log, Rom* rom, Gpu* gpu, Timer* timer, Joypad* joypad) :
+    Bus(Logger* log, Rom* rom, Gpu* gpu, Timer* timer, Joypad* joypad, Serial* serial) :
         log(log),
         rom(rom),
         gpu(gpu),
         timer(timer),
         joypad(joypad),
+        serial(serial),
         bootromEnabled(true),
         dmaInProgress(false),
         dmaCycles(0),

@@ -4,6 +4,7 @@
 #include "Irq.hpp"
 #include "Joypad.hpp"
 #include "Rom.hpp"
+#include "Serial.hpp"
 #include "Timer.hpp"
 #include "Utils.hpp"
 
@@ -85,7 +86,9 @@ void Bus::memAccess(Word address, Byte* pData, bool isWrite, MemAccessType acces
     else if (address <= 0xfe9f)
         gpu->oamAccess(address & 0xff, pData, isWrite);
     else if (address == 0xff00)
-        joypad->regAccess(pData, isWrite); // log->warn("JoyPad: %s %02x", isWrite ? "WR" : "RD", *pData);
+        joypad->regAccess(pData, isWrite);
+    else if (address >= 0xff01 && address <= 0xff02)
+        serial->regAccess(address - 0xff01, pData, isWrite);
     else if (address >= 0xff04 && address <= 0xff07)
         timer->regAccess(address, pData, isWrite);
     else if (address == 0xff0f)
@@ -136,7 +139,7 @@ void Bus::memWrite16(Word address, Word value, MemAccessType accessType)
 
 void Bus::raiseIrq(IrqSet irqs)
 {
-    irqsPending |= irqs & irqsEnabled;
+    irqsPending |= irqs; // TODO: should this be masked with irqsEnabled???
 }
 
 void Bus::ackIrq(Irq irq)

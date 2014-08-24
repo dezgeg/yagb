@@ -5,6 +5,7 @@
 #include "Joypad.hpp"
 #include "Logger.hpp"
 #include "Rom.hpp"
+#include "Serial.hpp"
 #include "Timer.hpp"
 
 class Gameboy
@@ -15,16 +16,18 @@ class Gameboy
     Cpu cpu;
     Timer timer;
     Joypad joypad;
+    Serial serial;
     long currentCycle;
 
 public:
     Gameboy(Logger* log, Rom* rom) :
         log(log),
-        bus(log, rom, &gpu, &timer, &joypad),
+        bus(log, rom, &gpu, &timer, &joypad, &serial),
         gpu(log),
         cpu(log, &bus),
         timer(),
         joypad(),
+        serial(),
         currentCycle(0)
     {
     }
