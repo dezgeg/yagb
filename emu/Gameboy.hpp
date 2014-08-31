@@ -41,5 +41,5 @@ public:
     Timer* getTimer() { return &timer; }
     Joypad* getJoypad() { return &joypad; }
 
-    void runFrame();
+    void runOneInstruction();
 };

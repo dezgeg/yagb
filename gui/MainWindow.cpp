@@ -97,10 +97,19 @@ MainWindow::MainWindow(const char* romFile, bool insnTrace, QWidget *parent) :
 
 void MainWindow::timerTick()
 {
-    gb.runFrame();
+    Gpu* gpu = gb.getGpu();
+
+    long frame = gpu->getCurrentFrame();
+    while (true) {
+        gb.runOneInstruction();
+        if (gpu->getCurrentFrame() != frame)
+            break;
+    }
+
     ui->lcdWidget->repaint();
     ui->patternViewerLcdWidget->repaint();
     ui->tileMapViewerLcdWidget->repaint();
+
     if (gb.getGpu()->getCurrentFrame() % 60 == 0)
         updateRegisters();
 }
