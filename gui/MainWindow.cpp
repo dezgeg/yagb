@@ -240,6 +240,8 @@ MainWindow::~MainWindow()
 {
 }
 
+QTextStream qtStdout(stdout);
+
 void GuiLogger::logImpl(const char* format, ...)
 {
     QString s;
@@ -248,9 +250,13 @@ void GuiLogger::logImpl(const char* format, ...)
     s.vsprintf(format, ap);
     va_end(ap);
 
+    qtStdout << s << "\n";
+
+#if 0
     ui->logTextarea->moveCursor(QTextCursor::End);
     ui->logTextarea->insertPlainText(s);
     ui->logTextarea->moveCursor(QTextCursor::End);
     ui->logTextarea->insertPlainText("\n");
     ui->logTextarea->moveCursor(QTextCursor::End);
+#endif
 }
