@@ -9,6 +9,7 @@ class Gpu;
 class Joypad;
 class Rom;
 class Serial;
+class Sound;
 class Timer;
 
 class Bus
@@ -19,6 +20,7 @@ class Bus
     Timer* timer;
     Joypad* joypad;
     Serial* serial;
+    Sound* sound;
 
     bool bootromEnabled;
     bool dmaInProgress;
@@ -37,13 +39,14 @@ class Bus
     void disableBootrom();
 
 public:
-    Bus(Logger* log, Rom* rom, Gpu* gpu, Timer* timer, Joypad* joypad, Serial* serial) :
+    Bus(Logger* log, Rom* rom, Gpu* gpu, Timer* timer, Joypad* joypad, Serial* serial, Sound* sound) :
         log(log),
         rom(rom),
         gpu(gpu),
         timer(timer),
         joypad(joypad),
         serial(serial),
+        sound(sound),
         bootromEnabled(true),
         dmaInProgress(false),
         dmaCycles(0),

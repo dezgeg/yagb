@@ -5,6 +5,7 @@
 #include "Joypad.hpp"
 #include "Rom.hpp"
 #include "Serial.hpp"
+#include "Sound.hpp"
 #include "Timer.hpp"
 #include "Utils.hpp"
 
@@ -93,6 +94,8 @@ void Bus::memAccess(Word address, Byte* pData, bool isWrite, MemAccessType acces
         timer->regAccess(address, pData, isWrite);
     else if (address == 0xff0f)
         BusUtil::simpleRegAccess(&irqsPending, pData, isWrite, 0x1f);
+    else if (address >= 0xff10 && address <= 0xff3f)
+        sound->registerAccess(address, pData, isWrite);
     else if (address == 0xff46)
         dmaRegAccess(pData, isWrite);
     else if (address >= 0xff40 && address <= 0xff4b)

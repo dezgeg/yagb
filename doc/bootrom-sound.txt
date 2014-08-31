@@ -1,0 +1,41 @@
+[mem wr (CPU)] 0xff26: 80
+[insn 00003/041/00229420] 0x0013:       32 => LD (HL)-, A                      A: 0x80 | BC: 0x0011 | DE: 0x0000 | HL: 0xff26 | SP: 0xfffe | Flags: Z-H-. | Cycles: 8
+[mem wr (CPU)] 0xff11: 80
+[insn 00003/041/00229428] 0x0014:       E2 => LDH (C), A                       A: 0x80 | BC: 0x0011 | DE: 0x0000 | HL: 0xff25 | SP: 0xfffe | Flags: Z-H-. | Cycles: 8
+[mem wr (CPU)] 0xff12: f3
+[insn 00003/041/00229444] 0x0018:       E2 => LDH (C), A                       A: 0xf3 | BC: 0x0012 | DE: 0x0000 | HL: 0xff25 | SP: 0xfffe | Flags: ----. | Cycles: 8
+[mem wr (CPU)] 0xff25: f3
+[insn 00003/041/00229452] 0x0019:       32 => LD (HL)-, A                      A: 0xf3 | BC: 0x0012 | DE: 0x0000 | HL: 0xff25 | SP: 0xfffe | Flags: ----. | Cycles: 8
+[mem wr (CPU)] 0xff24: 77
+[insn 00003/041/00229464] 0x001C:       77 => LD (HL), A                       A: 0x77 | BC: 0x0012 | DE: 0x0000 | HL: 0xff24 | SP: 0xfffe | Flags: ----. | Cycles: 8
+
+[mem wr (CPU)] 0xff13: 83
+[insn 00247/145/17411452] 0x0081:       E2 => LDH (C), A                       A: 0x83 | BC: 0x0113 | DE: 0x0383 | HL: 0x620f | SP: 0xfffe | Flags: ZN--. | Cycles: 8
+[mem wr (CPU)] 0xff14: 87
+[insn 00247/145/17411468] 0x0085:       E2 => LDH (C), A                       A: 0x87 | BC: 0x0114 | DE: 0x0383 | HL: 0x620f | SP: 0xfffe | Flags: ----. | Cycles: 8
+[mem wr (CPU)] 0xff13: c1
+[insn 00252/145/17762588] 0x0081:       E2 => LDH (C), A                       A: 0xc1 | BC: 0x0113 | DE: 0x01c1 | HL: 0x640f | SP: 0xfffe | Flags: ZN--. | Cycles: 8
+[mem wr (CPU)] 0xff14: 87
+[insn 00252/145/17762604] 0x0085:       E2 => LDH (C), A                       A: 0x87 | BC: 0x0114 | DE: 0x01c1 | HL: 0x640f | SP: 0xfffe | Flags: ----. | Cycles: 8
+
+BootRom sound init:
+	LD HL,$ff26		; $000c
+	LD C,$11		; $000f
+	LD A,$80		; $0011
+	LD (HL-),A		; $0013  [0xff26] <= 0x80, Power-on audio
+	LD ($FF00+C),A	        ; $0014  [0xff11] <= 0x80, Channel 1: duty cycle 50%, sound length = 0
+	INC C			; $0015
+	LD A,$f3		; $0016
+	LD ($FF00+C),A	        ; $0018  [0xff12] <= 0xf3, Channel 1: full volume (0xf), envelope decreasing, sweep = 3
+	LD (HL-),A		; $0019  [0xff25] <= 0xf3, Enable sound 1-2
+	LD A,$77		; $001a
+	LD (HL),A		; $001c  [0xff24] <= 0x77, Left/Right full volume (0x7)
+
+
+Sound 1:
+[0xff13] <= 0x83, Channel 1: low 8 bits of frequency (total 0x783 = 1923) == 1048.576 Hz
+[0xff14] <= 0x87, Channel 1: Enable sound, top 3 bits of frequency = 0x7
+
+Sound 2:
+[0xff13] <= 0xc1, Channel 1: low 8 bits of frequency (total 0x7c1 = 1985) == 2080.508 Hz
+[0xff14] <= 0x87, Channel 1: Enable sound, top 3 bits of frequency = 0x7
