@@ -46,7 +46,7 @@ void Rom::cartRomAccess(Word address, Byte* pData, bool isWrite)
             log->warn("Write (0x%02x) to ROM address 0x%04x without mapper", *pData, address);
             return;
         }
-        log->warn("Mapper write %04x (%d)", address, address >> 13);
+        // log->warn("Mapper write %04x (%d)", address, address >> 13);
         switch (address >> 13) {
             case 0: // 0000-1FFF
                 mapperRegs.ramEnabled = (*pData & 0x0f) == 0x0a;

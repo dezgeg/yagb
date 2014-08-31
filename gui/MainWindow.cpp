@@ -65,12 +65,12 @@ void MainWindow::fillDynamicRegisterTables()
 
 MainWindow::MainWindow(const char* romFile, bool insnTrace, QWidget *parent) :
     QMainWindow(parent),
-    log(insnTrace),
+    ui(new Ui::MainWindow),
+    log(ui.get()),
     rom(&log, romFile),
     gb(&log, &rom),
     frameTimer(new QTimer(this)),
-    qtFramebuffer(ScreenWidth*2, ScreenHeight*2),
-    ui(new Ui::MainWindow)
+    qtFramebuffer(ScreenWidth*2, ScreenHeight*2)
 {
     setFocusPolicy(Qt::StrongFocus);
 
@@ -91,6 +91,8 @@ MainWindow::MainWindow(const char* romFile, bool insnTrace, QWidget *parent) :
 
     ui->lcdWidget->setFocus();
     updateRegisters();
+
+    log.insnLoggingEnabled = insnTrace;
 }
 
 void MainWindow::timerTick()
@@ -236,4 +238,19 @@ void MainWindow::updateRegisters()
 
 MainWindow::~MainWindow()
 {
+}
+
+void GuiLogger::logImpl(const char* format, ...)
+{
+    QString s;
+    va_list ap;
+    va_start(ap, format);
+    s.vsprintf(format, ap);
+    va_end(ap);
+
+    ui->logTextarea->moveCursor(QTextCursor::End);
+    ui->logTextarea->insertPlainText(s);
+    ui->logTextarea->moveCursor(QTextCursor::End);
+    ui->logTextarea->insertPlainText("\n");
+    ui->logTextarea->moveCursor(QTextCursor::End);
 }

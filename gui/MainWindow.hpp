@@ -5,10 +5,24 @@
 
 #include <QMainWindow>
 #include <QPixmap>
+#include <QPlainTextEdit>
 #include <QTimer>
 #include <memory>
 
 namespace Ui { class MainWindow; }
+
+class GuiLogger : public Logger
+{
+    Ui::MainWindow* ui;
+
+public:
+    GuiLogger(Ui::MainWindow* ui) :
+        ui(ui)
+    {
+    }
+
+    virtual void logImpl(const char* format, ...) override;
+};
 
 class MainWindow : public QMainWindow
 {
@@ -19,13 +33,14 @@ public:
     ~MainWindow();
 
 private:
-    Logger log;
+    std::unique_ptr<Ui::MainWindow> ui;
+
+    GuiLogger log;
     Rom rom;
     Gameboy gb;
 
     QTimer* frameTimer;
     QPixmap qtFramebuffer;
-    std::unique_ptr<Ui::MainWindow> ui;
 
     void fillDynamicRegisterTables();
     void updateRegisters();

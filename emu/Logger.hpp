@@ -6,15 +6,18 @@ union Regs;
 class Bus;
 class Logger
 {
-    bool insnLoggingEnabled;
-
     long currentFrame;
     long currentCycle;
     int currentScanline;
 
+protected:
+    virtual void logImpl(const char* format, ...) = 0;
+
 public:
-    Logger(bool insnLoggingEnabled=false) :
-        insnLoggingEnabled(insnLoggingEnabled)
+    bool insnLoggingEnabled;
+
+    Logger() :
+        insnLoggingEnabled()
     {
     }
 
