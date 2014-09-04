@@ -1,9 +1,9 @@
 #pragma once
+
 #include "Platform.hpp"
 #include "Utils.hpp"
 
-enum Irq
-{
+enum Irq {
     Irq_None = -1,
 
     Irq_VBlank,

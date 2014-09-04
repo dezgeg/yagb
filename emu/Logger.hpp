@@ -3,9 +3,10 @@
 typedef const char* MemAccessType; // Just in case we want an enum instead someday...
 
 union Regs;
+
 class Bus;
-class Logger
-{
+
+class Logger {
     long currentFrame;
     long currentCycle;
     int currentScanline;
@@ -17,12 +18,10 @@ public:
     bool insnLoggingEnabled;
 
     Logger() :
-        insnLoggingEnabled()
-    {
+            insnLoggingEnabled() {
     }
 
-    void setTimestamp(long frame, int scanline, long cycle)
-    {
+    void setTimestamp(long frame, int scanline, long cycle) {
         currentFrame = frame;
         currentCycle = cycle;
         currentScanline = scanline;

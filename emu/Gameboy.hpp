@@ -9,9 +9,8 @@
 #include "Sound.hpp"
 #include "Timer.hpp"
 
-class Gameboy
-{
-    Logger *log;
+class Gameboy {
+    Logger* log;
     Bus bus;
     Gpu gpu;
     Cpu cpu;
@@ -23,16 +22,15 @@ class Gameboy
 
 public:
     Gameboy(Logger* log, Rom* rom) :
-        log(log),
-        bus(log, rom, &gpu, &timer, &joypad, &serial, &sound),
-        gpu(log),
-        cpu(log, &bus),
-        timer(),
-        joypad(),
-        serial(),
-        sound(log),
-        currentCycle(0)
-    {
+            log(log),
+            bus(log, rom, &gpu, &timer, &joypad, &serial, &sound),
+            gpu(log),
+            cpu(log, &bus),
+            timer(),
+            joypad(),
+            serial(),
+            sound(log),
+            currentCycle(0) {
     }
 
     Bus* getBus() { return &bus; }

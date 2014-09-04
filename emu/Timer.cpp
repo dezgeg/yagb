@@ -10,14 +10,14 @@
 
 static const unsigned divisorShifts[] = { 12, 10, 8, 6, };
 
-bool Timer::tick(int cycles)
-{
+bool Timer::tick(int cycles) {
     long before = currentCycles >> divisorShifts[regs.divisorSelect];
     currentCycles += cycles;
     regs.div = currentCycles >> 10;
 
-    if (!regs.running)
+    if (!regs.running) {
         return false;
+    }
 
     long after = currentCycles >> divisorShifts[regs.divisorSelect];
     long delta = after - before;
@@ -35,19 +35,25 @@ bool Timer::tick(int cycles)
     return overflow;
 }
 
-void Timer::regAccess(Word offset, Byte* pData, bool isWrite)
-{
+void Timer::regAccess(Word offset, Byte* pData, bool isWrite) {
     switch (offset) {
         case 0xff04: {
-            if (isWrite)
+            if (isWrite) {
                 regs.div = 0;
-            else
+            } else {
                 *pData = regs.div;
+            }
             return;
         }
-        case 0xff05: BusUtil::simpleRegAccess(&regs.tima, pData, isWrite); return;
-        case 0xff06: BusUtil::simpleRegAccess(&regs.tma, pData, isWrite); return;
-        case 0xff07: BusUtil::simpleRegAccess(&regs.tac, pData, isWrite, 0x07); return;
+        case 0xff05:
+            BusUtil::simpleRegAccess(&regs.tima, pData, isWrite);
+            return;
+        case 0xff06:
+            BusUtil::simpleRegAccess(&regs.tma, pData, isWrite);
+            return;
+        case 0xff07:
+            BusUtil::simpleRegAccess(&regs.tac, pData, isWrite, 0x07);
+            return;
     }
     unreachable();
 }

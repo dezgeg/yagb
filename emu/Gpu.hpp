@@ -1,4 +1,5 @@
 #pragma once
+
 #include "BusUtil.hpp"
 #include "Irq.hpp"
 #include "Logger.hpp"
@@ -11,8 +12,7 @@ enum {
     ScreenHeight = 144,
 };
 
-struct OamEntry
-{
+struct OamEntry {
     Byte y;
     Byte x;
     Byte tile;
@@ -28,8 +28,7 @@ struct OamEntry
     } flags;
 };
 
-class Gpu
-{
+class Gpu {
     Logger* log;
 
     long frame;
@@ -42,8 +41,7 @@ class Gpu
         Byte oam[0xa0];
         OamEntry sprites[40];
     };
-    struct GpuRegs
-    {
+    struct GpuRegs {
         union {
             Byte lcdc;
             struct {
@@ -84,10 +82,9 @@ class Gpu
 
 public:
     Gpu(Logger* log) :
-        log(log),
-        frame(0),
-        cycleResidue(0)
-    {
+            log(log),
+            frame(0),
+            cycleResidue(0) {
         std::memset(&framebuffer[0][0], 0, sizeof(framebuffer));
         std::memset(&vram[0], 0, sizeof(vram));
         std::memset(&oam[0], 0, sizeof(oam));
@@ -95,15 +92,13 @@ public:
         std::memset(&visibleSprites[0], 0, sizeof(visibleSprites));
     }
 
-    static inline Byte applyPalette(Byte palette, Byte colorIndex)
-    {
+    static inline Byte applyPalette(Byte palette, Byte colorIndex) {
         return (palette >> colorIndex * 2) & 0x3;
     }
 
     /* Inline so GUI code can reuse this and be optimized. */
     static inline Byte drawTilePixel(Byte* tile, unsigned x, unsigned y, bool large = false,
-                                     OamEntry::OamFlags flags = OamEntry::OamFlags(), Byte palette = 0xe4)
-    {
+            OamEntry::OamFlags flags = OamEntry::OamFlags(), Byte palette = 0xe4) {
         Byte height = large ? 16 : 8;
         unsigned base = 2 * (flags.yFlip ? height - y - 1 : y);
 
@@ -111,7 +106,7 @@ public:
         Byte msbs = flags.xFlip ? reverseBits(tile[base + 1]) : tile[base + 1];
 
         unsigned colorIndex = !!(lsbs & (0x80 >> x)) |
-                              ((!!(msbs & (0x80 >> x))) << 1);
+                ((!!(msbs & (0x80 >> x))) << 1);
         return applyPalette(palette, colorIndex);
     }
 

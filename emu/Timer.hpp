@@ -1,8 +1,8 @@
 #pragma once
+
 #include "Platform.hpp"
 
-class Timer
-{
+class Timer {
     long currentCycles;
     struct Regs {
         Byte div;
@@ -19,9 +19,8 @@ class Timer
 
 public:
     Timer() :
-        currentCycles(0),
-        regs()
-    {
+            currentCycles(0),
+            regs() {
     }
 
     bool tick(int cycles);

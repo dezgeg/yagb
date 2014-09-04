@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Platform.hpp"
 #include "Logger.hpp"
 
@@ -10,8 +11,7 @@ enum Mapper {
     Mapper_MBC3,
 };
 
-class Rom
-{
+class Rom {
     Logger* log;
     std::string romData;
     Byte ramData[8192];

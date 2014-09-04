@@ -1,4 +1,5 @@
 #pragma once
+
 #include "emu/Gameboy.hpp"
 #include "emu/Logger.hpp"
 #include "emu/Rom.hpp"
@@ -11,25 +12,22 @@
 
 namespace Ui { class MainWindow; }
 
-class GuiLogger : public Logger
-{
+class GuiLogger : public Logger {
     Ui::MainWindow* ui;
 
 public:
     GuiLogger(Ui::MainWindow* ui) :
-        ui(ui)
-    {
+            ui(ui) {
     }
 
     virtual void logImpl(const char* format, ...) override;
 };
 
-class MainWindow : public QMainWindow
-{
-    Q_OBJECT
+class MainWindow : public QMainWindow {
+Q_OBJECT
 
 public:
-    explicit MainWindow(const char* romFile, bool insnTrace, QWidget *parent = 0);
+    explicit MainWindow(const char* romFile, bool insnTrace, QWidget* parent = 0);
     ~MainWindow();
 
 private:

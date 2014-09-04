@@ -11,12 +11,12 @@ enum {
 };
 
 Rom::Rom(Logger* log, const char* fileName) :
-    log(log)
-{
+        log(log) {
     std::ifstream stream(fileName, std::ios_base::in | std::ios_base::binary);
     stream.seekg(0, std::ios::end);
-    if (!stream)
+    if (!stream) {
         throw "No such file";
+    }
 
     size_t sz = stream.tellg();
     romData.resize(sz);
@@ -29,18 +29,17 @@ Rom::Rom(Logger* log, const char* fileName) :
     mapperRegs.romBankLowBits = 1;
 
     Byte mapperByte = romData[MapperOffset];
-    if (mapperByte == 0x00)
+    if (mapperByte == 0x00) {
         mapper = Mapper_None;
-    else if (mapperByte >= 0x01 && mapperByte <= 0x03)
+    } else if (mapperByte >= 0x01 && mapperByte <= 0x03) {
         mapper = Mapper_MBC1;
-    else if (mapperByte >= 0x0f && mapperByte <= 0x13)
+    } else if (mapperByte >= 0x0f && mapperByte <= 0x13) {
         mapper = Mapper_MBC3;
-    else
+    } else
         assert(!"Unknown mapper");
 }
 
-void Rom::cartRomAccess(Word address, Byte* pData, bool isWrite)
-{
+void Rom::cartRomAccess(Word address, Byte* pData, bool isWrite) {
     if (isWrite) {
         if (!mapper) {
             log->warn("Write (0x%02x) to ROM address 0x%04x without mapper", *pData, address);
@@ -52,15 +51,16 @@ void Rom::cartRomAccess(Word address, Byte* pData, bool isWrite)
                 mapperRegs.ramEnabled = (*pData & 0x0f) == 0x0a;
                 break;
             case 1: // 2000-3FFF
-                if (mapper == Mapper_MBC1)
+                if (mapper == Mapper_MBC1) {
                     mapperRegs.romBankLowBits = *pData & 0x1f;
-                else if (mapper == Mapper_MBC3)
+                } else if (mapper == Mapper_MBC3) {
                     mapperRegs.romBankLowBits = *pData & 0x7f;
-                else
+                } else
                     assert(0);
 
-                if (!mapperRegs.romBankLowBits)
+                if (!mapperRegs.romBankLowBits) {
                     mapperRegs.romBankLowBits = 1;
+                }
                 break;
             case 2: // 4000-5FFF
                 mapperRegs.bankHighBits = *pData & 0x03;
@@ -88,9 +88,9 @@ void Rom::cartRomAccess(Word address, Byte* pData, bool isWrite)
     }
 }
 
-void Rom::cartRamAccess(Word address, Byte* pData, bool isWrite)
-{
-    if (!mapper)
+void Rom::cartRamAccess(Word address, Byte* pData, bool isWrite) {
+    if (!mapper) {
         log->warn("Access to cart RAM (0x%04x) without mapper", address);
+    }
     BusUtil::arrayMemAccess(ramData, address, pData, isWrite);
 }

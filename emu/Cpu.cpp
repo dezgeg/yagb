@@ -1,7 +1,5 @@
 #include "Cpu.hpp"
-#include "Utils.hpp"
 
-#include <string.h>
 #include <stdio.h>
 
 #define INSN_DBG(x) x
@@ -10,19 +8,19 @@
 #define INSN_DONE(cycles, ...) (log->logInsn(bus, &_savedRegs, cycles, _branched ? branchPc : regs.pc, __VA_ARGS__), cycles)
 
 static const char* const reg8Strings[] = {
-    "B", "C", "D", "E", "H", "L", "(HL)", "A",
+        "B", "C", "D", "E", "H", "L", "(HL)", "A",
 };
 
 static const char* const reg16SpStrings[] = {
-    "BC", "DE", "HL", "SP",
+        "BC", "DE", "HL", "SP",
 };
 
 static const char* const reg16AfStrings[] = {
-    "BC", "DE", "HL", "AF",
+        "BC", "DE", "HL", "AF",
 };
 
 static const char* const reg16AutodecStrings[] = {
-    "(BC)", "(DE)", "(HL)+", "(HL)-",
+        "(BC)", "(DE)", "(HL)+", "(HL)-",
 };
 
 // 'x' is an instruction encoding for one of the following: B C D E H L (HL) A
@@ -35,15 +33,13 @@ static const char* const reg16AutodecStrings[] = {
 #define LOAD8_AUTODEC(x) (bus->memRead8((x) == 2 ? regs.hl++ : (x) == 3 ? regs.hl-- : regs.words[x]))
 #define STORE8_AUTODEC(x, v) (bus->memWrite8((x) == 2 ? regs.hl++ : (x) == 3 ? regs.hl-- : regs.words[x], (v)))
 
-void Cpu::reset()
-{
+void Cpu::reset() {
     regs = Regs();
     halted = false;
     stopped = false;
 }
 
-long Cpu::tick()
-{
+long Cpu::tick() {
     Byte irqs = bus->getPendingIrqs();
     if (regs.irqsEnabled && irqs) {
         int irq = ffs(irqs ^ (irqs & (irqs - 1))) - 1;
@@ -57,21 +53,25 @@ long Cpu::tick()
         halted = stopped = false;
         return 12; // TODO: what's the delay?
     }
-    if (halted || stopped)
+    if (halted || stopped) {
         return 4;
+    }
 
     Byte opc = bus->memRead8(regs.pc++);
     switch (opc >> 6) {
-        case 0: return executeInsn_0x_3x(opc);
-        case 1: return executeInsn_4x_6x(opc);
-        case 2: return executeInsn_7x_Bx(opc);
-        case 3: return executeInsn_Cx_Fx(opc);
+        case 0:
+            return executeInsn_0x_3x(opc);
+        case 1:
+            return executeInsn_4x_6x(opc);
+        case 2:
+            return executeInsn_7x_Bx(opc);
+        case 3:
+            return executeInsn_Cx_Fx(opc);
     }
     unreachable();
 }
 
-bool Cpu::evalConditional(Byte opc, char* outDescr, const char* opcodeStr)
-{
+bool Cpu::evalConditional(Byte opc, char* outDescr, const char* opcodeStr) {
     // LSB set means unconditional, except JR r8 (0x18) is a special case.
     if (opc == 0x18 || opc & 1) {
         snprintf(outDescr, strlen(opcodeStr) + 1, "%s", opcodeStr);
@@ -81,21 +81,19 @@ bool Cpu::evalConditional(Byte opc, char* outDescr, const char* opcodeStr)
     bool flagIsCarry = opc & 0x10;
     bool compareVal = opc & 0x08;
     snprintf(outDescr, strlen(opcodeStr) + sizeof(" NZ,"), "%s %s%c,", opcodeStr,
-             compareVal ? "" : "N", flagIsCarry ? 'C' : 'Z');
+            compareVal ? "" : "N", flagIsCarry ? 'C' : 'Z');
     return bool(flagIsCarry ? regs.flags.c : regs.flags.z) == compareVal;
 }
 
-enum AddSubFlags
-{
-    AS_IsSub        = 1 << 0,
-    AS_WithCarry    = 1 << 1,
-    AS_UpdateCarry  = 1 << 2,
-    AS_UpdateZero   = 1 << 3,
+enum AddSubFlags {
+    AS_IsSub = 1 << 0,
+    AS_WithCarry = 1 << 1,
+    AS_UpdateCarry = 1 << 2,
+    AS_UpdateZero = 1 << 3,
 };
 
 // TODO: not sane to have three bool parameters
-Byte Cpu::doAddSub(unsigned lhs, unsigned rhs, unsigned flags)
-{
+Byte Cpu::doAddSub(unsigned lhs, unsigned rhs, unsigned flags) {
     unsigned carry = (flags & AS_WithCarry) && regs.flags.c;
     unsigned result;
     if (!(flags & AS_IsSub)) {
@@ -106,17 +104,18 @@ Byte Cpu::doAddSub(unsigned lhs, unsigned rhs, unsigned flags)
         result = lhs - rhs - carry;
     }
 
-    if (flags & AS_UpdateCarry)
+    if (flags & AS_UpdateCarry) {
         regs.flags.c = result > 0xff;
-    if (flags & AS_UpdateZero)
+    }
+    if (flags & AS_UpdateZero) {
         regs.flags.z = Byte(result) == 0;
+    }
     regs.flags.n = !!(flags & AS_IsSub);
 
     return result;
 }
 
-Word Cpu::doAdd16(unsigned lhs, unsigned rhs)
-{
+Word Cpu::doAdd16(unsigned lhs, unsigned rhs) {
     // set flags according to the MSB sum operation
     unsigned lsbSum = (lhs & 0xFF) + (rhs & 0xFF);
     regs.flags.c = lsbSum > 0xFF; // Slight hack?
@@ -124,15 +123,13 @@ Word Cpu::doAdd16(unsigned lhs, unsigned rhs)
     return lhs + rhs;
 }
 
-Byte Cpu::doRotLeft(Byte v)
-{
+Byte Cpu::doRotLeft(Byte v) {
     regs.flags.z = regs.flags.n = regs.flags.h = 0;
     regs.flags.c = !!(v & 0x80);
     return (v << 1) | !!(v & 0x80);
 }
 
-Byte Cpu::doRotLeftWithCarry(Byte v)
-{
+Byte Cpu::doRotLeftWithCarry(Byte v) {
     regs.flags.z = regs.flags.n = regs.flags.h = 0;
     bool oldMsb = v & 0x80;
     v = (v << 1) | regs.flags.c;
@@ -141,15 +138,13 @@ Byte Cpu::doRotLeftWithCarry(Byte v)
     return v;
 }
 
-Byte Cpu::doRotRight(Byte v)
-{
+Byte Cpu::doRotRight(Byte v) {
     regs.flags.z = regs.flags.n = regs.flags.h = 0;
     regs.flags.c = !!(v & 0x01);
     return (v >> 1) | ((v & 0x01) << 7);
 }
 
-Byte Cpu::doRotRightWithCarry(Byte v)
-{
+Byte Cpu::doRotRightWithCarry(Byte v) {
     regs.flags.z = regs.flags.n = regs.flags.h = 0;
     bool oldLsb = v & 0x01;
     v = (v >> 1) | (regs.flags.c << 7);
@@ -159,28 +154,50 @@ Byte Cpu::doRotRightWithCarry(Byte v)
 }
 
 static const char* const aluopStrings[] = {
-    "ADD", "ADC", "SUB", "SBC", "AND", "XOR", "OR", "CP",
+        "ADD", "ADC", "SUB", "SBC", "AND", "XOR", "OR", "CP",
 };
 
-Byte Cpu::doAluOp(int aluop, Byte lhs, Byte rhs)
-{
+Byte Cpu::doAluOp(int aluop, Byte lhs, Byte rhs) {
     Byte v;
     switch (aluop) {
-        case 0: return doAddSub(lhs, rhs, AS_UpdateCarry | AS_UpdateZero);
-        case 1: return doAddSub(lhs, rhs, AS_UpdateCarry | AS_UpdateZero | AS_WithCarry);
-        case 2: return doAddSub(lhs, rhs, AS_UpdateCarry | AS_UpdateZero | AS_IsSub);
-        case 3: return doAddSub(lhs, rhs, AS_UpdateCarry | AS_UpdateZero | AS_IsSub | AS_WithCarry);
+        case 0:
+            return doAddSub(lhs, rhs, AS_UpdateCarry | AS_UpdateZero);
+        case 1:
+            return doAddSub(lhs, rhs, AS_UpdateCarry | AS_UpdateZero | AS_WithCarry);
+        case 2:
+            return doAddSub(lhs, rhs, AS_UpdateCarry | AS_UpdateZero | AS_IsSub);
+        case 3:
+            return doAddSub(lhs, rhs, AS_UpdateCarry | AS_UpdateZero | AS_IsSub | AS_WithCarry);
 
-        case 4: v = lhs & rhs; regs.flags.z = v == 0; regs.flags.n = 0; regs.flags.c = 0; regs.flags.h = 1; return v;
-        case 5: v = lhs ^ rhs; regs.flags.z = v == 0; regs.flags.n = 0; regs.flags.c = 0; regs.flags.h = 0; return v;
-        case 6: v = lhs | rhs; regs.flags.z = v == 0; regs.flags.n = 0; regs.flags.c = 0; regs.flags.h = 0; return v;
-        case 7: doAddSub(lhs, rhs, AS_IsSub | AS_UpdateCarry | AS_UpdateZero); return lhs; // SUB with result not saved
+        case 4:
+            v = lhs & rhs;
+            regs.flags.z = v == 0;
+            regs.flags.n = 0;
+            regs.flags.c = 0;
+            regs.flags.h = 1;
+            return v;
+        case 5:
+            v = lhs ^ rhs;
+            regs.flags.z = v == 0;
+            regs.flags.n = 0;
+            regs.flags.c = 0;
+            regs.flags.h = 0;
+            return v;
+        case 6:
+            v = lhs | rhs;
+            regs.flags.z = v == 0;
+            regs.flags.n = 0;
+            regs.flags.c = 0;
+            regs.flags.h = 0;
+            return v;
+        case 7:
+            doAddSub(lhs, rhs, AS_IsSub | AS_UpdateCarry | AS_UpdateZero);
+            return lhs; // SUB with result not saved
     }
     unreachable();
 }
 
-long Cpu::executeInsn_0x_3x(Byte opc)
-{
+long Cpu::executeInsn_0x_3x(Byte opc) {
     INSN_DBG_DECL();
 
     // First, various special cases.
@@ -239,7 +256,8 @@ long Cpu::executeInsn_0x_3x(Byte opc)
     Byte operand = (opc >> 4) & 0x3;
     Byte byteOperand = (operand << 1) | !!(opc & 0x8);
     switch (opc & 0xf) {
-        case 0x0: case 0x8: {
+        case 0x0:
+        case 0x8: {
             char buf[16];
 
             int delta = (SByte)bus->memRead8(regs.pc++);
@@ -275,23 +293,26 @@ long Cpu::executeInsn_0x_3x(Byte opc)
             regs.words[operand]--;
             return INSN_DONE(8, "DEC %s", reg16SpStrings[operand]);
         }
-        case 0x4: case 0xC: {
+        case 0x4:
+        case 0xC: {
             Byte tmp = LOAD8(byteOperand);
             STORE8(byteOperand, doAddSub(tmp, 1, AS_UpdateZero));
             return INSN_DONE(4 + 2 * ldst8ExtraCycles(byteOperand), "INC %s",
-                             reg8Strings[byteOperand]);
+                    reg8Strings[byteOperand]);
         }
-        case 0x5: case 0xD: {
+        case 0x5:
+        case 0xD: {
             Byte tmp = LOAD8(byteOperand);
             STORE8(byteOperand, doAddSub(tmp, 1, AS_IsSub | AS_UpdateZero));
             return INSN_DONE(4 + 2 * ldst8ExtraCycles(byteOperand), "DEC %s",
-                             reg8Strings[byteOperand]);
+                    reg8Strings[byteOperand]);
         }
-        case 0x6: case 0xE: {
+        case 0x6:
+        case 0xE: {
             Byte val = bus->memRead8(regs.pc++);
             STORE8(byteOperand, val);
             return INSN_DONE(4 + ldst8ExtraCycles(byteOperand), "LD %s, d8",
-                             reg8Strings[byteOperand]);
+                    reg8Strings[byteOperand]);
         }
     }
     unreachable();
@@ -299,8 +320,7 @@ long Cpu::executeInsn_0x_3x(Byte opc)
 
 // Opcodes 4x..6x: Moves between 8-bit regs / (HL)
 // Bottom 3 bits = source, next 3 bits destination. Order is: B C D E H L (HL) A
-long Cpu::executeInsn_4x_6x(Byte opc)
-{
+long Cpu::executeInsn_4x_6x(Byte opc) {
     INSN_DBG_DECL();
 
     // Exception: opc 0x76 == LD (HL), (HL) is HALT instead
@@ -315,13 +335,12 @@ long Cpu::executeInsn_4x_6x(Byte opc)
     Byte val = LOAD8(src);
     STORE8(dest, val);
     return INSN_DONE(4 + ldst8ExtraCycles(src) + ldst8ExtraCycles(dest),
-                     "LD %s, %s", reg8Strings[dest], reg8Strings[src]);
+            "LD %s, %s", reg8Strings[dest], reg8Strings[src]);
 }
 
 // Opcodes 7x..Bx: Accu-based 8-bit alu ops
 // Bottom 3 bits = reg/(HL) operand, next 3 bits ALU op. Order is ADD, ADC, SUB, SBC, AND, XOR, OR, CP
-long Cpu::executeInsn_7x_Bx(Byte opc)
-{
+long Cpu::executeInsn_7x_Bx(Byte opc) {
     INSN_DBG_DECL();
 
     int operand = opc & 0x7;
@@ -329,11 +348,10 @@ long Cpu::executeInsn_7x_Bx(Byte opc)
 
     regs.a = doAluOp(aluop, regs.a, LOAD8(operand));
     return INSN_DONE(4 + ldst8ExtraCycles(operand),
-                     "%s %s", aluopStrings[aluop], reg8Strings[operand]);
+            "%s %s", aluopStrings[aluop], reg8Strings[operand]);
 }
 
-long Cpu::executeInsn_Cx_Fx(Byte opc)
-{
+long Cpu::executeInsn_Cx_Fx(Byte opc) {
     INSN_DBG_DECL();
 
     switch (opc) {
@@ -397,16 +415,26 @@ long Cpu::executeInsn_Cx_Fx(Byte opc)
             return INSN_DONE(4, "EI");
         }
 
-        case 0xD3: case 0xDB: case 0xDD:
-        case 0xE3: case 0xE4: case 0xEB: case 0xEC: case 0xED:
-        case 0xF4: case 0xFC: case 0xFD:
+        case 0xD3:
+        case 0xDB:
+        case 0xDD:
+        case 0xE3:
+        case 0xE4:
+        case 0xEB:
+        case 0xEC:
+        case 0xED:
+        case 0xF4:
+        case 0xFC:
+        case 0xFD:
             return INSN_DONE(100, "UNDEF");
     }
 
     Byte operand = (opc >> 4) & 0x3;
     Byte wideOperand = (opc >> 3) & 0x7;
     switch (opc & 0xf) {
-        case 0x0: case 0x8: case 0x9: {
+        case 0x0:
+        case 0x8:
+        case 0x9: {
             char buf[16];
             bool unconditional = opc & 1;
             bool taken = evalConditional(opc, buf, "RET");
@@ -432,17 +460,19 @@ long Cpu::executeInsn_Cx_Fx(Byte opc)
             return INSN_DONE(12, "POP %s", reg16AfStrings[operand]);
         }
         case 0x3:
-        case 0x2: case 0xA: {
+        case 0x2:
+        case 0xA: {
             Word addr = bus->memRead16(regs.pc);
             regs.pc += 2;
 
             char buf[16];
-            if(evalConditional(opc, buf, "JP"))
+            if (evalConditional(opc, buf, "JP"))
                 INSN_BRANCH(addr);
             return INSN_DONE(16, "%s a16", buf);
         }
         case 0xD:
-        case 0x4: case 0xC: {
+        case 0x4:
+        case 0xC: {
             Word addr = bus->memRead16(regs.pc);
             regs.pc += 2;
 
@@ -460,11 +490,13 @@ long Cpu::executeInsn_Cx_Fx(Byte opc)
             bus->memWrite16(regs.sp, operand == 3 ? regs.af : regs.words[operand]);
             return INSN_DONE(16, "PUSH %s", reg16AfStrings[operand]);
         }
-        case 0x6: case 0xE: {
+        case 0x6:
+        case 0xE: {
             regs.a = doAluOp(wideOperand, regs.a, bus->memRead8(regs.pc++));
             return INSN_DONE(8, "%s d8", aluopStrings[wideOperand]);
         }
-        case 0x7: case 0xF: {
+        case 0x7:
+        case 0xF: {
             regs.sp -= 2;
             bus->memWrite16(regs.sp, regs.pc);
             INSN_BRANCH(wideOperand * 0x08);
@@ -474,8 +506,7 @@ long Cpu::executeInsn_Cx_Fx(Byte opc)
     unreachable();
 }
 
-long Cpu::executeTwoByteInsn()
-{
+long Cpu::executeTwoByteInsn() {
     INSN_DBG_DECL();
     Byte opc = bus->memRead8(regs.pc++);
     const char* description;
@@ -488,14 +519,42 @@ long Cpu::executeTwoByteInsn()
 
     if (category == 0) {
         switch ((opc >> 3) & 0x7) {
-            case 0: description = "RLC"; value = doRotLeft(value); break;
-            case 1: description = "RRC"; value = doRotRight(value); break;
-            case 2: description = "RL"; value = doRotLeftWithCarry(value); break;
-            case 3: description = "RR"; value = doRotRightWithCarry(value); break;
-            case 4: description = "SLA"; regs.flags.c = !!(value & 0x80); value <<= 1; break;
-            case 5: description = "SRA"; regs.flags.c = value & 0x01; value = ((SByte)value) >> 1; break;
-            case 6: description = "SWAP"; value = ((value & 0xf) << 4) | (value >> 4); regs.flags.c = 0; break;
-            case 7: description = "SRL"; regs.flags.c = value & 0x01; value >>= 1; break;
+            case 0:
+                description = "RLC";
+                value = doRotLeft(value);
+                break;
+            case 1:
+                description = "RRC";
+                value = doRotRight(value);
+                break;
+            case 2:
+                description = "RL";
+                value = doRotLeftWithCarry(value);
+                break;
+            case 3:
+                description = "RR";
+                value = doRotRightWithCarry(value);
+                break;
+            case 4:
+                description = "SLA";
+                regs.flags.c = !!(value & 0x80);
+                value <<= 1;
+                break;
+            case 5:
+                description = "SRA";
+                regs.flags.c = value & 0x01;
+                value = ((SByte)value) >> 1;
+                break;
+            case 6:
+                description = "SWAP";
+                value = ((value & 0xf) << 4) | (value >> 4);
+                regs.flags.c = 0;
+                break;
+            case 7:
+                description = "SRL";
+                regs.flags.c = value & 0x01;
+                value >>= 1;
+                break;
         }
         regs.flags.n = regs.flags.h = 0;
         regs.flags.z = value == 0;
@@ -516,10 +575,11 @@ long Cpu::executeTwoByteInsn()
     if (category != 1) // no writeback for BIT
         STORE8(operand, value);
 
-    if (bitIndex < 0)
+    if (bitIndex < 0) {
         return INSN_DONE(8 + ldst8ExtraCycles(operand), "%s %s",
-                         description, reg8Strings[operand]);
-    else
+                description, reg8Strings[operand]);
+    } else {
         return INSN_DONE(8 + 2 * ldst8ExtraCycles(operand), "%s %d, %s",
-                         description, bitIndex, reg8Strings[operand]);
+                description, bitIndex, reg8Strings[operand]);
+    }
 }

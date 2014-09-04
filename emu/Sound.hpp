@@ -1,35 +1,36 @@
 #pragma once
+
 #include "BusUtil.hpp"
 #include "Logger.hpp"
 #include "Platform.hpp"
 
 enum {
-    Snd_Ch1_Sweep       = 0x10,
-    Snd_Ch1_Wave        = 0x11,
-    Snd_Ch1_Envelope    = 0x12,
-    Snd_Ch1_FreqLo      = 0x13,
-    Snd_Ch1_FreqHi      = 0x14,
+    Snd_Ch1_Sweep = 0x10,
+    Snd_Ch1_Wave = 0x11,
+    Snd_Ch1_Envelope = 0x12,
+    Snd_Ch1_FreqLo = 0x13,
+    Snd_Ch1_FreqHi = 0x14,
 
-    Snd_Ch2_Wave        = 0x16,
-    Snd_Ch2_Envelope    = 0x17,
-    Snd_Ch2_FreqLo      = 0x18,
-    Snd_Ch2_FreqHi      = 0x19,
+    Snd_Ch2_Wave = 0x16,
+    Snd_Ch2_Envelope = 0x17,
+    Snd_Ch2_FreqLo = 0x18,
+    Snd_Ch2_FreqHi = 0x19,
 
-    Snd_Ch3_Enable      = 0x1a,
-    Snd_Ch3_Length      = 0x1b,
-    Snd_Ch3_Volume      = 0x1c,
-    Snd_Ch3_FreqLo      = 0x1d,
-    Snd_Ch3_FreqHi      = 0x1e,
-    Snd_Ch3_WaveRam     = 0x30,
+    Snd_Ch3_Enable = 0x1a,
+    Snd_Ch3_Length = 0x1b,
+    Snd_Ch3_Volume = 0x1c,
+    Snd_Ch3_FreqLo = 0x1d,
+    Snd_Ch3_FreqHi = 0x1e,
+    Snd_Ch3_WaveRam = 0x30,
 
-    Snd_Ch4_Length      = 0x20,
-    Snd_Ch4_Envelope    = 0x21,
-    Snd_Ch4_Poly        = 0x22,
-    Snd_Ch4_Control     = 0x23,
+    Snd_Ch4_Length = 0x20,
+    Snd_Ch4_Envelope = 0x21,
+    Snd_Ch4_Poly = 0x22,
+    Snd_Ch4_Control = 0x23,
 
-    Snd_Ctrl_Volume     = 0x24,
-    Snd_Ctrl_ChSel      = 0x25,
-    Snd_Ctrl_Stat       = 0x26,
+    Snd_Ctrl_Volume = 0x24,
+    Snd_Ctrl_ChSel = 0x25,
+    Snd_Ctrl_Stat = 0x26,
 };
 
 union EnvelopeRegs {
@@ -42,8 +43,7 @@ union EnvelopeRegs {
 };
 static_assert(sizeof(EnvelopeRegs) == 1, "");
 
-struct FrequencyRegs
-{
+struct FrequencyRegs {
     Byte low;
     union {
         Byte control;
@@ -57,8 +57,7 @@ struct FrequencyRegs
 };
 static_assert(sizeof(FrequencyRegs) == 2, "");
 
-struct SquareChannelRegs
-{
+struct SquareChannelRegs {
     union {
         Byte wave;
         struct {
@@ -69,8 +68,7 @@ struct SquareChannelRegs
     EnvelopeRegs envelope;
 };
 
-struct SoundRegs
-{
+struct SoundRegs {
     struct {
         union {
             Byte sweep;
@@ -149,16 +147,14 @@ static_assert(sizeof(SoundRegs::ctrl) == 3, "Control regs incorrect");
 
 static_assert(sizeof(SoundRegs) == (0xff3f - 0xff10 + 1), "Sound regs incorrect");
 
-class Sound
-{
+class Sound {
     Logger* log;
     SoundRegs regs;
 
 public:
     Sound(Logger* log) :
-        log(log),
-        regs()
-    {
+            log(log),
+            regs() {
     }
 
     void registerAccess(Word address, Byte* pData, bool isWrite);

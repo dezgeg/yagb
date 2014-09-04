@@ -5,40 +5,34 @@
 #include "ui_MainWindow.h"
 
 #include <QCheckBox>
-#include <QImage>
-#include <QLabel>
-#include <QLineEdit>
 #include <QPainter>
-#include <QPushButton>
-#include <QString>
-#include <utility>
+
 using namespace std;
 
 static const pair<unsigned, QString> lcdRegs[] = {
-    { 0xff40, QStringLiteral("LCDC") },
-    { 0xff41, QStringLiteral("STAT") },
-    { 0xff42, QStringLiteral("SCY") },
-    { 0xff43, QStringLiteral("SCX") },
-    { 0xff44, QStringLiteral("LY") },
-    { 0xff45, QStringLiteral("LYC") },
-    { 0xff46, QStringLiteral("DMA") },
-    { 0xff47, QStringLiteral("BGP") },
-    { 0xff48, QStringLiteral("OBP0") },
-    { 0xff49, QStringLiteral("OBP1") },
-    { 0xff4a, QStringLiteral("WY") },
-    { 0xff4b, QStringLiteral("WX") },
+        { 0xff40, QStringLiteral("LCDC") },
+        { 0xff41, QStringLiteral("STAT") },
+        { 0xff42, QStringLiteral("SCY") },
+        { 0xff43, QStringLiteral("SCX") },
+        { 0xff44, QStringLiteral("LY") },
+        { 0xff45, QStringLiteral("LYC") },
+        { 0xff46, QStringLiteral("DMA") },
+        { 0xff47, QStringLiteral("BGP") },
+        { 0xff48, QStringLiteral("OBP0") },
+        { 0xff49, QStringLiteral("OBP1") },
+        { 0xff4a, QStringLiteral("WY") },
+        { 0xff4b, QStringLiteral("WX") },
 };
 
 static const QString irqNames[] = {
-    QStringLiteral("VBlank"),
-    QStringLiteral("LcdStat"),
-    QStringLiteral("Timer"),
-    QStringLiteral("Serial"),
-    QStringLiteral("Joypad"),
+        QStringLiteral("VBlank"),
+        QStringLiteral("LcdStat"),
+        QStringLiteral("Timer"),
+        QStringLiteral("Serial"),
+        QStringLiteral("Joypad"),
 };
 
-void MainWindow::fillDynamicRegisterTables()
-{
+void MainWindow::fillDynamicRegisterTables() {
     QFont font("Monospace");
     font.setStyleHint(QFont::TypeWriter);
 
@@ -63,28 +57,27 @@ void MainWindow::fillDynamicRegisterTables()
     }
 }
 
-MainWindow::MainWindow(const char* romFile, bool insnTrace, QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    log(ui.get()),
-    rom(&log, romFile),
-    gb(&log, &rom),
-    frameTimer(new QTimer(this)),
-    qtFramebuffer(ScreenWidth*2, ScreenHeight*2)
-{
+MainWindow::MainWindow(const char* romFile, bool insnTrace, QWidget* parent) :
+        QMainWindow(parent),
+        ui(new Ui::MainWindow),
+        log(ui.get()),
+        rom(&log, romFile),
+        gb(&log, &rom),
+        frameTimer(new QTimer(this)),
+        qtFramebuffer(ScreenWidth * 2, ScreenHeight * 2) {
     setFocusPolicy(Qt::StrongFocus);
 
     ui->setupUi(this);
     fillDynamicRegisterTables();
 
     connect(ui->lcdWidget, SIGNAL(focusChanged(bool)), this, SLOT(lcdFocusChanged(bool)));
-    connect(ui->lcdWidget, SIGNAL(paintRequested(QPaintEvent*)), this, SLOT(lcdPaintRequested(QPaintEvent*)));
-    connect(ui->lcdWidget, SIGNAL(keyEvent(QKeyEvent*)), this, SLOT(lcdKeyEvent(QKeyEvent*)));
+    connect(ui->lcdWidget, SIGNAL(paintRequested(QPaintEvent * )), this, SLOT(lcdPaintRequested(QPaintEvent * )));
+    connect(ui->lcdWidget, SIGNAL(keyEvent(QKeyEvent * )), this, SLOT(lcdKeyEvent(QKeyEvent * )));
 
-    connect(ui->patternViewerLcdWidget, SIGNAL(paintRequested(QPaintEvent*)),
-            this, SLOT(patternViewerPaintRequested(QPaintEvent*)));
-    connect(ui->tileMapViewerLcdWidget, SIGNAL(paintRequested(QPaintEvent*)),
-            this, SLOT(tileMapViewerPaintRequested(QPaintEvent*)));
+    connect(ui->patternViewerLcdWidget, SIGNAL(paintRequested(QPaintEvent * )),
+            this, SLOT(patternViewerPaintRequested(QPaintEvent * )));
+    connect(ui->tileMapViewerLcdWidget, SIGNAL(paintRequested(QPaintEvent * )),
+            this, SLOT(tileMapViewerPaintRequested(QPaintEvent * )));
 
     connect(frameTimer, SIGNAL(timeout()), this, SLOT(timerTick()));
     frameTimer->start(4);
@@ -95,27 +88,27 @@ MainWindow::MainWindow(const char* romFile, bool insnTrace, QWidget *parent) :
     log.insnLoggingEnabled = insnTrace;
 }
 
-void MainWindow::timerTick()
-{
+void MainWindow::timerTick() {
     Gpu* gpu = gb.getGpu();
 
     long frame = gpu->getCurrentFrame();
     while (true) {
         gb.runOneInstruction();
-        if (gpu->getCurrentFrame() != frame)
+        if (gpu->getCurrentFrame() != frame) {
             break;
+        }
     }
 
     ui->lcdWidget->repaint();
     ui->patternViewerLcdWidget->repaint();
     ui->tileMapViewerLcdWidget->repaint();
 
-    if (gb.getGpu()->getCurrentFrame() % 60 == 0)
+    if (gb.getGpu()->getCurrentFrame() % 60 == 0) {
         updateRegisters();
+    }
 }
 
-void MainWindow::lcdFocusChanged(bool in)
-{
+void MainWindow::lcdFocusChanged(bool in) {
     if (in) {
         frameTimer->start();
     } else {
@@ -124,63 +117,79 @@ void MainWindow::lcdFocusChanged(bool in)
     }
 }
 
-void MainWindow::lcdKeyEvent(QKeyEvent* e)
-{
+void MainWindow::lcdKeyEvent(QKeyEvent* e) {
     Byte keys;
     switch (e->key()) {
-        case Qt::Key_Right:     keys = Pad_Right;   break;
-        case Qt::Key_Left:      keys = Pad_Left;    break;
-        case Qt::Key_Up:        keys = Pad_Up;      break;
-        case Qt::Key_Down:      keys = Pad_Down;    break;
-        case Qt::Key_Return:    keys = Pad_Start;   break;
-        case Qt::Key_Backspace: keys = Pad_Select;  break;
-        case Qt::Key_Control:   keys = Pad_A;       break;
-        case Qt::Key_Shift:     keys = Pad_B;       break;
-        default: return;
+        case Qt::Key_Right:
+            keys = Pad_Right;
+            break;
+        case Qt::Key_Left:
+            keys = Pad_Left;
+            break;
+        case Qt::Key_Up:
+            keys = Pad_Up;
+            break;
+        case Qt::Key_Down:
+            keys = Pad_Down;
+            break;
+        case Qt::Key_Return:
+            keys = Pad_Start;
+            break;
+        case Qt::Key_Backspace:
+            keys = Pad_Select;
+            break;
+        case Qt::Key_Control:
+            keys = Pad_A;
+            break;
+        case Qt::Key_Shift:
+            keys = Pad_B;
+            break;
+        default:
+            return;
     }
 
-    if (e->type() == QEvent::KeyPress)
+    if (e->type() == QEvent::KeyPress) {
         gb.getJoypad()->keysPressed(keys);
-    else
+    } else {
         gb.getJoypad()->keysReleased(keys);
+    }
 }
 
 static const QVector<QRgb> monochromeToRgb = {
-    qRgb(255, 255, 255),
-    qRgb(2*255/3, 2*255/3, 2*255/3),
-    qRgb(255/3, 255/3, 255/3),
-    qRgb(0, 0, 0),
+        qRgb(255, 255, 255),
+        qRgb(2 * 255 / 3, 2 * 255 / 3, 2 * 255 / 3),
+        qRgb(255 / 3, 255 / 3, 255 / 3),
+        qRgb(0, 0, 0),
 };
 
-void MainWindow::lcdPaintRequested(QPaintEvent*)
-{
+void MainWindow::lcdPaintRequested(QPaintEvent*) {
     QImage image((const uchar*)gb.getGpu()->getFramebuffer(),
-                 ScreenWidth, ScreenHeight, QImage::Format_Indexed8);
+            ScreenWidth, ScreenHeight, QImage::Format_Indexed8);
     image.setColorTable(monochromeToRgb); // TODO: copies?
 
     // TODO: draw border
     QPainter painter;
     painter.begin(ui->lcdWidget);
-    painter.drawImage(QRectF(QPointF(1, 1), QSizeF(ScreenWidth*2, ScreenHeight*2)), image);
+    painter.drawImage(QRectF(QPointF(1, 1), QSizeF(ScreenWidth * 2, ScreenHeight * 2)), image);
     painter.end();
 }
 
-static void drawTile(int i, int j, Byte* tile, QPainter* painter)
-{
+static void drawTile(int i, int j, Byte* tile, QPainter* painter) {
     unsigned char tmpBuf[8][8];
     QImage image((uchar*)tmpBuf, 8, 8, QImage::Format_Indexed8);
     image.setColorTable(monochromeToRgb); // TODO: copies?
 
-    for (unsigned x = 0; x < 8; x++)
-        for (unsigned y = 0; y < 8; y++)
+    for (unsigned x = 0; x < 8; x++) {
+        for (unsigned y = 0; y < 8; y++) {
             tmpBuf[y][x] = Gpu::drawTilePixel(tile, x, y, 0xe4);
+        }
+    }
 
     painter->drawImage(QRectF(QPointF(17 * i, 17 * j), QSizeF(16, 16)), image,
-                       QRectF(QPointF(0, 0), QSize(8, 8)));
+            QRectF(QPointF(0, 0), QSize(8, 8)));
 }
 
-void MainWindow::patternViewerPaintRequested(QPaintEvent*)
-{
+void MainWindow::patternViewerPaintRequested(QPaintEvent*) {
     Byte* vram = gb.getGpu()->getVram();
     QPainter painter;
     painter.begin(ui->patternViewerLcdWidget);
@@ -192,8 +201,7 @@ void MainWindow::patternViewerPaintRequested(QPaintEvent*)
     painter.end();
 }
 
-void MainWindow::tileMapViewerPaintRequested(QPaintEvent*)
-{
+void MainWindow::tileMapViewerPaintRequested(QPaintEvent*) {
     Byte* vram = gb.getGpu()->getVram();
     Byte* tiles = vram + 0x1800;
     unsigned char tmpBuf[8][8];
@@ -210,8 +218,7 @@ void MainWindow::tileMapViewerPaintRequested(QPaintEvent*)
     painter.end();
 }
 
-void MainWindow::updateRegisters()
-{
+void MainWindow::updateRegisters() {
     Bus* bus = gb.getBus();
     for (unsigned i = 0; i < arraySize(lcdRegs); i++) {
         HexTextField* edit = static_cast<HexTextField*>(ui->lcdRegsFormLayout->itemAt(i, QFormLayout::FieldRole)->widget());
@@ -245,14 +252,12 @@ void MainWindow::updateRegisters()
     ui->cpuFlagIrqs->setChecked(regs->irqsEnabled);
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow() {
 }
 
 QTextStream qtStdout(stdout);
 
-void GuiLogger::logImpl(const char* format, ...)
-{
+void GuiLogger::logImpl(const char* format, ...) {
     QString s;
     va_list ap;
     va_start(ap, format);

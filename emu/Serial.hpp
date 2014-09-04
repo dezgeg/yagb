@@ -1,10 +1,10 @@
 #pragma once
+
 #include "Platform.hpp"
 
 // Doesn't actually communicate with anything, but
 // some games (Alleyway) use the serial for timing. UGH!
-class Serial
-{
+class Serial {
     long currentCycles;
     struct Regs {
         Byte sb;
@@ -18,16 +18,14 @@ class Serial
         };
     } regs;
 
-    inline bool isRunning()
-    {
+    inline bool isRunning() {
         return regs.transferStart && regs.internalClock;
     }
 
 public:
     Serial() :
-        currentCycles(0),
-        regs()
-    {
+            currentCycles(0),
+            regs() {
     }
 
     bool tick(int cycles);

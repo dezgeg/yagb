@@ -3,8 +3,7 @@
 #include <QApplication>
 #include <unistd.h>
 
-int main(int argc, char **argv)
-{
+int main(int argc, char** argv) {
     QApplication app(argc, argv);
 
     bool trace = false;

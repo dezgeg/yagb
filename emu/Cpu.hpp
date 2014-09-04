@@ -1,10 +1,10 @@
 #pragma once
+
 #include "Bus.hpp"
 #include "Logger.hpp"
 #include "Platform.hpp"
 
-union Regs
-{
+union Regs {
     struct {
         Byte c, b, e, d, l, h, _pad1, _pad2, f, a, _pad3, _pad4;
         Byte irqsEnabled : 1;
@@ -29,8 +29,8 @@ union Regs
 #endif
 
 class Gameboy;
-class Cpu
-{
+
+class Cpu {
     Logger* log;
     Bus* bus;
 
@@ -57,9 +57,8 @@ class Cpu
 
 public:
     Cpu(Logger* log, Bus* bus) :
-        log(log),
-        bus(bus)
-    {
+            log(log),
+            bus(bus) {
         reset();
     }
 

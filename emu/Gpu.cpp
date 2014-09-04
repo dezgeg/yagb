@@ -19,8 +19,7 @@ enum {
     MaxScanline = 153,
 };
 
-IrqSet Gpu::tick(long cycles)
-{
+IrqSet Gpu::tick(long cycles) {
     IrqSet irqs = 0;
 
     bool wasInOamFetch = cycleResidue < OamFetchThresholdCycles;
@@ -32,8 +31,9 @@ IrqSet Gpu::tick(long cycles)
     bool nowInHBlank = cycleResidue >= VramFetchThresholdCycles;
 
     if (cycleResidue >= ScanlineCycles) {
-        if (regs.ly < ScreenHeight)
+        if (regs.ly < ScreenHeight) {
             renderScanline();
+        }
 
         // Assumes that cycle delta is not insanely large
         cycleResidue -= ScanlineCycles;
@@ -43,8 +43,9 @@ IrqSet Gpu::tick(long cycles)
             frame++;
         } else if (regs.ly == ScreenHeight) {
             irqs |= bit(Irq_VBlank);
-            if (regs.vBlankIrqEnabled)
+            if (regs.vBlankIrqEnabled) {
                 irqs |= bit(Irq_LcdStat);
+            }
         }
 
         if (regs.ly == regs.lyc && regs.coincidenceIrqEnabled) {
@@ -53,10 +54,11 @@ IrqSet Gpu::tick(long cycles)
     } else {
         if (!nowInOamFetch && wasInOamFetch) { // TODO - bug
             captureSpriteState();
-            if (regs.oamIrqEnabled)
+            if (regs.oamIrqEnabled) {
                 irqs |= bit(Irq_LcdStat);
+            }
         }
-        if (nowInHBlank && ! wasInHBlank && regs.hBlankIrqEnabled) {
+        if (nowInHBlank && !wasInHBlank && regs.hBlankIrqEnabled) {
             irqs |= bit(Irq_LcdStat);
         }
     }
@@ -64,8 +66,7 @@ IrqSet Gpu::tick(long cycles)
     return irqs;
 }
 
-void Gpu::captureSpriteState()
-{
+void Gpu::captureSpriteState() {
     int prevSpriteXPos = -1000;
     for (unsigned i = 0; i < 10; i++) {
         int bestSpriteNum = -1;
@@ -75,8 +76,9 @@ void Gpu::captureSpriteState()
             int spriteTop = sprites[j].y - 16;
             int spriteBottom = spriteTop + (regs.objSizeLarge ? 16 : 8);
 
-            if (!(regs.ly >= spriteTop && regs.ly < spriteBottom))
-                continue; // not visible this scanline
+            if (!(regs.ly >= spriteTop && regs.ly < spriteBottom)) {
+                continue;
+            } // not visible this scanline
             if (sprites[j].x > prevSpriteXPos && sprites[j].x < bestXPos) {
                 bestSpriteNum = j;
                 bestXPos = sprites[j].x;
@@ -87,9 +89,8 @@ void Gpu::captureSpriteState()
     }
 }
 
-void Gpu::renderScanline()
-{
-    Byte* bgPatternBase = regs.bgPatternBaseSelect ? &vram[0x0]: &vram[0x1000];  // Bit 4
+void Gpu::renderScanline() {
+    Byte* bgPatternBase = regs.bgPatternBaseSelect ? &vram[0x0] : &vram[0x1000];  // Bit 4
 
     unsigned spriteIndex = 0;
     for (unsigned i = 0; i < ScreenWidth; i++) {
@@ -130,13 +131,14 @@ void Gpu::renderScanline()
             pixel = applyPalette(regs.bgp, bgColor);
         }
 
-trySpriteAgain:
+        trySpriteAgain:
         if (regs.objEnabled && spriteIndex < 10 && visibleSprites[spriteIndex] >= 0) {
             OamEntry* oamEntry = &sprites[visibleSprites[spriteIndex]];
 
             int tileX = i - (oamEntry->x - 8);
-            if (tileX < 0)
+            if (tileX < 0) {
                 goto noSprite;
+            }
             assert(tileX <= 8);
             if (tileX == 8) {
                 spriteIndex++;
@@ -147,19 +149,19 @@ trySpriteAgain:
             Byte palette = oamEntry->flags.palette ? regs.obp1 : regs.obp0;
 
             Byte spriteColor = drawTilePixel(&vram[16 * oamEntry->tile], tileX, tileY,
-                                             regs.objSizeLarge, oamEntry->flags);
+                    regs.objSizeLarge, oamEntry->flags);
             Byte spritePixel = applyPalette(palette, spriteColor);
-            if (spriteColor != 0 && (!oamEntry->flags.lowPriority || bgColor == 0))
+            if (spriteColor != 0 && (!oamEntry->flags.lowPriority || bgColor == 0)) {
                 pixel = spritePixel;
+            }
         }
-noSprite:
+        noSprite:
 
         framebuffer[regs.ly][i] = pixel;
     }
 }
 
-void Gpu::vramAccess(Word offset, Byte* pData, bool isWrite)
-{
+void Gpu::vramAccess(Word offset, Byte* pData, bool isWrite) {
 #if 0
     if (isWrite)
         log->warn("GPU VRAM write [0x%0x] = 0x%02x", 0x8000 + offset, *pData);
@@ -167,8 +169,7 @@ void Gpu::vramAccess(Word offset, Byte* pData, bool isWrite)
     BusUtil::arrayMemAccess(vram, offset, pData, isWrite);
 }
 
-void Gpu::oamAccess(Word offset, Byte* pData, bool isWrite)
-{
+void Gpu::oamAccess(Word offset, Byte* pData, bool isWrite) {
 #if 0
     if (isWrite)
         log->warn("GPU OAM write [0x%0x] = 0x%02x", 0xfe00 + offset, *pData);
@@ -176,24 +177,25 @@ void Gpu::oamAccess(Word offset, Byte* pData, bool isWrite)
     BusUtil::arrayMemAccess(oam, offset, pData, isWrite);
 }
 
-void Gpu::registerAccess(Word reg, Byte* pData, bool isWrite)
-{
+void Gpu::registerAccess(Word reg, Byte* pData, bool isWrite) {
 #if 0
     if (isWrite)
         log->warn("GPU reg write [0x%0x] = 0x%02x", reg, *pData);
 #endif
 
     switch (reg) {
-        case 0xff40: BusUtil::simpleRegAccess(&regs.lcdc, pData, isWrite); return;
+        case 0xff40:
+            BusUtil::simpleRegAccess(&regs.lcdc, pData, isWrite);
+            return;
         case 0xff41: {
             if (isWrite) {
                 regs.stat = *pData & 0xf8;
             } else {
                 Byte tmp = regs.stat;
                 unsigned mode = cycleResidue >= VramFetchThresholdCycles ? 0 // HBlank
-                              : regs.ly >= ScreenHeight ? 1                  // VBlank
-                              : cycleResidue >= OamFetchThresholdCycles ? 2  // OAM access
-                              : 3;                                           // VRAM access
+                        : regs.ly >= ScreenHeight ? 1                  // VBlank
+                                : cycleResidue >= OamFetchThresholdCycles ? 2  // OAM access
+                                        : 3;                                           // VRAM access
                 tmp |= !!(regs.ly == regs.lyc) << 2;
                 tmp |= mode;
 
@@ -201,23 +203,40 @@ void Gpu::registerAccess(Word reg, Byte* pData, bool isWrite)
             }
             return;
         }
-        case 0xff42: BusUtil::simpleRegAccess(&regs.scy, pData, isWrite); return;
-        case 0xff43: BusUtil::simpleRegAccess(&regs.scx, pData, isWrite); return;
+        case 0xff42:
+            BusUtil::simpleRegAccess(&regs.scy, pData, isWrite);
+            return;
+        case 0xff43:
+            BusUtil::simpleRegAccess(&regs.scx, pData, isWrite);
+            return;
         case 0xff44: {
             // XXX: what happens on LY write?
-            if (isWrite)
+            if (isWrite) {
                 log->warn("GPU register write to LY");
-            else
+            } else {
                 *pData = regs.ly;
+            }
             return;
         }
-        case 0xff45: BusUtil::simpleRegAccess(&regs.lyc, pData, isWrite); return;
-        // case 0xff46: dma - TODO: must be handled by Bus!
-        case 0xff47: BusUtil::simpleRegAccess(&regs.bgp, pData, isWrite); return;
-        case 0xff48: BusUtil::simpleRegAccess(&regs.obp0, pData, isWrite); return;
-        case 0xff49: BusUtil::simpleRegAccess(&regs.obp1, pData, isWrite); return;
-        case 0xff4a: BusUtil::simpleRegAccess(&regs.wy, pData, isWrite); return;
-        case 0xff4b: BusUtil::simpleRegAccess(&regs.wx, pData, isWrite); return;
+        case 0xff45:
+            BusUtil::simpleRegAccess(&regs.lyc, pData, isWrite);
+            return;
+            // case 0xff46: dma - TODO: must be handled by Bus!
+        case 0xff47:
+            BusUtil::simpleRegAccess(&regs.bgp, pData, isWrite);
+            return;
+        case 0xff48:
+            BusUtil::simpleRegAccess(&regs.obp0, pData, isWrite);
+            return;
+        case 0xff49:
+            BusUtil::simpleRegAccess(&regs.obp1, pData, isWrite);
+            return;
+        case 0xff4a:
+            BusUtil::simpleRegAccess(&regs.wy, pData, isWrite);
+            return;
+        case 0xff4b:
+            BusUtil::simpleRegAccess(&regs.wx, pData, isWrite);
+            return;
     }
     log->warn("Unhandled GPU register %s to register %04X", isWrite ? "write" : "read", reg);
 }

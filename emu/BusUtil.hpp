@@ -1,21 +1,21 @@
 #pragma once
+
 #include "Platform.hpp"
 
-struct BusUtil
-{
-    static inline void arrayMemAccess(Byte* array, Word address, Byte* pData, bool isWrite)
-    {
-        if (isWrite)
+struct BusUtil {
+    static inline void arrayMemAccess(Byte* array, Word address, Byte* pData, bool isWrite) {
+        if (isWrite) {
             array[address] = *pData;
-        else
+        } else {
             *pData = array[address];
+        }
     }
 
-    static inline void simpleRegAccess(Byte* pReg, Byte* pData, bool isWrite, Byte writeMask = 0xff)
-    {
-        if (isWrite)
+    static inline void simpleRegAccess(Byte* pReg, Byte* pData, bool isWrite, Byte writeMask = 0xff) {
+        if (isWrite) {
             *pReg = *pData & writeMask;
-        else
+        } else {
             *pData = *pReg;
+        }
     }
 };
