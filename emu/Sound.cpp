@@ -47,17 +47,22 @@ void Sound::tick(int cycleDelta) {
 }
 
 void Sound::generateSamples() {
-    bool ch1 = evalSquareChannel(regs.ch1.square);
-    unsigned ch1EnvelopeVolume = regs.ch1.square.freqCtrl.start ? evalEnvelope(regs.ch1.square.envelope, envelopes.ch1) : 0;
-    // qDebug() << "Envel result: " << ch1EnvelopeVolume;
-    int ch1Volume = mixVolume(ch1 ? MaxChanLevel : -MaxChanLevel, ch1EnvelopeVolume);
+    int ch1Volume = evalPulseChannel(regs.ch1.square, envelopes.ch1);
+    int ch2Volume = evalPulseChannel(regs.ch2.square, envelopes.ch2);
 
-    rightSample = ch1Volume;
+    rightSample = ch1Volume + ch2Volume;
     leftSample = rightSample;
 }
 
+int Sound::evalPulseChannel(SquareChannelRegs& regs, EnvelopeState& envelState) {
+    bool ch1 = evalPulseWaveform(regs);
+    unsigned ch1EnvelopeVolume = regs.freqCtrl.start ? evalEnvelope(regs.envelope, envelState) : 0;
+    // qDebug() << "Envel result: " << ch1EnvelopeVolume;
+    return mixVolume(ch1 ? MaxChanLevel : -MaxChanLevel, ch1EnvelopeVolume);
+}
+
 // Returns true/false whether the square channel output is high or low
-bool Sound::evalSquareChannel(SquareChannelRegs& ch) {
+bool Sound::evalPulseWaveform(SquareChannelRegs& ch) {
     static const unsigned pulseWidthLookup[] = { 4 * 1, 4 * 2, 4 * 4, 4 * 6 };
 
     if (!ch.freqCtrl.start) {

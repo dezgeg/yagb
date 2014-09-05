@@ -181,8 +181,9 @@ public:
     uint16_t getLeftSample() { return leftSample; }
     uint16_t getRightSample() { return rightSample; }
     void generateSamples();
-    bool evalSquareChannel(SquareChannelRegs& ch);
+    bool evalPulseWaveform(SquareChannelRegs& ch);
     void restartEnvelope(EnvelopeState& state);
     unsigned int evalEnvelope(EnvelopeRegs& regs, EnvelopeState& state);
     int mixVolume(int sample, unsigned int volume);
+    int evalPulseChannel(SquareChannelRegs& regs, EnvelopeState& envelState);
 };
