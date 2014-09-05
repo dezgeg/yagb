@@ -54,6 +54,10 @@ struct FrequencyRegs {
             Byte start : 1;
         };
     };
+
+    Word getFrequency() {
+        return (high << 8) | low;
+    }
 };
 static_assert(sizeof(FrequencyRegs) == 2, "");
 
@@ -66,6 +70,7 @@ struct SquareChannelRegs {
         };
     };
     EnvelopeRegs envelope;
+    FrequencyRegs freqCtrl;
 };
 
 struct SoundRegs {
@@ -79,14 +84,12 @@ struct SoundRegs {
             };
         };
         SquareChannelRegs square;
-        FrequencyRegs freqCtrl;
     } ch1;
 
     Byte _unused1; // 0xff15
 
     struct {
         SquareChannelRegs square;
-        FrequencyRegs freqCtrl;
     } ch2;
 
     struct {
@@ -151,6 +154,7 @@ class Sound {
     Logger* log;
     SoundRegs regs;
 
+    unsigned long currentCycle;
     long cycleResidue;
     long currentSampleNumber;
 
@@ -161,6 +165,7 @@ public:
     Sound(Logger* log) :
             log(log),
             regs(),
+            currentCycle(),
             cycleResidue(),
             currentSampleNumber(),
             leftSample(),
@@ -173,4 +178,6 @@ public:
     long getCurrentSampleNumber() { return currentSampleNumber; }
     uint16_t getLeftSample() { return leftSample; }
     uint16_t getRightSample() { return rightSample; }
+    void generateSamples();
+    bool evalSquareChannel(SquareChannelRegs& ch);
 };

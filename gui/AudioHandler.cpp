@@ -7,7 +7,7 @@
 
 using namespace std;
 
-void AudioHandler::feedSamples(uint16_t left, uint16_t right) {
+void AudioHandler::feedSamples(int16_t left, int16_t right) {
     if ((head + 1) % SIZE == tail) {
         if (!wasFull) {
             TimingUtils::log() << "Audio buffer full!";
@@ -29,7 +29,7 @@ QAudioFormat AudioHandler::createFormat() {
     f.setChannelCount(2);
     f.setSampleRate(48000);
     f.setSampleSize(16);
-    f.setSampleType(QAudioFormat::UnSignedInt);
+    f.setSampleType(QAudioFormat::SignedInt);
     f.setByteOrder(QAudioFormat::LittleEndian);
 
     return f;

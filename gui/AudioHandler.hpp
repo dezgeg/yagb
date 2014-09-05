@@ -22,6 +22,7 @@ Q_OBJECT
     bool wasFull;
 
     QAudioFormat createFormat();
+    size_t samplesAvailable() { return (head - tail) % SIZE; }
 
 private slots:
     void outputStateChanged(QAudio::State st);
@@ -31,8 +32,7 @@ protected:
     virtual qint64 writeData(const char* data, qint64 len);
 
 public:
-    size_t samplesAvailable() { return (head - tail) % SIZE; }
-    void feedSamples(uint16_t left, uint16_t right);
+    void feedSamples(int16_t left, int16_t right);
 
     AudioHandler();
 };
