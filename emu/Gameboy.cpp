@@ -20,5 +20,6 @@ void Gameboy::runOneInstruction() {
 
     IrqSet gpuIrqs = gpu.tick(cycleDelta);
     bus.raiseIrq(gpuIrqs);
+    sound.tick(cycleDelta);
     currentCycle += cycleDelta;
 }

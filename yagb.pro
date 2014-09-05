@@ -1,5 +1,5 @@
 CONFIG += qt debug silent
-QT += core gui widgets
+QT += core gui widgets multimedia
 QMAKE_CXXFLAGS += -std=c++0x -O0 -gdwarf-2 -Wall -Wextra -Woverloaded-virtual -Werror -Wno-unused-parameter -Wno-unknown-pragmas
 
 HEADERS += gui/*.hpp emu/*.hpp

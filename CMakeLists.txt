@@ -9,9 +9,10 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(CMAKE_AUTOMOC ON)
 find_package(Qt5Widgets REQUIRED)
+find_package(Qt5Multimedia REQUIRED)
 
 file(GLOB_RECURSE srcs ${CMAKE_CURRENT_SOURCE_DIR}/emu/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/gui/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/emu/*.hpp ${CMAKE_CURRENT_SOURCE_DIR}/gui/*.hpp)
 qt5_wrap_ui(ui_headers ${CMAKE_CURRENT_SOURCE_DIR}/gui/MainWindow.ui)
 
 add_executable(yagb ${srcs} ${ui_headers})
-qt5_use_modules(yagb Widgets)
+qt5_use_modules(yagb Widgets Multimedia)

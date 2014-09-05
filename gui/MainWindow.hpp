@@ -3,6 +3,7 @@
 #include "emu/Gameboy.hpp"
 #include "emu/Logger.hpp"
 #include "emu/Rom.hpp"
+#include "AudioHandler.hpp"
 
 #include <QMainWindow>
 #include <QPixmap>
@@ -32,11 +33,13 @@ public:
 
 private:
     std::unique_ptr<Ui::MainWindow> ui;
+    AudioHandler audioHandler;
 
     GuiLogger log;
     Rom rom;
     Gameboy gb;
 
+    long nextRenderAt;
     QTimer* frameTimer;
     QPixmap qtFramebuffer;
 

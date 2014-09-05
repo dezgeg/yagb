@@ -36,6 +36,7 @@ public:
     Bus* getBus() { return &bus; }
     Cpu* getCpu() { return &cpu; }
     Gpu* getGpu() { return &gpu; }
+    Sound* getSound() { return &sound; }
     Timer* getTimer() { return &timer; }
     Joypad* getJoypad() { return &joypad; }
 

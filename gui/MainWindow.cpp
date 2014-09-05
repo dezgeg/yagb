@@ -3,11 +3,13 @@
 #include "gui/MainWindow.hpp"
 #include "gui/OneCharacterButton.hpp"
 #include "ui_MainWindow.h"
+#include "TimingUtils.hpp"
 
 #include <QCheckBox>
 #include <QPainter>
 
 using namespace std;
+static constexpr double FrameNsecs = (70224.0 / (1L << 22)) * 1000000000L;
 
 static const pair<unsigned, QString> lcdRegs[] = {
         { 0xff40, QStringLiteral("LCDC") },
@@ -80,24 +82,43 @@ MainWindow::MainWindow(const char* romFile, bool insnTrace, QWidget* parent) :
             this, SLOT(tileMapViewerPaintRequested(QPaintEvent * )));
 
     connect(frameTimer, SIGNAL(timeout()), this, SLOT(timerTick()));
-    frameTimer->start(4);
+    frameTimer->start(0);
 
     ui->lcdWidget->setFocus();
     updateRegisters();
 
     log.insnLoggingEnabled = insnTrace;
+
+    nextRenderAt = TimingUtils::getNsecs();
 }
 
 void MainWindow::timerTick() {
     Gpu* gpu = gb.getGpu();
+    Sound* snd = gb.getSound();
+
+    long startTime = TimingUtils::getNsecs();
+    long overtime = startTime - nextRenderAt;
+    if (overtime < -FrameNsecs / 20)
+        overtime = -FrameNsecs / 20;
+    else if (overtime > FrameNsecs / 20)
+        overtime = FrameNsecs / 20;
 
     long frame = gpu->getCurrentFrame();
+    long sample = snd->getCurrentSampleNumber();
+    // TimingUtils::log() << "Frame start, audio sample: " << snd->getCurrentSampleNumber();
     while (true) {
         gb.runOneInstruction();
+
+        if (snd->getCurrentSampleNumber() != sample) {
+            audioHandler.feedSamples(snd->getLeftSample(), snd->getRightSample());
+            sample = snd->getCurrentSampleNumber();
+        }
+
         if (gpu->getCurrentFrame() != frame) {
             break;
         }
     }
+    // TimingUtils::log() << "Frame over, audio sample: " << snd->getCurrentSampleNumber() << ", available: " << audioHandler.samplesAvailable();
 
     ui->lcdWidget->repaint();
     ui->patternViewerLcdWidget->repaint();
@@ -106,6 +127,12 @@ void MainWindow::timerTick() {
     if (gb.getGpu()->getCurrentFrame() % 60 == 0) {
         updateRegisters();
     }
+
+    long endTime = TimingUtils::getNsecs();
+    nextRenderAt = startTime - overtime + FrameNsecs;
+    long msec = (nextRenderAt - endTime) / 1000000;
+    // qDebug() << "msec: " << msec << "overtime: " << overtime;
+    frameTimer->start(msec);
 }
 
 void MainWindow::lcdFocusChanged(bool in) {

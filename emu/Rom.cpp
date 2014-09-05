@@ -89,8 +89,10 @@ void Rom::cartRomAccess(Word address, Byte* pData, bool isWrite) {
 }
 
 void Rom::cartRamAccess(Word address, Byte* pData, bool isWrite) {
+#if 0
     if (!mapper) {
         log->warn("Access to cart RAM (0x%04x) without mapper", address);
     }
+#endif
     BusUtil::arrayMemAccess(ramData, address, pData, isWrite);
 }

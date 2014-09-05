@@ -10,3 +10,12 @@ void Sound::registerAccess(Word address, Byte* pData, bool isWrite) {
     // TODO: mask
     BusUtil::arrayMemAccess((Byte*)&regs, address - 0xff10, pData, isWrite);
 }
+
+void Sound::tick(int cycleDelta)
+{
+    cycleResidue += 375 * cycleDelta;
+    if (cycleResidue >= 32768) {
+        cycleResidue -= 32768;
+        currentSampleNumber++;
+    }
+}

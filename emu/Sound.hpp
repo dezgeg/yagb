@@ -151,11 +151,26 @@ class Sound {
     Logger* log;
     SoundRegs regs;
 
+    long cycleResidue;
+    long currentSampleNumber;
+
+    uint16_t leftSample;
+    uint16_t rightSample;
+
 public:
     Sound(Logger* log) :
             log(log),
-            regs() {
+            regs(),
+            cycleResidue(),
+            currentSampleNumber(),
+            leftSample(),
+            rightSample() {
     }
 
     void registerAccess(Word address, Byte* pData, bool isWrite);
+    void tick(int cycleDelta);
+
+    long getCurrentSampleNumber() { return currentSampleNumber; }
+    uint16_t getLeftSample() { return leftSample; }
+    uint16_t getRightSample() { return rightSample; }
 };
