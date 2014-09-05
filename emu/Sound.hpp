@@ -43,6 +43,10 @@ union EnvelopeRegs {
 };
 static_assert(sizeof(EnvelopeRegs) == 1, "");
 
+struct EnvelopeState {
+    unsigned long startCycle;
+};
+
 struct FrequencyRegs {
     Byte low;
     union {
@@ -59,6 +63,7 @@ struct FrequencyRegs {
         return (high << 8) | low;
     }
 };
+
 static_assert(sizeof(FrequencyRegs) == 2, "");
 
 struct SquareChannelRegs {
@@ -153,6 +158,11 @@ static_assert(sizeof(SoundRegs) == (0xff3f - 0xff10 + 1), "Sound regs incorrect"
 class Sound {
     Logger* log;
     SoundRegs regs;
+    struct {
+        EnvelopeState ch1;
+        EnvelopeState ch2;
+        EnvelopeState ch4;
+    } envelopes;
 
     unsigned long currentCycle;
     long cycleResidue;
@@ -162,15 +172,7 @@ class Sound {
     uint16_t rightSample;
 
 public:
-    Sound(Logger* log) :
-            log(log),
-            regs(),
-            currentCycle(),
-            cycleResidue(),
-            currentSampleNumber(),
-            leftSample(),
-            rightSample() {
-    }
+    Sound(Logger* log);
 
     void registerAccess(Word address, Byte* pData, bool isWrite);
     void tick(int cycleDelta);
@@ -180,4 +182,7 @@ public:
     uint16_t getRightSample() { return rightSample; }
     void generateSamples();
     bool evalSquareChannel(SquareChannelRegs& ch);
+    void restartEnvelope(EnvelopeState& state);
+    unsigned int evalEnvelope(EnvelopeRegs& regs, EnvelopeState& state);
+    int mixVolume(int sample, unsigned int volume);
 };

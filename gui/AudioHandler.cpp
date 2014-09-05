@@ -15,6 +15,7 @@ void AudioHandler::feedSamples(int16_t left, int16_t right) {
         wasFull = true;
         return;
     }
+    // qDebug() << "Sample: " << left;
     buf[head].left = left;
     buf[head].right = right;
     head = (head + 1) % SIZE;
@@ -29,7 +30,7 @@ QAudioFormat AudioHandler::createFormat() {
     f.setChannelCount(2);
     f.setSampleRate(48000);
     f.setSampleSize(16);
-    f.setSampleType(QAudioFormat::SignedInt);
+    f.setSampleType(QAudioFormat::UnSignedInt);
     f.setByteOrder(QAudioFormat::LittleEndian);
 
     return f;

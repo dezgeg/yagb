@@ -19,3 +19,8 @@ inline unsigned long bit(unsigned long b) {
 inline uint8_t reverseBits(uint8_t b) {
     return ((b * 0x80200802ULL) & 0x0884422110ULL) * 0x0101010101ULL >> 32;
 }
+
+template<typename A, typename B, typename C>
+A clamp(A val, B min, C max) {
+    return val < min ? min : val > max ? max : val;
+}
