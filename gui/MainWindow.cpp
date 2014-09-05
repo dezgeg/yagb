@@ -82,14 +82,13 @@ MainWindow::MainWindow(const char* romFile, bool insnTrace, QWidget* parent) :
             this, SLOT(tileMapViewerPaintRequested(QPaintEvent * )));
 
     connect(frameTimer, SIGNAL(timeout()), this, SLOT(timerTick()));
+    nextRenderAt = TimingUtils::getNsecs();
     frameTimer->start(0);
 
     ui->lcdWidget->setFocus();
     updateRegisters();
 
     log.insnLoggingEnabled = insnTrace;
-
-    nextRenderAt = TimingUtils::getNsecs();
 }
 
 void MainWindow::timerTick() {
@@ -132,7 +131,7 @@ void MainWindow::timerTick() {
     nextRenderAt = startTime - overtime + FrameNsecs;
     long msec = (nextRenderAt - endTime) / 1000000;
     // qDebug() << "msec: " << msec << "overtime: " << overtime;
-    frameTimer->start(msec);
+    frameTimer->start(msec < 0 ? 0 : msec);
 }
 
 void MainWindow::lcdFocusChanged(bool in) {

@@ -17,7 +17,7 @@ void AudioHandler::feedSamples(uint16_t left, uint16_t right) {
     }
     buf[head].left = left;
     buf[head].right = right;
-    head++;
+    head = (head + 1) % SIZE;
 }
 void AudioHandler::outputStateChanged(QAudio::State state) {
     TimingUtils::log() << "State: " << state << ", error: " << audioOutput->error();
