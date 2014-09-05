@@ -96,11 +96,7 @@ void MainWindow::timerTick() {
     Sound* snd = gb.getSound();
 
     long startTime = TimingUtils::getNsecs();
-    long overtime = startTime - nextRenderAt;
-    if (overtime < -FrameNsecs / 20)
-        overtime = -FrameNsecs / 20;
-    else if (overtime > FrameNsecs / 20)
-        overtime = FrameNsecs / 20;
+    long overtime = clamp(startTime - nextRenderAt, -FrameNsecs / 20, FrameNsecs / 20);
 
     long frame = gpu->getCurrentFrame();
     long sample = snd->getCurrentSampleNumber();
