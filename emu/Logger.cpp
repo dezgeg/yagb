@@ -1,5 +1,6 @@
 #include "Bus.hpp"
 #include "Cpu.hpp"
+#include "Gpu.hpp"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -25,7 +26,7 @@ void Logger::logInsn(Bus* bus, Regs* regs, int cycles, Word newPC, const char* f
 
     logImpl("[insn %05ld/%03d/%08ld] 0x%04X: %8s => %-32s "
                     "A: 0x%02x | BC: 0x%04x | DE: 0x%04x | HL: 0x%04x | SP: 0x%04x | Flags: %c%c%c%c%c | Cycles: %d",
-            currentFrame, currentScanline, currentCycle,
+            currentFrame, currentScanline, currentCycle % ScanlineCycles,
             regs->pc, hexdumpBuf, buf, regs->a, regs->bc, regs->de, regs->hl, regs->sp,
             regs->flags.z ? 'Z' : '-', regs->flags.n ? 'N' : '-',
             regs->flags.h ? 'H' : '-', regs->flags.c ? 'C' : '-',
@@ -49,4 +50,19 @@ void Logger::warn(const char* fmt, ...) {
 
     va_end(ap);
     logImpl("[warn] %s", buf);
+}
+
+void Logger::logDebug(const char* fmt, ...) {
+    if (!insnLoggingEnabled) {
+        return;
+    }
+
+    char buf[256];
+    va_list ap;
+    va_start(ap, fmt);
+
+    vsnprintf(buf, sizeof(buf), fmt, ap);
+
+    va_end(ap);
+    logImpl("%s", buf);
 }

@@ -14,7 +14,6 @@
 enum {
     OamFetchThresholdCycles = 80,
     VramFetchThresholdCycles = 80 + 172,
-    ScanlineCycles = 456,
 
     MaxScanline = 153,
 };

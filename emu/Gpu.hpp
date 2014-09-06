@@ -10,6 +10,8 @@
 enum {
     ScreenWidth = 160,
     ScreenHeight = 144,
+
+    ScanlineCycles = 456,
 };
 
 struct OamEntry {
