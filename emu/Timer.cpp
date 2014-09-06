@@ -3,17 +3,17 @@
 #include "Utils.hpp"
 
 // Frequency-to-divisor mapping:
-// 4096   Hz => 4096  (2^12)
-// 16384  Hz => 1024  (2^10)
-// 65536  Hz => 256   (2^8)
-// 262144 Hz => 64    (2^6)
+// 4096   Hz => 1024 (2^10)
+// 16384  Hz => 256  (2^8)
+// 65536  Hz => 64   (2^6)
+// 262144 Hz => 16   (2^4)
 
-static const unsigned divisorShifts[] = { 12, 10, 8, 6, };
+static const unsigned divisorShifts[] = { 10, 4, 6, 8, };
 
 bool Timer::tick(int cycles) {
     long before = currentCycles >> divisorShifts[regs.divisorSelect];
     currentCycles += cycles;
-    regs.div = currentCycles >> 10;
+    regs.div = currentCycles >> 8;
 
     if (!regs.running) {
         return false;
