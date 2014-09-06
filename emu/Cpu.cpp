@@ -217,7 +217,7 @@ long Cpu::executeInsn_0x_3x(Byte opc) {
             Word addr = bus->memRead16(regs.pc);
             regs.pc += 2;
             bus->memWrite16(addr, regs.sp);
-            return INSN_DONE(20, "LD (a16), SP");
+            return INSN_DONE(20, "LD (0x%04x), SP", addr);
         }
         case 0x07: {
             regs.a = doRotLeft(regs.a);
@@ -281,13 +281,13 @@ long Cpu::executeInsn_0x_3x(Byte opc) {
             if (taken)
                 INSN_BRANCH(regs.pc + delta);
 
-            return INSN_DONE(taken ? 12 : 8, "%s r8", buf);
+            return INSN_DONE(taken ? 12 : 8, "%s 0x%04x", buf, regs.pc);
         }
         case 0x1: {
             Word val = bus->memRead16(regs.pc);
             regs.pc += 2;
             regs.words[operand] = val;
-            return INSN_DONE(12, "LD %s, d16", reg16SpStrings[operand]);
+            return INSN_DONE(12, "LD %s, 0x%04x", reg16SpStrings[operand], val);
         }
         case 0x9: {
             regs.hl = doAdd16(regs.hl, regs.words[operand]); // TODO: are flags really correct?
@@ -327,8 +327,8 @@ long Cpu::executeInsn_0x_3x(Byte opc) {
         case 0xE: {
             Byte val = bus->memRead8(regs.pc++);
             STORE8(byteOperand, val);
-            return INSN_DONE(4 + ldst8ExtraCycles(byteOperand), "LD %s, d8",
-                    reg8Strings[byteOperand]);
+            return INSN_DONE(4 + ldst8ExtraCycles(byteOperand), "LD %s, 0x%02x",
+                    reg8Strings[byteOperand], val);
         }
     }
     unreachable();
@@ -372,26 +372,28 @@ long Cpu::executeInsn_Cx_Fx(Byte opc) {
 
     switch (opc) {
         case 0xE0: {
-            bus->memWrite8(0xff00 | bus->memRead8(regs.pc++), regs.a);
-            return INSN_DONE(12, "LDH (a8), A");
+            Word address = 0xff00 | bus->memRead8(regs.pc++);
+            bus->memWrite8(address, regs.a);
+            return INSN_DONE(12, "LDH (0x%04x), A", address);
         }
         case 0xF0: {
-            regs.a = bus->memRead8(0xff00 | bus->memRead8(regs.pc++));
-            return INSN_DONE(12, "LDH A, (a8)");
+            Word address = 0xff00 | bus->memRead8(regs.pc++);
+            regs.a = bus->memRead8(address);
+            return INSN_DONE(12, "LDH A, (0x%04x)", address);
         }
         case 0xE8: {
             // TODO: nowhere is really documented how the flags are set in this case.
-            Byte tmp = bus->memRead8(regs.pc++);
-            regs.sp = doAdd16(regs.sp, (Word)(SByte)tmp);
+            SByte tmp = (SByte)bus->memRead8(regs.pc++);
+            regs.sp = doAdd16(regs.sp, (Word)tmp);
             regs.flags.z = 0;
-            return INSN_DONE(16, "ADD SP, r8");
+            return INSN_DONE(16, "ADD SP, %d", tmp);
         }
         case 0xF8: {
             // TODO: not sure about these flags either
-            Byte tmp = bus->memRead8(regs.pc++);
-            regs.hl = doAdd16(regs.sp, (Word)(SByte)tmp);
+            SByte tmp = (SByte)bus->memRead8(regs.pc++);
+            regs.hl = doAdd16(regs.sp, (Word)tmp);
             regs.flags.z = 0;
-            return INSN_DONE(12, "LD HL, SP+r8");
+            return INSN_DONE(12, "LD HL, SP + %d", tmp);
         }
         case 0xE9: {
             INSN_BRANCH(regs.hl);
@@ -410,14 +412,16 @@ long Cpu::executeInsn_Cx_Fx(Byte opc) {
             return INSN_DONE(8, "LDH A, (C)");
         }
         case 0xEA: {
-            bus->memWrite8(bus->memRead16(regs.pc), regs.a);
+            Word address = bus->memRead16(regs.pc);
+            bus->memWrite8(address, regs.a);
             regs.pc += 2;
-            return INSN_DONE(16, "LDH (a16), A");
+            return INSN_DONE(16, "LD (0x%04x), A", address);
         }
         case 0xFA: {
-            regs.a = bus->memRead8(bus->memRead16(regs.pc));
+            Word address = bus->memRead16(regs.pc);
+            regs.a = bus->memRead8(address);
             regs.pc += 2;
-            return INSN_DONE(16, "LDH A, (a16)");
+            return INSN_DONE(16, "LD A, (0x%04x)", address);
         }
         case 0xF3: {
             regs.irqsEnabled = false;
@@ -485,7 +489,7 @@ long Cpu::executeInsn_Cx_Fx(Byte opc) {
             bool taken = evalConditional(opc, buf, "JP");
             if (taken)
                 INSN_BRANCH(addr);
-            return INSN_DONE(taken ? 16 : 12, "%s a16", buf);
+            return INSN_DONE(taken ? 16 : 12, "%s 0x%04x", buf, addr);
         }
         case 0xD:
         case 0x4:
@@ -500,7 +504,7 @@ long Cpu::executeInsn_Cx_Fx(Byte opc) {
                 bus->memWrite16(regs.sp, regs.pc);
                 INSN_BRANCH(addr);
             }
-            return INSN_DONE(taken ? 24 : 12, "%s a16", buf);
+            return INSN_DONE(taken ? 24 : 12, "%s 0x%04x", buf, addr);
         }
         case 0x5: {
             regs.sp -= 2;
@@ -509,8 +513,9 @@ long Cpu::executeInsn_Cx_Fx(Byte opc) {
         }
         case 0x6:
         case 0xE: {
-            regs.a = doAluOp(wideOperand, regs.a, bus->memRead8(regs.pc++));
-            return INSN_DONE(8, "%s d8", aluopStrings[wideOperand]);
+            Byte value = bus->memRead8(regs.pc++);
+            regs.a = doAluOp(wideOperand, regs.a, value);
+            return INSN_DONE(8, "%s 0x%02x", aluopStrings[wideOperand], value);
         }
         case 0x7:
         case 0xF: {
