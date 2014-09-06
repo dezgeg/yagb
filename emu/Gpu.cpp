@@ -46,17 +46,17 @@ IrqSet Gpu::tick(long cycles) {
         if (regs.ly == regs.lyc && regs.coincidenceIrqEnabled) {
             irqs |= bit(Irq_LcdStat);
         }
-    } else {
-        if (!nowInOamFetch && wasInOamFetch) { // TODO - bug
+    } else if (regs.ly < ScreenHeight) {
+        if (!nowInOamFetch && wasInOamFetch) {
             captureSpriteState();
+        }
+        if (nowInOamFetch && !wasInHBlank) {
             if (regs.oamIrqEnabled) {
                 irqs |= bit(Irq_LcdStat);
             }
         }
         if (nowInHBlank && !wasInHBlank) {
-            if (regs.ly < ScreenHeight) {
-                renderScanline();
-            }
+            renderScanline();
 
             if (regs.hBlankIrqEnabled) {
                 irqs |= bit(Irq_LcdStat);
