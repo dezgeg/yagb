@@ -470,9 +470,10 @@ long Cpu::executeInsn_Cx_Fx(Byte opc) {
             regs.pc += 2;
 
             char buf[16];
-            if (evalConditional(opc, buf, "JP"))
+            bool taken = evalConditional(opc, buf, "JP");
+            if (taken)
                 INSN_BRANCH(addr);
-            return INSN_DONE(16, "%s a16", buf);
+            return INSN_DONE(taken ? 16 : 12, "%s a16", buf);
         }
         case 0xD:
         case 0x4:
@@ -580,7 +581,7 @@ long Cpu::executeTwoByteInsn() {
         STORE8(operand, value);
 
     if (bitIndex < 0) {
-        return INSN_DONE(8 + ldst8ExtraCycles(operand), "%s %s",
+        return INSN_DONE(8 + 2 * ldst8ExtraCycles(operand), "%s %s",
                 description, reg8Strings[operand]);
     } else {
         return INSN_DONE(8 + 2 * ldst8ExtraCycles(operand), "%s %d, %s",
