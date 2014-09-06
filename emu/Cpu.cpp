@@ -41,6 +41,10 @@ void Cpu::reset() {
 
 long Cpu::tick() {
     Byte irqs = bus->getPendingIrqs();
+    if (irqs) {
+        halted = stopped = false;
+    }
+
     if (regs.irqsEnabled && irqs) {
         int irq = ffs(irqs ^ (irqs & (irqs - 1))) - 1;
         bus->ackIrq((Irq)irq);
@@ -50,9 +54,9 @@ long Cpu::tick() {
         bus->memWrite16(regs.sp, regs.pc);
         regs.pc = 0x40 + irq * 0x8;
         regs.irqsEnabled = false;
-        halted = stopped = false;
         return 12; // TODO: what's the delay?
     }
+
     if (halted || stopped) {
         return 4;
     }
