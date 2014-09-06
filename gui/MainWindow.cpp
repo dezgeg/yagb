@@ -251,7 +251,7 @@ void MainWindow::updateRegisters() {
     for (unsigned i = 0; i < arraySize(lcdRegs); i++) {
         HexTextField* edit = static_cast<HexTextField*>(ui->lcdRegsFormLayout->itemAt(i, QFormLayout::FieldRole)->widget());
         unsigned reg = lcdRegs[i].first;
-        edit->setHex(bus->memRead8(reg));
+        edit->setHex(bus->memRead8(reg, NULL));
     }
 
     Byte irqsEnabled = bus->getEnabledIrqs();
