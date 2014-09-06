@@ -31,10 +31,6 @@ IrqSet Gpu::tick(long cycles) {
     bool nowInHBlank = cycleResidue >= VramFetchThresholdCycles;
 
     if (cycleResidue >= ScanlineCycles) {
-        if (regs.ly < ScreenHeight) {
-            renderScanline();
-        }
-
         // Assumes that cycle delta is not insanely large
         cycleResidue -= ScanlineCycles;
         regs.ly++;
@@ -58,8 +54,14 @@ IrqSet Gpu::tick(long cycles) {
                 irqs |= bit(Irq_LcdStat);
             }
         }
-        if (nowInHBlank && !wasInHBlank && regs.hBlankIrqEnabled) {
-            irqs |= bit(Irq_LcdStat);
+        if (nowInHBlank && !wasInHBlank) {
+            if (regs.ly < ScreenHeight) {
+                renderScanline();
+            }
+
+            if (regs.hBlankIrqEnabled) {
+                irqs |= bit(Irq_LcdStat);
+            }
         }
     }
 
