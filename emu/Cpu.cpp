@@ -238,14 +238,16 @@ long Cpu::executeInsn_0x_3x(Byte opc) {
         case 0x27: {
             // TODO: flags aren't still being set correctly?
             Byte corr = 0;
-            if (regs.flags.h || (regs.a & 0xf) >= 10)
+            if (regs.flags.h || (regs.a & 0xf) >= 10) {
                 corr += 0x06;
-            if (regs.flags.c || regs.a > 0x99)
+            }
+            if (regs.flags.c || regs.a > 0x99) {
                 corr += 0x60;
+            }
 
             regs.flags.c = corr >= 0x60;
             regs.a = doAddSub(regs.a, corr,
-                              AS_UpdateZero | (regs.flags.n ? AS_IsSub : 0));
+                    AS_UpdateZero | (regs.flags.n ? AS_IsSub : 0));
 
             return INSN_DONE(4, "DAA");
         }
