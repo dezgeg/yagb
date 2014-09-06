@@ -28,6 +28,42 @@ struct OamEntry {
     } flags;
 };
 
+struct GpuRegs {
+    union {
+        Byte lcdc;
+        struct {
+            Byte bgEnabled : 1;
+            Byte objEnabled : 1;
+            Byte objSizeLarge : 1;
+            Byte bgTileBaseSelect : 1;
+            Byte bgPatternBaseSelect : 1;
+            Byte winEnabled : 1;
+            Byte winTileBaseSelect : 1;
+            Byte lcdEnabled : 1;
+        };
+    };
+    union {
+        Byte stat;
+        struct {
+            Byte mode : 2;
+            Byte coincidence : 1;
+            Byte hBlankIrqEnabled : 1;
+            Byte vBlankIrqEnabled : 1;
+            Byte oamIrqEnabled : 1;
+            Byte coincidenceIrqEnabled : 1;
+        };
+    };
+    Byte scy;
+    Byte scx;
+    Byte ly;
+    Byte lyc;
+    Byte bgp;
+    Byte obp0;
+    Byte obp1;
+    Byte wy;
+    Byte wx;
+};
+
 class Gpu {
     Logger* log;
 
@@ -36,46 +72,12 @@ class Gpu {
     Byte framebuffer[ScreenHeight][ScreenWidth];
     SByte visibleSprites[10];
 
+    GpuRegs regs;
     Byte vram[8192];
     union {
         Byte oam[0xa0];
         OamEntry sprites[40];
     };
-    struct GpuRegs {
-        union {
-            Byte lcdc;
-            struct {
-                Byte bgEnabled : 1;
-                Byte objEnabled : 1;
-                Byte objSizeLarge : 1;
-                Byte bgTileBaseSelect : 1;
-                Byte bgPatternBaseSelect : 1;
-                Byte winEnabled : 1;
-                Byte winTileBaseSelect : 1;
-                Byte lcdEnabled : 1;
-            };
-        };
-        union {
-            Byte stat;
-            struct {
-                Byte mode : 2;
-                Byte coincidence : 1;
-                Byte hBlankIrqEnabled : 1;
-                Byte vBlankIrqEnabled : 1;
-                Byte oamIrqEnabled : 1;
-                Byte coincidenceIrqEnabled : 1;
-            };
-        };
-        Byte scy;
-        Byte scx;
-        Byte ly;
-        Byte lyc;
-        Byte bgp;
-        Byte obp0;
-        Byte obp1;
-        Byte wy;
-        Byte wx;
-    } regs;
 
     void renderScanline();
     void captureSpriteState();
@@ -114,6 +116,7 @@ public:
     int getCurrentFrame() { return frame; }
     Byte* getFramebuffer() { return &framebuffer[0][0]; }
     Byte* getVram() { return vram; }
+    GpuRegs* getRegs() { return &regs; }
 
     void vramAccess(Word offset, Byte* pData, bool isWrite);
     void oamAccess(Word offset, Byte* pData, bool isWrite);

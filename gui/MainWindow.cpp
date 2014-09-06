@@ -225,7 +225,11 @@ void MainWindow::patternViewerPaintRequested(QPaintEvent*) {
 
 void MainWindow::tileMapViewerPaintRequested(QPaintEvent*) {
     Byte* vram = gb.getGpu()->getVram();
-    Byte* tiles = vram + 0x1800;
+    GpuRegs* regs = gb.getGpu()->getRegs();
+
+    Byte* patterns = regs->bgPatternBaseSelect ? &vram[0x0] : &vram[0x1000];
+    Byte* tiles = regs->bgTileBaseSelect ? vram + 0x1c00 : vram + 0x1800;
+
     unsigned char tmpBuf[8][8];
     QImage image((uchar*)tmpBuf, 8, 8, QImage::Format_Indexed8);
     image.setColorTable(monochromeToRgb); // TODO: copies?
@@ -234,7 +238,9 @@ void MainWindow::tileMapViewerPaintRequested(QPaintEvent*) {
     painter.begin(ui->tileMapViewerLcdWidget);
     for (unsigned i = 0; i < 32; i++) {
         for (unsigned j = 0; j < 32; j++) {
-            drawTile(i, j, &vram[16 * tiles[32 * j + i]], &painter);
+            Byte rawTile = tiles[32 * j + i];
+            long tile = regs->bgPatternBaseSelect ? (long)rawTile : (long)(SByte)rawTile;
+            drawTile(i, j, &patterns[16 * tile], &painter);
         }
     }
     painter.end();
