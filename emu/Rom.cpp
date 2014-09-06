@@ -5,26 +5,59 @@
 
 #include <fstream>
 #include <cstring>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <unistd.h>
 
-enum {
-    MapperOffset = 0x0147,
-};
+static constexpr Word MapperOffset = 0x0147;
+
+static constexpr size_t MAX_SAVE_RAM_SIZE = 0x10000;
 
 Rom::Rom(Logger* log, const char* fileName) :
-        log(log) {
+        log(log),
+        saveRamFd(-1),
+        saveRamData((Byte*)MAP_FAILED) {
+
+    readRomFile(fileName);
+    setupSaveRam(fileName);
+    setupMapper();
+}
+
+void Rom::readRomFile(char const* fileName) {
     std::ifstream stream(fileName, std::ios_base::in | std::ios_base::binary);
-    stream.seekg(0, std::ios::end);
+    stream.seekg(0, std::ios_base::end);
     if (!stream) {
         throw "No such file";
     }
 
     size_t sz = stream.tellg();
     romData.resize(sz);
-    stream.seekg(0, std::ios::beg);
+    stream.seekg(0, std::ios_base::beg);
     stream.read(&romData[0], sz);
+}
 
-    std::memset(ramData, 0, sizeof(ramData));
+void Rom::setupSaveRam(char const* name) {
+    std::string saveRamFile = name;
+    size_t dotIndex = saveRamFile.find_last_of('.');
+    if (dotIndex != std::string::npos) {
+        saveRamFile = saveRamFile.substr(0, dotIndex);
+    }
+    saveRamFile += ".sav";
 
+    saveRamFd = open(saveRamFile.c_str(), O_CREAT | O_RDWR, 0644);
+    if (saveRamFd < 0) {
+        throw "Can't open save RAM file";
+    }
+    if (ftruncate(saveRamFd, MAX_SAVE_RAM_SIZE) < 0) {
+        throw "Can't resize save RAM file";
+    }
+    saveRamData = (Byte*)mmap(nullptr, MAX_SAVE_RAM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, saveRamFd, 0);
+    if (saveRamData == MAP_FAILED) {
+        throw "Can't mmap save RAM file";
+    }
+}
+
+void Rom::setupMapper() {
     std::memset(&mapperRegs, 0, sizeof(mapperRegs));
     mapperRegs.romBankLowBits = 1;
 
@@ -94,5 +127,14 @@ void Rom::cartRamAccess(Word address, Byte* pData, bool isWrite) {
         log->warn("Access to cart RAM (0x%04x) without mapper", address);
     }
 #endif
-    BusUtil::arrayMemAccess(ramData, address, pData, isWrite);
+    BusUtil::arrayMemAccess(saveRamData, address, pData, isWrite);
+}
+
+Rom::~Rom() {
+    if (saveRamData != MAP_FAILED) {
+        munmap(saveRamData, MAX_SAVE_RAM_SIZE);
+    }
+    if (saveRamFd != -1) {
+        close(saveRamFd);
+    }
 }

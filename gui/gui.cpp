@@ -20,8 +20,13 @@ int main(int argc, char** argv) {
     }
     const char* file = optind >= argc ? "test.bin" : argv[optind];
 
-    MainWindow main(file, trace);
-    main.show();
+    try {
+        MainWindow main(file, trace);
+        main.show();
 
-    return app.exec();
+        return app.exec();
+    } catch (const char* msg) {
+        fprintf(stderr, "error: %s\n", msg);
+        return 1;
+    }
 }

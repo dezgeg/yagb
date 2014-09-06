@@ -14,7 +14,10 @@ enum Mapper {
 class Rom {
     Logger* log;
     std::string romData;
-    Byte ramData[8192];
+
+    int saveRamFd;
+    Byte* saveRamData;
+
     Mapper mapper;
 
     struct MapperRegs {
@@ -26,7 +29,11 @@ class Rom {
 
 public:
     Rom(Logger* log, const char* fileName);
+    ~Rom();
 
     void cartRomAccess(Word address, Byte* pData, bool isWrite);
     void cartRamAccess(Word address, Byte* pData, bool isWrite);
+    void readRomFile(char const* fileName);
+    void setupSaveRam(char const* name);
+    void setupMapper();
 };
