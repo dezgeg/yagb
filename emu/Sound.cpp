@@ -3,7 +3,7 @@
 #include "Sound.hpp"
 #include "Utils.hpp"
 
-static constexpr int MaxChanLevel = 0xFFF;
+static constexpr int MaxChanLevel = 0x1FFF;
 
 void Sound::registerAccess(Word address, Byte* pData, bool isWrite) {
     if (address == 0xff15 || address == 0xff1f ||
@@ -28,6 +28,10 @@ void Sound::registerAccess(Word address, Byte* pData, bool isWrite) {
             restartEnvelope(envelopes.ch2);
             break;
 
+        case Snd_Ch3_FreqHi:
+            restartEnvelope(envelopes.ch3);
+            break;
+
         case Snd_Ch4_Envelope:
             // TODO: need control register here
             restartEnvelope(envelopes.ch4);
@@ -46,6 +50,10 @@ void Sound::tick(int cycleDelta) {
         tickEnvelope(envelopes.ch2, regs.ch2.square.soundLength, 64);
     }
 
+    if (regs.ch3.freqCtrl.noRestart) {
+        tickEnvelope(envelopes.ch3, regs.ch3.length, 256);
+    }
+
     if (cycleResidue >= 32768) {
         cycleResidue -= 32768;
         currentSampleNumber++;
@@ -57,17 +65,38 @@ void Sound::tick(int cycleDelta) {
 void Sound::generateSamples() {
     int ch1Volume = evalPulseChannel(regs.ch1.square, envelopes.ch1);
     int ch2Volume = evalPulseChannel(regs.ch2.square, envelopes.ch2);
+    int ch3Volume = evalWaveChannel();
 
-    rightSample = ch1Volume + ch2Volume;
+    rightSample = ch1Volume + ch2Volume + ch3Volume;
     leftSample = rightSample;
 }
 
-int Sound::evalPulseChannel(SquareChannelRegs& regs, EnvelopeState& envelState) {
-    if (!envelState.startCycle)
+int Sound::evalWaveChannel() {
+    if (!envelopes.ch3.startCycle || !regs.ch3.enable) {
         return 0;
+    }
+
+    static const unsigned shiftLookup[] = { 4, 0, 1, 2 };
+
+    // TODO: make some sense of this code
+    unsigned period = (2048 - regs.ch3.freqCtrl.getFrequency());
+    unsigned cycleInWave = (currentCycle - envelopes.ch3.startCycle) % (period * 32 * 2);
+    unsigned pointer = ((cycleInWave / period) / 2 + 1) % 32;
+
+    unsigned sample = (regs.waveRam[pointer >> 1] >> (pointer ? 4 : 0)) & 0xf;
+    sample >>= shiftLookup[regs.ch3.volume];
+    // qDebug() << "Wave sample: " << sample << " at pointer: " << ((cycleInWave / period) / 2 + 1);
+
+    return (sample - 8) * (MaxChanLevel / 8);
+}
+
+int Sound::evalPulseChannel(SquareChannelRegs& regs, EnvelopeState& envelState) {
+    if (!envelState.startCycle) {
+        return 0;
+    }
 
     bool ch1 = evalPulseWaveform(regs);
-    unsigned ch1EnvelopeVolume = regs.freqCtrl.start ? evalEnvelope(regs.envelope, envelState) : 0;
+    unsigned ch1EnvelopeVolume = evalEnvelope(regs.envelope, envelState);
     // qDebug() << "Envel result: " << ch1EnvelopeVolume;
     return mixVolume(ch1 ? MaxChanLevel : -MaxChanLevel, ch1EnvelopeVolume);
 }

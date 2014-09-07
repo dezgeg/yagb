@@ -175,17 +175,21 @@ class Sound {
 public:
     Sound(Logger* log);
 
+    void generateSamples();
     void registerAccess(Word address, Byte* pData, bool isWrite);
     void tick(int cycleDelta);
+
+    int evalPulseChannel(SquareChannelRegs& regs, EnvelopeState& envelState);
+    int evalWaveChannel();
+
+    void restartEnvelope(EnvelopeState& state);
+    unsigned int evalEnvelope(EnvelopeRegs& regs, EnvelopeState& state);
+    void tickEnvelope(EnvelopeState& state, unsigned curLength, unsigned channelMaxLength);
+
+    int mixVolume(int sample, unsigned int volume);
+    bool evalPulseWaveform(SquareChannelRegs& ch);
 
     long getCurrentSampleNumber() { return currentSampleNumber; }
     uint16_t getLeftSample() { return leftSample; }
     uint16_t getRightSample() { return rightSample; }
-    void generateSamples();
-    bool evalPulseWaveform(SquareChannelRegs& ch);
-    void restartEnvelope(EnvelopeState& state);
-    unsigned int evalEnvelope(EnvelopeRegs& regs, EnvelopeState& state);
-    int mixVolume(int sample, unsigned int volume);
-    int evalPulseChannel(SquareChannelRegs& regs, EnvelopeState& envelState);
-    void tickEnvelope(EnvelopeState& state, unsigned curLength, unsigned channelMaxLength);
 };
