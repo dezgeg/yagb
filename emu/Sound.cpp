@@ -19,12 +19,12 @@ void Sound::registerAccess(Word address, Byte* pData, bool isWrite) {
 
     switch (address & 0xff) {
         case Snd_Ch1_FreqHi:
-        case Snd_Ch1_Envelope:
+        // case Snd_Ch1_Envelope:
             restartEnvelope(envelopes.ch1);
             break;
 
         case Snd_Ch2_FreqHi:
-        case Snd_Ch2_Envelope:
+        // case Snd_Ch2_Envelope:
             restartEnvelope(envelopes.ch2);
             break;
 
@@ -67,6 +67,8 @@ void Sound::generateSamples() {
     int ch2Volume = evalPulseChannel(regs.ch2.square, envelopes.ch2);
     int ch3Volume = evalWaveChannel();
 
+    // qDebug() << ch1Volume << ch2Volume << ch3Volume;
+
     rightSample = ch1Volume + ch2Volume + ch3Volume;
     leftSample = rightSample;
 }
@@ -95,19 +97,16 @@ int Sound::evalPulseChannel(SquareChannelRegs& regs, EnvelopeState& envelState) 
         return 0;
     }
 
-    bool ch1 = evalPulseWaveform(regs);
-    unsigned ch1EnvelopeVolume = evalEnvelope(regs.envelope, envelState);
-    // qDebug() << "Envel result: " << ch1EnvelopeVolume;
-    return mixVolume(ch1 ? MaxChanLevel : -MaxChanLevel, ch1EnvelopeVolume);
+    bool pulseOn = evalPulseWaveform(regs);
+    unsigned pulseVolume = evalEnvelope(regs.envelope, envelState);
+    // qDebug() << "Envel result: " << pulseVolume;
+    return mixVolume(pulseOn ? MaxChanLevel : -MaxChanLevel, pulseVolume);
 }
 
 // Returns true/false whether the square channel output is high or low
 bool Sound::evalPulseWaveform(SquareChannelRegs& ch) {
     static const unsigned pulseWidthLookup[] = { 4 * 1, 4 * 2, 4 * 4, 4 * 6 };
 
-    if (!ch.freqCtrl.start) {
-        return false;
-    }
     unsigned pulseLen = 2048 - ch.freqCtrl.getFrequency();
     unsigned long stepInPulse = currentCycle % (pulseLen * 4 * 8);
 
@@ -140,11 +139,11 @@ int Sound::mixVolume(int sample, unsigned int volume) {
 }
 
 Sound::Sound(Logger* log) : log(log),
-                            regs(),
                             currentCycle(),
                             cycleResidue(),
                             currentSampleNumber(),
                             leftSample(),
                             rightSample() {
+    memset(&regs, 0, sizeof(regs));
     memset(&envelopes, 0, sizeof(envelopes));
 }
