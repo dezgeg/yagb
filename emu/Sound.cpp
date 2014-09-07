@@ -38,6 +38,14 @@ void Sound::registerAccess(Word address, Byte* pData, bool isWrite) {
 void Sound::tick(int cycleDelta) {
     currentCycle += cycleDelta;
     cycleResidue += 375 * cycleDelta;
+
+    if (regs.ch1.square.freqCtrl.noRestart) {
+        tickEnvelope(envelopes.ch1, regs.ch1.square.soundLength, 64);
+    }
+    if (regs.ch2.square.freqCtrl.noRestart) {
+        tickEnvelope(envelopes.ch2, regs.ch2.square.soundLength, 64);
+    }
+
     if (cycleResidue >= 32768) {
         cycleResidue -= 32768;
         currentSampleNumber++;
@@ -55,6 +63,9 @@ void Sound::generateSamples() {
 }
 
 int Sound::evalPulseChannel(SquareChannelRegs& regs, EnvelopeState& envelState) {
+    if (!envelState.startCycle)
+        return 0;
+
     bool ch1 = evalPulseWaveform(regs);
     unsigned ch1EnvelopeVolume = regs.freqCtrl.start ? evalEnvelope(regs.envelope, envelState) : 0;
     // qDebug() << "Envel result: " << ch1EnvelopeVolume;
@@ -74,6 +85,12 @@ bool Sound::evalPulseWaveform(SquareChannelRegs& ch) {
     return stepInPulse / pulseLen < pulseWidthLookup[ch.waveDuty];
 }
 
+void Sound::tickEnvelope(EnvelopeState& state, unsigned curLength, unsigned channelMaxLength) {
+    if ((currentCycle - state.startCycle) >> 16 > (channelMaxLength - curLength)) {
+        state.startCycle = 0;
+    }
+}
+
 void Sound::restartEnvelope(EnvelopeState& state) {
     // qDebug() << "Restart envelope at cycle " << currentCycle;
     state.startCycle = currentCycle;
@@ -88,6 +105,7 @@ unsigned int Sound::evalEnvelope(EnvelopeRegs& regs, EnvelopeState& state) {
     // qDebug() << "Envelope steps: " << steps << " at cycle " << currentCycle;
     return clamp(regs.initialVolume + (regs.increase ? steps : -steps), 0, 0xf);
 }
+
 int Sound::mixVolume(int sample, unsigned int volume) {
     return sample * (int)volume / 0xf;
 }

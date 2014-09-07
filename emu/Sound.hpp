@@ -161,6 +161,7 @@ class Sound {
     struct {
         EnvelopeState ch1;
         EnvelopeState ch2;
+        EnvelopeState ch3; // no real envelope but used as enable/disable counter
         EnvelopeState ch4;
     } envelopes;
 
@@ -186,4 +187,5 @@ public:
     unsigned int evalEnvelope(EnvelopeRegs& regs, EnvelopeState& state);
     int mixVolume(int sample, unsigned int volume);
     int evalPulseChannel(SquareChannelRegs& regs, EnvelopeState& envelState);
+    void tickEnvelope(EnvelopeState& state, unsigned curLength, unsigned channelMaxLength);
 };
