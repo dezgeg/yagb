@@ -19,12 +19,12 @@ void Sound::registerAccess(Word address, Byte* pData, bool isWrite) {
 
     switch (address & 0xff) {
         case Snd_Ch1_FreqHi:
-        // case Snd_Ch1_Envelope:
+            // case Snd_Ch1_Envelope:
             restartEnvelope(envelopes.ch1);
             break;
 
         case Snd_Ch2_FreqHi:
-        // case Snd_Ch2_Envelope:
+            // case Snd_Ch2_Envelope:
             restartEnvelope(envelopes.ch2);
             break;
 
@@ -63,14 +63,22 @@ void Sound::tick(int cycleDelta) {
 }
 
 void Sound::generateSamples() {
-    int ch1Volume = evalPulseChannel(regs.ch1.square, envelopes.ch1);
-    int ch2Volume = evalPulseChannel(regs.ch2.square, envelopes.ch2);
-    int ch3Volume = evalWaveChannel();
+    int sounds[] = {
+            evalPulseChannel(regs.ch1.square, envelopes.ch1),
+            evalPulseChannel(regs.ch2.square, envelopes.ch2),
+            evalWaveChannel(),
+            0,
+    };
 
-    // qDebug() << ch1Volume << ch2Volume << ch3Volume;
-
-    rightSample = ch1Volume + ch2Volume + ch3Volume;
-    leftSample = rightSample;
+    leftSample = rightSample = 0;
+    for (int i = 0; i < 4; ++i) {
+        if (regs.ctrl.chSel & bit(i)) {
+            leftSample += sounds[i];
+        }
+        if (regs.ctrl.chSel & bit(i + 4)) {
+            rightSample += sounds[i];
+        }
+    }
 }
 
 int Sound::evalWaveChannel() {
