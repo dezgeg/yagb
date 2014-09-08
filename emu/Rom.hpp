@@ -3,7 +3,7 @@
 #include "Platform.hpp"
 #include "Logger.hpp"
 
-#include <string>
+#include <vector>
 
 enum Mapper {
     Mapper_None,
@@ -13,7 +13,7 @@ enum Mapper {
 
 class Rom {
     Logger* log;
-    std::string romData;
+    std::vector<Byte> romData;
 
     int saveRamFd;
     Byte* saveRamData;

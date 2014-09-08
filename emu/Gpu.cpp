@@ -47,7 +47,7 @@ IrqSet Gpu::tick(long cycles) {
             irqs |= bit(Irq_LcdStat);
         }
     } else if (regs.ly < ScreenHeight) {
-        if (!nowInOamFetch && wasInOamFetch) {
+        if (!nowInOamFetch && wasInOamFetch && renderEnabled) {
             captureSpriteState();
         }
         if (nowInOamFetch && !wasInHBlank) {
@@ -56,7 +56,9 @@ IrqSet Gpu::tick(long cycles) {
             }
         }
         if (nowInHBlank && !wasInHBlank) {
-            renderScanline();
+            if (renderEnabled) {
+                renderScanline();
+            }
 
             if (regs.hBlankIrqEnabled) {
                 irqs |= bit(Irq_LcdStat);

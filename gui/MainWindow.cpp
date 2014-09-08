@@ -87,8 +87,10 @@ MainWindow::MainWindow(const char* romFile, bool insnTrace, QWidget* parent) :
     log.insnLoggingEnabled = insnTrace;
 
     // Skip BootRom
+    gb.getGpu()->setRenderEnabled(false);
     while (gb.getGpu()->getCurrentFrame() != 332)
         gb.runOneInstruction();
+    gb.getGpu()->setRenderEnabled(true);
 
     connect(frameTimer, SIGNAL(timeout()), this, SLOT(timerTick()));
     nextRenderAt = TimingUtils::getNsecs();

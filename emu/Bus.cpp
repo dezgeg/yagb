@@ -111,9 +111,11 @@ void Bus::memAccess(Word address, Byte* pData, bool isWrite, MemAccessType acces
         }
     }
 
+#ifndef CONFIG_NO_INSN_TRACE
     if (!bootromEnabled && accessType) {
         log->logMemoryAccess(address, *pData, isWrite, accessType);
     }
+#endif
 }
 
 Byte Bus::memRead8(Word address, MemAccessType accessType) {

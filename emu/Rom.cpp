@@ -33,7 +33,7 @@ void Rom::readRomFile(char const* fileName) {
     size_t sz = stream.tellg();
     romData.resize(sz);
     stream.seekg(0, std::ios_base::beg);
-    stream.read(&romData[0], sz);
+    stream.read((char*)&romData[0], sz);
 }
 
 void Rom::setupSaveRam(char const* name) {

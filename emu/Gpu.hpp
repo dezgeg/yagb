@@ -69,6 +69,7 @@ struct GpuRegs {
 class Gpu {
     Logger* log;
 
+    bool renderEnabled;
     long frame;
     int cycleResidue;
     Byte framebuffer[ScreenHeight][ScreenWidth];
@@ -87,6 +88,7 @@ class Gpu {
 public:
     Gpu(Logger* log) :
             log(log),
+            renderEnabled(true),
             frame(0),
             cycleResidue(0) {
         std::memset(&framebuffer[0][0], 0, sizeof(framebuffer));
@@ -119,6 +121,7 @@ public:
     Byte* getFramebuffer() { return &framebuffer[0][0]; }
     Byte* getVram() { return vram; }
     GpuRegs* getRegs() { return &regs; }
+    void setRenderEnabled(bool renderEnabled) { this->renderEnabled = renderEnabled; }
 
     void vramAccess(Word offset, Byte* pData, bool isWrite);
     void oamAccess(Word offset, Byte* pData, bool isWrite);

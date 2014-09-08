@@ -2,10 +2,17 @@
 
 #include <stdio.h>
 
+#ifndef CONFIG_NO_INSN_TRACE
 #define INSN_DBG(x) x
 #define INSN_DBG_DECL() bool _branched = false; Word branchPc = 0; Regs _savedRegs = regs; _savedRegs.pc -= 1
 #define INSN_BRANCH(newPc) (_branched = true, branchPc = regs.pc, regs.pc = (newPc))
 #define INSN_DONE(cycles, ...) (log->logInsn(bus, &_savedRegs, cycles, _branched ? branchPc : regs.pc, __VA_ARGS__), cycles)
+#else
+#define INSN_DBG(x)
+#define INSN_DBG_DECL()
+#define INSN_BRANCH(newPc) regs.pc = (newPc)
+#define INSN_DONE(cycles, ...) cycles
+#endif
 
 static const char* const reg8Strings[] = {
         "B", "C", "D", "E", "H", "L", "(HL)", "A",
@@ -78,14 +85,14 @@ long Cpu::tick() {
 bool Cpu::evalConditional(Byte opc, char* outDescr, const char* opcodeStr) {
     // LSB set means unconditional, except JR r8 (0x18) is a special case.
     if (opc == 0x18 || opc & 1) {
-        snprintf(outDescr, strlen(opcodeStr) + 1, "%s", opcodeStr);
+        INSN_DBG(snprintf(outDescr, strlen(opcodeStr) + 1, "%s", opcodeStr));
         return true;
     }
 
     bool flagIsCarry = opc & 0x10;
     bool compareVal = opc & 0x08;
-    snprintf(outDescr, strlen(opcodeStr) + sizeof(" NZ,"), "%s %s%c,", opcodeStr,
-            compareVal ? "" : "N", flagIsCarry ? 'C' : 'Z');
+    INSN_DBG(snprintf(outDescr, strlen(opcodeStr) + sizeof(" NZ,"), "%s %s%c,", opcodeStr,
+            compareVal ? "" : "N", flagIsCarry ? 'C' : 'Z'));
     return bool(flagIsCarry ? regs.flags.c : regs.flags.z) == compareVal;
 }
 
@@ -531,7 +538,7 @@ long Cpu::executeInsn_Cx_Fx(Byte opc) {
 long Cpu::executeTwoByteInsn() {
     INSN_DBG_DECL();
     Byte opc = bus->memRead8(regs.pc++);
-    const char* description;
+    const char* description __attribute__((unused));
 
     int operand = opc & 0x7;
     int category = opc >> 6;
