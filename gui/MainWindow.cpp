@@ -81,14 +81,18 @@ MainWindow::MainWindow(const char* romFile, bool insnTrace, QWidget* parent) :
     connect(ui->tileMapViewerLcdWidget, SIGNAL(paintRequested(QPaintEvent * )),
             this, SLOT(tileMapViewerPaintRequested(QPaintEvent * )));
 
-    connect(frameTimer, SIGNAL(timeout()), this, SLOT(timerTick()));
-    nextRenderAt = TimingUtils::getNsecs();
-    frameTimer->start(0);
-
     ui->lcdWidget->setFocus();
     updateRegisters();
 
     log.insnLoggingEnabled = insnTrace;
+
+    // Skip BootRom
+    while (gb.getGpu()->getCurrentFrame() != 332)
+        gb.runOneInstruction();
+
+    connect(frameTimer, SIGNAL(timeout()), this, SLOT(timerTick()));
+    nextRenderAt = TimingUtils::getNsecs();
+    frameTimer->start(0);
 }
 
 void MainWindow::timerTick() {
