@@ -44,7 +44,11 @@ union EnvelopeRegs {
 static_assert(sizeof(EnvelopeRegs) == 1, "");
 
 struct TimerState {
-    unsigned long startCycle;
+    unsigned long lengthCounterStartCycle;
+
+    bool lengthTimerRunning() {
+        return lengthCounterStartCycle != 0;
+    }
 };
 
 struct FrequencyRegs {
@@ -184,7 +188,7 @@ public:
 
     void restartTimer(TimerState& state);
     unsigned int evalEnvelope(EnvelopeRegs& regs, TimerState& state);
-    void tickTimer(TimerState& state, unsigned curLength, unsigned channelMaxLength);
+    void tickTimer(TimerState& state, Byte curLength, int channelMaxLength, bool noRestart);
 
     int mixVolume(int sample, unsigned int volume);
     bool evalPulseWaveform(SquareChannelRegs& ch);

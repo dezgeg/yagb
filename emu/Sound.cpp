@@ -48,16 +48,9 @@ void Sound::tick(int cycleDelta) {
     currentCycle += cycleDelta;
     cycleResidue += 375 * cycleDelta;
 
-    if (regs.ch1.square.freqCtrl.noRestart) {
-        tickTimer(timers.ch1, regs.ch1.square.soundLength, 64);
-    }
-    if (regs.ch2.square.freqCtrl.noRestart) {
-        tickTimer(timers.ch2, regs.ch2.square.soundLength, 64);
-    }
-
-    if (regs.ch3.freqCtrl.noRestart) {
-        tickTimer(timers.ch3, regs.ch3.length, 256);
-    }
+    tickTimer(timers.ch1, regs.ch1.square.soundLength, 64, regs.ch1.square.freqCtrl.noRestart);
+    tickTimer(timers.ch2, regs.ch2.square.soundLength, 64, regs.ch2.square.freqCtrl.noRestart);
+    tickTimer(timers.ch3, regs.ch3.length, 256, regs.ch3.freqCtrl.noRestart);
 
     if (cycleResidue >= 32768) {
         cycleResidue -= 32768;
@@ -125,7 +118,7 @@ int Sound::evalWaveChannel() {
 }
 
 int Sound::evalPulseChannel(SquareChannelRegs& regs, TimerState& timerState) {
-    if (!timerState.startCycle) {
+    if (!timerState.lengthTimerRunning()) {
         return 0;
     }
 
@@ -145,15 +138,17 @@ bool Sound::evalPulseWaveform(SquareChannelRegs& ch) {
     return stepInPulse / pulseLen < pulseWidthLookup[ch.waveDuty];
 }
 
-void Sound::tickTimer(TimerState& state, unsigned curLength, unsigned channelMaxLength) {
-    if ((currentCycle - state.startCycle) >> 16 > (channelMaxLength - curLength)) {
-        state.startCycle = 0;
+void Sound::tickTimer(TimerState& state, Byte curLength, int channelMaxLength, bool noRestart) {
+    long cycleDelta = currentCycle - state.lengthCounterStartCycle;
+
+    if (noRestart && cycleDelta >> 16 > (channelMaxLength - curLength)) {
+        state.lengthCounterStartCycle = 0;
     }
 }
 
 void Sound::restartTimer(TimerState& state) {
     // qDebug() << "Restart envelope at cycle " << currentCycle;
-    state.startCycle = currentCycle;
+    state.lengthCounterStartCycle = currentCycle;
 }
 
 unsigned int Sound::evalEnvelope(EnvelopeRegs& regs, TimerState& state) {
@@ -161,7 +156,7 @@ unsigned int Sound::evalEnvelope(EnvelopeRegs& regs, TimerState& state) {
         return regs.initialVolume;
     }
 
-    long steps = (currentCycle - state.startCycle) / ((1 << 16) * regs.sweep);
+    long steps = (currentCycle - state.lengthCounterStartCycle) / ((1 << 16) * regs.sweep);
     // qDebug() << "Envelope steps: " << steps << " at cycle " << currentCycle;
     return clamp(regs.initialVolume + (regs.increase ? steps : -steps), 0, 0xf);
 }
