@@ -45,6 +45,7 @@ static_assert(sizeof(EnvelopeRegs) == 1, "");
 
 struct TimerState {
     unsigned long lengthCounterStartCycle;
+    unsigned long frequencyCounterStartCycle;
 
     bool lengthTimerRunning() {
         return lengthCounterStartCycle != 0;

@@ -91,13 +91,14 @@ int Sound::evalWaveChannel() {
             4915, 6007, 7100, 8192,
     };
 
-    if (!timers.ch3.startCycle || !regs.ch3.enable) {
+    if (!timers.ch3.lengthTimerRunning() || !regs.ch3.enable) {
         return 0;
     }
 
     // TODO: make some sense of this code
     unsigned period = (2048 - regs.ch3.freqCtrl.getFrequency());
-    unsigned cycleInWave = (currentCycle - timers.ch3.startCycle) % (period * 32 * 2);
+    unsigned long cycleDelta = currentCycle - timers.ch3.frequencyCounterStartCycle;
+    unsigned cycleInWave = cycleDelta % (period * 32 * 2);
     unsigned pointer = ((cycleInWave / period) / 2 + 1) % 32;
 
 #if 0
@@ -149,6 +150,7 @@ void Sound::tickTimer(TimerState& state, Byte curLength, int channelMaxLength, b
 void Sound::restartTimer(TimerState& state) {
     // qDebug() << "Restart envelope at cycle " << currentCycle;
     state.lengthCounterStartCycle = currentCycle;
+    state.frequencyCounterStartCycle = currentCycle;
 }
 
 unsigned int Sound::evalEnvelope(EnvelopeRegs& regs, TimerState& state) {
