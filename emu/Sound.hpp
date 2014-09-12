@@ -43,7 +43,7 @@ union EnvelopeRegs {
 };
 static_assert(sizeof(EnvelopeRegs) == 1, "");
 
-struct EnvelopeState {
+struct TimerState {
     unsigned long startCycle;
 };
 
@@ -159,11 +159,11 @@ class Sound {
     Logger* log;
     SoundRegs regs;
     struct {
-        EnvelopeState ch1;
-        EnvelopeState ch2;
-        EnvelopeState ch3; // no real envelope but used as enable/disable counter
-        EnvelopeState ch4;
-    } envelopes;
+        TimerState ch1;
+        TimerState ch2;
+        TimerState ch3; // no real envelope but used as enable/disable counter
+        TimerState ch4;
+    } timers;
 
     unsigned long currentCycle;
     long cycleResidue;
@@ -179,12 +179,12 @@ public:
     void registerAccess(Word address, Byte* pData, bool isWrite);
     void tick(int cycleDelta);
 
-    int evalPulseChannel(SquareChannelRegs& regs, EnvelopeState& envelState);
+    int evalPulseChannel(SquareChannelRegs& regs, TimerState& envelState);
     int evalWaveChannel();
 
-    void restartEnvelope(EnvelopeState& state);
-    unsigned int evalEnvelope(EnvelopeRegs& regs, EnvelopeState& state);
-    void tickEnvelope(EnvelopeState& state, unsigned curLength, unsigned channelMaxLength);
+    void restartTimer(TimerState& state);
+    unsigned int evalEnvelope(EnvelopeRegs& regs, TimerState& state);
+    void tickTimer(TimerState& state, unsigned curLength, unsigned channelMaxLength);
 
     int mixVolume(int sample, unsigned int volume);
     bool evalPulseWaveform(SquareChannelRegs& ch);
