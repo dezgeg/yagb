@@ -3,7 +3,7 @@
 #include "Sound.hpp"
 #include "Utils.hpp"
 
-static constexpr int MaxChanLevel = 0x1FFF;
+static constexpr int MaxChanLevel = 0x2000;
 
 void Sound::registerAccess(Word address, Byte* pData, bool isWrite) {
     if (address == 0xff15 || address == 0xff1f ||
@@ -16,6 +16,10 @@ void Sound::registerAccess(Word address, Byte* pData, bool isWrite) {
     Byte reg = address - 0xff10;
     // qDebug() << "Register write: " << reg;
     BusUtil::arrayMemAccess((Byte*)&regs, reg, pData, isWrite);
+
+    if (!isWrite || (*pData & 0x80) == 0) {
+        return;
+    }
 
     switch (address & 0xff) {
         case Snd_Ch1_FreqHi:
@@ -70,34 +74,53 @@ void Sound::generateSamples() {
             0,
     };
 
-    leftSample = rightSample = 0;
+    int leftDac = 0, rightDac = 0;
     for (int i = 0; i < 4; ++i) {
         if (regs.ctrl.chSel & bit(i)) {
-            leftSample += sounds[i];
+            leftDac += sounds[i];
         }
         if (regs.ctrl.chSel & bit(i + 4)) {
-            rightSample += sounds[i];
+            rightDac += sounds[i];
         }
     }
+
+    leftSample = leftDac * (regs.ctrl.leftVolume + 1) / 16;
+    rightSample = rightDac * (regs.ctrl.rightVolume + 1) / 16;
 }
 
 int Sound::evalWaveChannel() {
+    static const unsigned shiftLookup[] = { 4, 0, 1, 2 };
+    static const int sampleLookup[] = {
+            -8192, -7100, -6007, -4915,
+            -3823, -2731, -1638, -546,
+            546, 1638, 2731, 3823,
+            4915, 6007, 7100, 8192,
+    };
+
     if (!envelopes.ch3.startCycle || !regs.ch3.enable) {
         return 0;
     }
-
-    static const unsigned shiftLookup[] = { 4, 0, 1, 2 };
 
     // TODO: make some sense of this code
     unsigned period = (2048 - regs.ch3.freqCtrl.getFrequency());
     unsigned cycleInWave = (currentCycle - envelopes.ch3.startCycle) % (period * 32 * 2);
     unsigned pointer = ((cycleInWave / period) / 2 + 1) % 32;
 
-    unsigned sample = (regs.waveRam[pointer >> 1] >> (pointer ? 4 : 0)) & 0xf;
+#if 0
+    char buf[100] = "";
+    char buf2[8];
+    for (unsigned i = 0; i < 16; ++i) {
+        sprintf(buf2, "%x %x ", regs.waveRam[i] >> 4, regs.waveRam[i] & 0xf);
+        strcat(buf, buf2);
+    }
+    log->warn("Wave pointer %02d: %s", pointer, buf);
+#endif
+
+    unsigned sample = (regs.waveRam[pointer >> 1] >> (pointer & 1 ? 0 : 4)) & 0xf;
     sample >>= shiftLookup[regs.ch3.volume];
     // qDebug() << "Wave sample: " << sample << " at pointer: " << ((cycleInWave / period) / 2 + 1);
 
-    return (sample - 8) * (MaxChanLevel / 8);
+    return sampleLookup[sample];
 }
 
 int Sound::evalPulseChannel(SquareChannelRegs& regs, EnvelopeState& envelState) {
@@ -143,7 +166,13 @@ unsigned int Sound::evalEnvelope(EnvelopeRegs& regs, EnvelopeState& state) {
 }
 
 int Sound::mixVolume(int sample, unsigned int volume) {
-    return sample * (int)volume / 0xf;
+    static const int lookup[] = {
+            0, 546, 1092, 1638,
+            2185, 2731, 3277, 3823,
+            4369, 4915, 5461, 6007,
+            6554, 7100, 7646, 8192,
+    };
+    return (long(lookup[volume]) * sample) / 8192;
 }
 
 Sound::Sound(Logger* log) : log(log),
