@@ -39,7 +39,7 @@ void LcdWidget::initializeGL() {
     vertexShader = new QGLShader(QGLShader::Vertex, this);
     const char* vsrc =
             "attribute highp vec2 vertex;\n" \
-            "varying mediump vec2 texc;\n" \
+            "varying highp vec2 texc;\n" \
             "void main(void)\n" \
             "{\n" \
             "    gl_Position = vec4(vertex, 0.0, 1.0);\n" \
