@@ -8,28 +8,6 @@
 using namespace std;
 static constexpr double FrameNsecs = (70224.0 / (1L << 22)) * 1000000000L;
 
-static const char* const mainLcdShader = "uniform sampler2D texture;\n" \
-                        "varying highp vec2 texc;\n" \
-                        "void main(void)\n" \
-                        "{\n" \
-                        "    float index = texture2D(texture, texc).r * 255.0;\n" \
-                        "    float grayScale = 1.0 - index/3.0;\n" \
-                        "    gl_FragColor = vec4(grayScale, grayScale, grayScale, 1.0);\n" \
-                        "}\n";
-
-static const char* const patternViewerShader = "uniform sampler2D texture;\n" \
-                        "varying highp vec2 texc;\n" \
-                        "void main(void)\n" \
-                        "{\n" \
-                        "    float x = (texc.x - 0.375) * (271.0 - 1.0);\n" \
-                        "    float y = (texc.y - 0.375) * (407.0 - 1.0);\n" \
-                        "\n" \
-                        "    if (int(floor(mod(x, 17.0))) == 0 || int(floor(mod(y, 17.0))) == 0)\n" \
-                        "        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n" \
-                        "    else\n" \
-                        "        gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);\n" \
-                        "}\n";
-
 static const pair<unsigned, QString> lcdRegs[] = {
         { 0xff40, QStringLiteral("LCDC") },
         { 0xff41, QStringLiteral("STAT") },
@@ -100,10 +78,10 @@ MainWindow::MainWindow(const char* romFile, bool insnTrace, QWidget* parent) :
     connect(ui->tileMapViewerLcdWidget, SIGNAL(paintRequested(QPaintEvent * )),
             this, SLOT(tileMapViewerPaintRequested(QPaintEvent * )));
 
-    ui->lcdWidget->init(gb.getGpu()->getFramebuffer(), QSize(ScreenWidth, ScreenHeight), mainLcdShader);
+    ui->lcdWidget->init(gb.getGpu()->getFramebuffer(), QSize(ScreenWidth, ScreenHeight), "main.frag");
     ui->lcdWidget->setFocus();
 
-    ui->patternViewerLcdWidget->init(gb.getGpu()->getVram(), QSize(4096, 1), patternViewerShader);
+    ui->patternViewerLcdWidget->init(gb.getGpu()->getVram(), QSize(4096, 1), "patternViewer.frag");
 
     updateRegisters();
 

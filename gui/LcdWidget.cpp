@@ -48,7 +48,7 @@ void LcdWidget::initializeGL() {
     vertexShader->compileSourceCode(vsrc);
 
     fragmentShader = new QGLShader(QGLShader::Fragment, this);
-    fragmentShader->compileSourceCode(fragmentShaderSource);
+    fragmentShader->compileSourceFile(QString("shaders/") + fragmentShaderFile);
 
     shaderProgram = new QGLShaderProgram(this);
     shaderProgram->addShader(vertexShader);
