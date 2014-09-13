@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <emu/Gpu.hpp>
 #include "LcdWidget.hpp"
 
@@ -9,7 +8,6 @@
             exit(1); \
         } \
     }()
-
 
 enum Attr {
     Vertex,
@@ -23,11 +21,15 @@ static const QVector2D vertexes[] = {
 };
 
 void LcdWidget::initializeGL() {
+    if (textureSize.isEmpty()) {
+        return;
+    }
+
     glGetError();
     glEnable(GL_CULL_FACE);
     glEnable(GL_TEXTURE_2D);
 
-    texture.setSize(ScreenWidth, ScreenHeight);
+    texture.setSize(textureSize.width(), textureSize.height());
     texture.setFormat(QOpenGLTexture::R8_UNorm);
     texture.setMipLevels(1);
     texture.setMinMagFilters(QOpenGLTexture::Nearest, QOpenGLTexture::Nearest);
@@ -46,16 +48,7 @@ void LcdWidget::initializeGL() {
     vertexShader->compileSourceCode(vsrc);
 
     fragmentShader = new QGLShader(QGLShader::Fragment, this);
-    const char* fsrc =
-            "uniform sampler2D texture;\n" \
-            "varying mediump vec2 texc;\n" \
-            "void main(void)\n" \
-            "{\n" \
-            "    float index = texture2D(texture, texc).r * 255.0;\n" \
-            "    float grayScale = 1.0 - index/3.0;\n" \
-            "    gl_FragColor = vec4(grayScale, grayScale, grayScale, 1.0);\n" \
-            "}\n";
-    fragmentShader->compileSourceCode(fsrc);
+    fragmentShader->compileSourceCode(fragmentShaderSource);
 
     shaderProgram = new QGLShaderProgram(this);
     shaderProgram->addShader(vertexShader);
@@ -71,7 +64,7 @@ void LcdWidget::initializeGL() {
 
     shaderProgram->enableAttributeArray(Attr::Vertex);
     CHECK_GL();
-    shaderProgram->setAttributeArray (Attr::Vertex, &vertexes[0]);
+    shaderProgram->setAttributeArray(Attr::Vertex, &vertexes[0]);
     CHECK_GL();
 
     texture.bind();
@@ -83,7 +76,7 @@ void LcdWidget::resizeGL(int w, int h) {
 }
 
 void LcdWidget::paintGL() {
-    texture.setData(QOpenGLTexture::Red, QOpenGLTexture::UInt8, (void*)framebuffer);
+    texture.setData(QOpenGLTexture::Red, QOpenGLTexture::UInt8, (void*)textureData);
     CHECK_GL();
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);

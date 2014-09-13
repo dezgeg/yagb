@@ -5,11 +5,17 @@
 #include "ui_MainWindow.h"
 #include "TimingUtils.hpp"
 
-#include <QCheckBox>
-#include <QPainter>
-
 using namespace std;
 static constexpr double FrameNsecs = (70224.0 / (1L << 22)) * 1000000000L;
+
+static const char* const mainLcdShader = "uniform sampler2D texture;\n" \
+                        "varying mediump vec2 texc;\n" \
+                        "void main(void)\n" \
+                        "{\n" \
+                        "    float index = texture2D(texture, texc).r * 255.0;\n" \
+                        "    float grayScale = 1.0 - index/3.0;\n" \
+                        "    gl_FragColor = vec4(grayScale, grayScale, grayScale, 1.0);\n" \
+                        "}\n";
 
 static const pair<unsigned, QString> lcdRegs[] = {
         { 0xff40, QStringLiteral("LCDC") },
@@ -81,7 +87,7 @@ MainWindow::MainWindow(const char* romFile, bool insnTrace, QWidget* parent) :
     connect(ui->tileMapViewerLcdWidget, SIGNAL(paintRequested(QPaintEvent * )),
             this, SLOT(tileMapViewerPaintRequested(QPaintEvent * )));
 
-    ui->lcdWidget->setFramebuffer(gb.getGpu()->getFramebuffer());
+    ui->lcdWidget->init(gb.getGpu()->getFramebuffer(), (QSize(ScreenWidth, ScreenHeight)), mainLcdShader);
     ui->lcdWidget->setFocus();
     updateRegisters();
 
@@ -89,8 +95,9 @@ MainWindow::MainWindow(const char* romFile, bool insnTrace, QWidget* parent) :
 
     // Skip BootRom
     gb.getGpu()->setRenderEnabled(false);
-    while (gb.getGpu()->getCurrentFrame() != 332)
+    while (gb.getGpu()->getCurrentFrame() != 332) {
         gb.runOneInstruction();
+    }
     gb.getGpu()->setRenderEnabled(true);
 
     connect(frameTimer, SIGNAL(timeout()), this, SLOT(timerTick()));

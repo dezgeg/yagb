@@ -11,7 +11,10 @@ Q_OBJECT
     QGLShader* fragmentShader;
     QGLShaderProgram* shaderProgram;
     QOpenGLTexture texture;
-    Byte* framebuffer;
+
+    Byte* textureData;
+    QSize textureSize;
+    char const* fragmentShaderSource;
 
     static QGLFormat& createGLFormat() {
         static QGLFormat f = QGLFormat::defaultFormat();
@@ -48,8 +51,10 @@ public:
         setFocusPolicy(Qt::StrongFocus);
     }
 
-    void setFramebuffer(Byte* framebuffer) {
-        this->framebuffer = framebuffer;
+    void init(Byte* textureData, QSize size, char const* shader) {
+        this->textureData = textureData;
+        this->textureSize = size;
+        this->fragmentShaderSource = shader;
     }
 signals:
     void focusChanged(bool in);
