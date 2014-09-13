@@ -121,9 +121,9 @@ void MainWindow::timerTick() {
     }
     // TimingUtils::log() << "Frame over, audio sample: " << snd->getCurrentSampleNumber() << ", available: " << audioHandler.samplesAvailable();
 
-    ui->lcdWidget->repaint();
-    //ui->patternViewerLcdWidget->repaint();
-    //ui->tileMapViewerLcdWidget->repaint();
+    ui->lcdWidget->updateGL();
+    //ui->patternViewerLcdWidget->updateGL();
+    //ui->tileMapViewerLcdWidget->updateGL();
 
     if (gb.getGpu()->getCurrentFrame() % 60 == 0) {
         updateRegisters();
@@ -191,6 +191,7 @@ static const QVector<QRgb> monochromeToRgb = {
 };
 
 void MainWindow::lcdPaintRequested(QPaintEvent*) {
+    return;
     QImage image((const uchar*)gb.getGpu()->getFramebuffer(),
             ScreenWidth, ScreenHeight, QImage::Format_Indexed8);
     image.setColorTable(monochromeToRgb); // TODO: copies?

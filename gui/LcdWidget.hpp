@@ -1,11 +1,20 @@
 #pragma once
 
 #include <QWidget>
+#include <QGLWidget>
+#include <QtOpenGL>
 
-class LcdWidget : public QWidget {
+class LcdWidget : public QGLWidget {
 Q_OBJECT
+    QGLShader* vertexShader;
+    QGLShader* fragmentShader;
+    QGLShaderProgram* shaderProgram;
 
 protected:
+    virtual void initializeGL() override;
+    virtual void resizeGL(int w, int h) override;
+    virtual void paintGL() override;
+
     virtual void focusInEvent(QFocusEvent*) override {
         emit focusChanged(true);
     }
@@ -23,8 +32,7 @@ protected:
     }
 
 public:
-    explicit LcdWidget(QWidget* parent = nullptr, Qt::WindowFlags flags = 0) : QWidget(parent, flags) {
-        setAttribute(Qt::WA_OpaquePaintEvent);
+    explicit LcdWidget(QWidget* parent = nullptr) : QGLWidget(parent) {
         setFocusPolicy(Qt::StrongFocus);
     }
 
