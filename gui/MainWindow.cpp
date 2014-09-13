@@ -81,6 +81,7 @@ MainWindow::MainWindow(const char* romFile, bool insnTrace, QWidget* parent) :
     connect(ui->tileMapViewerLcdWidget, SIGNAL(paintRequested(QPaintEvent * )),
             this, SLOT(tileMapViewerPaintRequested(QPaintEvent * )));
 
+    ui->lcdWidget->setFramebuffer(gb.getGpu()->getFramebuffer());
     ui->lcdWidget->setFocus();
     updateRegisters();
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "emu/Platform.hpp"
 #include <QWidget>
 #include <QGLWidget>
 #include <QtOpenGL>
@@ -9,6 +10,8 @@ Q_OBJECT
     QGLShader* vertexShader;
     QGLShader* fragmentShader;
     QGLShaderProgram* shaderProgram;
+    QOpenGLTexture texture;
+    Byte* framebuffer;
 
 protected:
     virtual void initializeGL() override;
@@ -32,10 +35,15 @@ protected:
     }
 
 public:
-    explicit LcdWidget(QWidget* parent = nullptr) : QGLWidget(parent) {
+    explicit LcdWidget(QWidget* parent) :
+            QGLWidget(parent),
+            texture(QOpenGLTexture::Target2D) {
         setFocusPolicy(Qt::StrongFocus);
     }
 
+    void setFramebuffer(Byte* framebuffer) {
+        this->framebuffer = framebuffer;
+    }
 signals:
     void focusChanged(bool in);
     void paintRequested(QPaintEvent*);
