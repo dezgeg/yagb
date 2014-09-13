@@ -13,6 +13,12 @@ Q_OBJECT
     QOpenGLTexture texture;
     Byte* framebuffer;
 
+    static QGLFormat& createGLFormat() {
+        static QGLFormat f = QGLFormat::defaultFormat();
+        f.setSwapInterval(0);
+        return f;
+    }
+
 protected:
     virtual void initializeGL() override;
     virtual void resizeGL(int w, int h) override;
@@ -35,8 +41,9 @@ protected:
     }
 
 public:
+
     explicit LcdWidget(QWidget* parent) :
-            QGLWidget(parent),
+            QGLWidget(createGLFormat(), parent),
             texture(QOpenGLTexture::Target2D) {
         setFocusPolicy(Qt::StrongFocus);
     }
