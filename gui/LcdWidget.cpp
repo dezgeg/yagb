@@ -1,6 +1,8 @@
 #include <emu/Gpu.hpp>
 #include "LcdWidget.hpp"
 
+#include <algorithm>
+
 #define CHECK_GL() [](){ \
         GLint err = glGetError(); \
         if (err != GL_NO_ERROR) { \
@@ -40,10 +42,11 @@ void LcdWidget::makeGridTexture(QOpenGLTexture& gridTexture, int size) {
     setupTexture(gridTexture);
     unsigned char buf[8192];
     for (int i = 0; i < size; ++i) {
-        if (i % 17 == 16)
+        if (i % 17 == 16) {
             buf[i] = 0xff;
-        else
-            buf[i] = 0xf0 * (double(i % 17) / 16.0);
+        } else {
+            buf[i] = std::min(int(round(0xff * (double((i % 17) / 2) / 7.0))), 0xfe);
+        }
     }
     gridTexture.setData(QOpenGLTexture::Red, QOpenGLTexture::UInt8, (void*)buf);
 }
@@ -73,7 +76,7 @@ void LcdWidget::initializeGL() {
             "void main(void)\n" \
             "{\n" \
             "    gl_Position = vec4(vertex, 0.0, 1.0);\n" \
-            "    texc = vec2(1.0, -1.0) * (vertex + vec2(1.0, 1.0)) / 2.0;\n" \
+            "    texc = vec2(0.0, 1.0) + vec2(1.0, -1.0) * (vertex + vec2(1.0, 1.0)) / 2.0;\n" \
             "}\n";
     vertexShader->compileSourceCode(vsrc);
 
