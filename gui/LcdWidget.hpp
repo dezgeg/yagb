@@ -56,6 +56,12 @@ public:
         this->textureSize = size;
         this->fragmentShaderFile = shaderFile;
     }
+
+    virtual ~LcdWidget() {
+        makeCurrent();
+        texture.destroy();
+    }
+
 signals:
     void focusChanged(bool in);
     void paintRequested(QPaintEvent*);
