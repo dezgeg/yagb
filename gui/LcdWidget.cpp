@@ -20,6 +20,34 @@ static const QVector2D vertexes[] = {
         QVector2D(+1, +1), // top right
 };
 
+QGLFormat& LcdWidget::createGLFormat() {
+    static QGLFormat f = QGLFormat::defaultFormat();
+    f.setSwapInterval(0);
+    return f;
+}
+
+void LcdWidget::setupTexture(QOpenGLTexture& glTexture) {
+    glTexture.setFormat(QOpenGLTexture::R8_UNorm);
+    glTexture.setMipLevels(1);
+    glTexture.setMinMagFilters(QOpenGLTexture::Nearest, QOpenGLTexture::Nearest);
+    glTexture.allocateStorage();
+    glTexture.create();
+    glTexture.bind();
+}
+
+void LcdWidget::makeGridTexture(QOpenGLTexture& gridTexture, int size) {
+    gridTexture.setSize(size);
+    setupTexture(gridTexture);
+    unsigned char buf[8192];
+    for (int i = 0; i < size; ++i) {
+        if (i % 17 == 16)
+            buf[i] = 0xff;
+        else
+            buf[i] = 0xf0 * (double(i % 17) / 16.0);
+    }
+    gridTexture.setData(QOpenGLTexture::Red, QOpenGLTexture::UInt8, (void*)buf);
+}
+
 void LcdWidget::initializeGL() {
     if (textureSize.isEmpty()) {
         return;
@@ -29,12 +57,14 @@ void LcdWidget::initializeGL() {
     glEnable(GL_CULL_FACE);
     glEnable(GL_TEXTURE_2D);
 
+    glActiveTexture(GL_TEXTURE0);
     texture.setSize(textureSize.width(), textureSize.height());
-    texture.setFormat(QOpenGLTexture::R8_UNorm);
-    texture.setMipLevels(1);
-    texture.setMinMagFilters(QOpenGLTexture::Nearest, QOpenGLTexture::Nearest);
-    texture.allocateStorage();
-    texture.create();
+    setupTexture(texture);
+
+    glActiveTexture(GL_TEXTURE1);
+    makeGridTexture(xAxisGridTexture, size().width());
+    glActiveTexture(GL_TEXTURE2);
+    makeGridTexture(yAxisGridTexture, size().height());
 
     vertexShader = new QGLShader(QGLShader::Vertex, this);
     const char* vsrc =
@@ -63,16 +93,18 @@ void LcdWidget::initializeGL() {
 
     shaderProgram->bind();
     shaderProgram->setUniformValue("texture", 0);
+    shaderProgram->setUniformValue("xAxisGrid", 1);
+    shaderProgram->setUniformValue("yAxisGrid", 2);
 
     shaderProgram->enableAttributeArray(Attr::Vertex);
     CHECK_GL();
     shaderProgram->setAttributeArray(Attr::Vertex, &vertexes[0]);
     CHECK_GL();
 
-    texture.bind();
+    glActiveTexture(GL_TEXTURE0);
     CHECK_GL();
-
 }
+
 void LcdWidget::resizeGL(int w, int h) {
     glViewport(0, 0, w, h);
 }

@@ -11,16 +11,16 @@ Q_OBJECT
     QGLShader* fragmentShader;
     QGLShaderProgram* shaderProgram;
     QOpenGLTexture texture;
+    QOpenGLTexture xAxisGridTexture;
+    QOpenGLTexture yAxisGridTexture;
 
     Byte* textureData;
     QSize textureSize;
     char const* fragmentShaderFile;
 
-    static QGLFormat& createGLFormat() {
-        static QGLFormat f = QGLFormat::defaultFormat();
-        f.setSwapInterval(0);
-        return f;
-    }
+    static QGLFormat& createGLFormat();
+    static void setupTexture(QOpenGLTexture& glTexture);
+    void makeGridTexture(QOpenGLTexture& gridTexture, int size);
 
 protected:
     virtual void initializeGL() override;
@@ -47,7 +47,9 @@ public:
 
     explicit LcdWidget(QWidget* parent) :
             QGLWidget(createGLFormat(), parent),
-            texture(QOpenGLTexture::Target2D) {
+            texture(QOpenGLTexture::Target2D),
+            xAxisGridTexture(QOpenGLTexture::Target2D),
+            yAxisGridTexture(QOpenGLTexture::Target2D) {
         setFocusPolicy(Qt::StrongFocus);
     }
 
