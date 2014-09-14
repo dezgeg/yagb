@@ -81,7 +81,7 @@ MainWindow::MainWindow(const char* romFile, bool insnTrace, QWidget* parent) :
     ui->lcdWidget->init(gb.getGpu()->getFramebuffer(), QSize(ScreenWidth, ScreenHeight), "main.frag");
     ui->lcdWidget->setFocus();
 
-    ui->patternViewerLcdWidget->init(gb.getGpu()->getVram(), QSize(4096, 1), "patternViewer.frag");
+    ui->patternViewerLcdWidget->init(gb.getGpu()->getVram(), QSize(8192, 1), "patternViewer.frag");
 
     updateRegisters();
 

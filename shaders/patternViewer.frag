@@ -14,13 +14,13 @@ void main(void) {
     int bitX = int(round(xc * 7));
     int bitY = int(round(yc * 7));
 
-    int offs = 16 * (16 * tileY + tileX) + 2 * bitY;
+    int offs = 16 * (16 * tileY + tileX);
 
-    int msbs = int(texture2D(texture, vec2((offs + 2 * tileY) / 4095.0, 0.0)).r * 255.0);
-    int lsbs = int(texture2D(texture, vec2((offs + 2 * tileY + 1) / 4095.0, 0.0)).r * 255.0);
+    int lsbs = int(round(texture2D(texture, vec2((offs + 2 * bitY) / 8191.0, 0.0)).r * 255.0));
+    int msbs = int(round(texture2D(texture, vec2((offs + 2 * bitY + 1) / 8191.0, 0.0)).r * 255.0));
 
-    int b1 = int(mod(int(msbs / exp2(7 - bitX)), 2.0));
     int b0 = int(mod(int(lsbs / exp2(7 - bitX)), 2.0));
+    int b1 = int(mod(int(msbs / exp2(7 - bitX)), 2.0));
 
     float grayScale = 1.0 - float(2 * b1 + b0)/3.0;
 
@@ -28,6 +28,5 @@ void main(void) {
         gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
     } else {
         gl_FragColor = vec4(grayScale, grayScale, grayScale, 1.0);
-        //gl_FragColor = vec4(1.0, tileX / 15.0, tileY / 23.0, 1.0);
     }
 }
