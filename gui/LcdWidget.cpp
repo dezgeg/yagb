@@ -11,10 +11,6 @@
         } \
     }()
 
-enum Attr {
-    Vertex,
-};
-
 static const QVector2D vertexes[] = {
         QVector2D(-1, -1), // bottom left
         QVector2D(+1, -1), // bottom right
@@ -88,7 +84,12 @@ void LcdWidget::initializeGL() {
     shaderProgram = new QGLShaderProgram(this);
     shaderProgram->addShader(vertexShader);
     shaderProgram->addShader(fragmentShader);
-    shaderProgram->bindAttributeLocation("vertex", Attr::Vertex);
+    shaderProgram->bindAttributeLocation("vertex", 0);
+
+    // XXX: huge hack
+    shaderProgram->bindAttributeLocation("bgPatternBaseSelect", 1);
+    shaderProgram->bindAttributeLocation("bgTileBaseSelect", 2);
+
     shaderProgram->link();
     if (!shaderProgram->isLinked()) {
         throw "Shader compiling/linking failed";
@@ -99,9 +100,9 @@ void LcdWidget::initializeGL() {
     shaderProgram->setUniformValue("xAxisGrid", 1);
     shaderProgram->setUniformValue("yAxisGrid", 2);
 
-    shaderProgram->enableAttributeArray(Attr::Vertex);
+    shaderProgram->enableAttributeArray(0);
     CHECK_GL();
-    shaderProgram->setAttributeArray(Attr::Vertex, &vertexes[0]);
+    shaderProgram->setAttributeArray(0, &vertexes[0]);
     CHECK_GL();
 
     glActiveTexture(GL_TEXTURE0);
@@ -113,6 +114,9 @@ void LcdWidget::resizeGL(int w, int h) {
 }
 
 void LcdWidget::paintGL() {
+    if (drawCallback) {
+        drawCallback(this);
+    }
     texture.setData(QOpenGLTexture::Red, QOpenGLTexture::UInt8, (void*)textureData);
     CHECK_GL();
 

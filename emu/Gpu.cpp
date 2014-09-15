@@ -142,7 +142,7 @@ void Gpu::renderScanline() {
             if (tileX < 0) {
                 goto noSprite;
             }
-            assert(tileX <= 8);
+            assert(tileX <= 8); // XXX: this assert has fired!
             if (tileX == 8) {
                 spriteIndex++;
                 goto trySpriteAgain;

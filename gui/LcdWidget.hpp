@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QGLWidget>
 #include <QtOpenGL>
+#include <functional>
 
 class LcdWidget : public QGLWidget {
 Q_OBJECT
@@ -17,6 +18,7 @@ Q_OBJECT
     Byte* textureData;
     QSize textureSize;
     char const* fragmentShaderFile;
+    std::function<void(LcdWidget*)> drawCallback;
 
     static QGLFormat& createGLFormat();
     static void setupTexture(QOpenGLTexture& glTexture);
@@ -53,11 +55,15 @@ public:
         setFocusPolicy(Qt::StrongFocus);
     }
 
-    void init(Byte* textureData, QSize size, char const* shaderFile) {
+    void init(Byte* textureData, QSize size, char const* shaderFile,
+            std::function<void(LcdWidget*)> drawCallback = nullptr) {
         this->textureData = textureData;
         this->textureSize = size;
         this->fragmentShaderFile = shaderFile;
+        this->drawCallback = drawCallback;
     }
+
+    QGLShaderProgram* getShaderProgram() { return shaderProgram; }
 
     virtual ~LcdWidget() {
         makeCurrent();

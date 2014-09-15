@@ -81,8 +81,15 @@ MainWindow::MainWindow(const char* romFile, bool insnTrace, QWidget* parent) :
     ui->lcdWidget->init(gb.getGpu()->getFramebuffer(), QSize(ScreenWidth, ScreenHeight), "main.frag");
     ui->lcdWidget->setFocus();
 
+    Gpu* gpu = gb.getGpu();
+    // FIXME(maybe): vram is copied to texture memory twice
     ui->patternViewerLcdWidget->init(gb.getGpu()->getVram(), QSize(8192, 1), "patternViewer.frag");
-
+    ui->tileMapViewerLcdWidget->init(gb.getGpu()->getVram(), QSize(8192, 1), "tilemapViewer.frag",
+            [gpu](LcdWidget* tilemapViewer) {
+                QGLShaderProgram* tilemapShader = tilemapViewer->getShaderProgram();
+                tilemapShader->setUniformValue("bgPatternBaseSelect", (int)gpu->getRegs()->bgPatternBaseSelect);
+                tilemapShader->setUniformValue("bgTileBaseSelect", (int)gpu->getRegs()->bgTileBaseSelect);
+    });
     updateRegisters();
 
     log.insnLoggingEnabled = insnTrace;
@@ -125,7 +132,7 @@ void MainWindow::timerTick() {
 
     ui->lcdWidget->updateGL();
     ui->patternViewerLcdWidget->updateGL();
-    //ui->tileMapViewerLcdWidget->updateGL();
+    ui->tileMapViewerLcdWidget->updateGL();
 
     if (gb.getGpu()->getCurrentFrame() % 60 == 0) {
         updateRegisters();
