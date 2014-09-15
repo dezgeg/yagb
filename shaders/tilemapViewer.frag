@@ -29,7 +29,7 @@ void main(void) {
     int bitY = int(round(yc * 7));
 
     int rawTile = int(round(texture2D(texture, vec2((tileOff + 32 * tileY + tileX) / 8191.0, 0.0)).r * 255.0));
-    int tile = (bgPatternBaseSelect != 0) ? rawTile : -int(mod(-rawTile + 256, 256.0));
+    int tile = (bgPatternBaseSelect != 0) ? rawTile : (rawTile < 128 ? rawTile : -(256 - rawTile));
     int offs = patternOff + 16 * tile;
 
     int lsbs = int(round(texture2D(texture, vec2((offs + 2 * bitY) / 8191.0, 0.0)).r * 255.0));
