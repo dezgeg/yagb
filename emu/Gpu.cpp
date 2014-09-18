@@ -66,7 +66,9 @@ IrqSet Gpu::tick(long cycles) {
         }
     }
 
-    return irqs;
+    // TODO FIXME: instead of just not raising IRQs, force vblank when LCD
+    // is off, and restart rendering at LY=0 when display re-enabled
+    return regs.lcdEnabled ? irqs : 0;
 }
 
 void Gpu::captureSpriteState() {
