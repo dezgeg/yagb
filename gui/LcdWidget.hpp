@@ -73,6 +73,5 @@ public:
 
 signals:
     void focusChanged(bool in);
-    void paintRequested(QPaintEvent*);
     void keyEvent(QKeyEvent*);
 };

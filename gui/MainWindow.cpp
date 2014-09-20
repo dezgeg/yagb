@@ -62,21 +62,14 @@ MainWindow::MainWindow(const char* romFile, bool insnTrace, QWidget* parent) :
         log(ui.get()),
         rom(&log, romFile),
         gb(&log, &rom),
-        frameTimer(new QTimer(this)),
-        qtFramebuffer(ScreenWidth * 2, ScreenHeight * 2) {
+        frameTimer(new QTimer(this)) {
     setFocusPolicy(Qt::StrongFocus);
 
     ui->setupUi(this);
     fillDynamicRegisterTables();
 
     connect(ui->lcdWidget, SIGNAL(focusChanged(bool)), this, SLOT(lcdFocusChanged(bool)));
-    connect(ui->lcdWidget, SIGNAL(paintRequested(QPaintEvent * )), this, SLOT(lcdPaintRequested(QPaintEvent * )));
     connect(ui->lcdWidget, SIGNAL(keyEvent(QKeyEvent * )), this, SLOT(lcdKeyEvent(QKeyEvent * )));
-
-    connect(ui->patternViewerLcdWidget, SIGNAL(paintRequested(QPaintEvent * )),
-            this, SLOT(patternViewerPaintRequested(QPaintEvent * )));
-    connect(ui->tileMapViewerLcdWidget, SIGNAL(paintRequested(QPaintEvent * )),
-            this, SLOT(tileMapViewerPaintRequested(QPaintEvent * )));
 
     ui->lcdWidget->init(gb.getGpu()->getFramebuffer(), QSize(ScreenWidth, ScreenHeight), "main.frag");
     ui->lcdWidget->setFocus();
@@ -190,78 +183,6 @@ void MainWindow::lcdKeyEvent(QKeyEvent* e) {
     } else {
         gb.getJoypad()->keysReleased(keys);
     }
-}
-
-static const QVector<QRgb> monochromeToRgb = {
-        qRgb(255, 255, 255),
-        qRgb(2 * 255 / 3, 2 * 255 / 3, 2 * 255 / 3),
-        qRgb(255 / 3, 255 / 3, 255 / 3),
-        qRgb(0, 0, 0),
-};
-
-void MainWindow::lcdPaintRequested(QPaintEvent*) {
-    return;
-    QImage image((const uchar*)gb.getGpu()->getFramebuffer(),
-            ScreenWidth, ScreenHeight, QImage::Format_Indexed8);
-    image.setColorTable(monochromeToRgb); // TODO: copies?
-
-    // TODO: draw border
-    QPainter painter;
-    painter.begin(ui->lcdWidget);
-    painter.drawImage(QRectF(QPointF(1, 1), QSizeF(ScreenWidth * 2, ScreenHeight * 2)), image);
-    painter.end();
-}
-
-static void drawTile(int i, int j, Byte* tile, QPainter* painter) {
-    unsigned char tmpBuf[8][8];
-    QImage image((uchar*)tmpBuf, 8, 8, QImage::Format_Indexed8);
-    image.setColorTable(monochromeToRgb); // TODO: copies?
-
-    for (unsigned x = 0; x < 8; x++) {
-        for (unsigned y = 0; y < 8; y++) {
-            tmpBuf[y][x] = Gpu::drawTilePixel(tile, x, y, 0xe4);
-        }
-    }
-
-    painter->drawImage(QRectF(QPointF(17 * i, 17 * j), QSizeF(16, 16)), image,
-            QRectF(QPointF(0, 0), QSize(8, 8)));
-}
-
-void MainWindow::patternViewerPaintRequested(QPaintEvent*) {
-    return;
-    Byte* vram = gb.getGpu()->getVram();
-    QPainter painter;
-    painter.begin(ui->patternViewerLcdWidget);
-    for (unsigned i = 0; i < 16; i++) {
-        for (unsigned j = 0; j < 24; j++) {
-            drawTile(i, j, &vram[16 * (16 * j + i)], &painter);
-        }
-    }
-    painter.end();
-}
-
-void MainWindow::tileMapViewerPaintRequested(QPaintEvent*) {
-    return;
-    Byte* vram = gb.getGpu()->getVram();
-    GpuRegs* regs = gb.getGpu()->getRegs();
-
-    Byte* patterns = regs->bgPatternBaseSelect ? &vram[0x0] : &vram[0x1000];
-    Byte* tiles = regs->bgTileBaseSelect ? vram + 0x1c00 : vram + 0x1800;
-
-    unsigned char tmpBuf[8][8];
-    QImage image((uchar*)tmpBuf, 8, 8, QImage::Format_Indexed8);
-    image.setColorTable(monochromeToRgb); // TODO: copies?
-
-    QPainter painter;
-    painter.begin(ui->tileMapViewerLcdWidget);
-    for (unsigned i = 0; i < 32; i++) {
-        for (unsigned j = 0; j < 32; j++) {
-            Byte rawTile = tiles[32 * j + i];
-            long tile = regs->bgPatternBaseSelect ? (long)rawTile : (long)(SByte)rawTile;
-            drawTile(i, j, &patterns[16 * tile], &painter);
-        }
-    }
-    painter.end();
 }
 
 void MainWindow::updateRegisters() {

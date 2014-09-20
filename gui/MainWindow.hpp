@@ -41,7 +41,6 @@ private:
 
     long nextRenderAt;
     QTimer* frameTimer;
-    QPixmap qtFramebuffer;
 
     void fillDynamicRegisterTables();
     void updateRegisters();
@@ -51,8 +50,4 @@ private slots:
 
     void lcdFocusChanged(bool);
     void lcdKeyEvent(QKeyEvent*);
-    void lcdPaintRequested(QPaintEvent*);
-
-    void patternViewerPaintRequested(QPaintEvent*);
-    void tileMapViewerPaintRequested(QPaintEvent*);
 };
