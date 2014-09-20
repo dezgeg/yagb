@@ -36,7 +36,8 @@ protected:
         emit focusChanged(false);
     }
     virtual void paintEvent(QPaintEvent* e) override {
-        emit paintRequested(e);
+        //emit paintRequested(e);
+        updateGL();
     }
     virtual void keyPressEvent(QKeyEvent* e) override {
         emit keyEvent(e);

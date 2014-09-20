@@ -150,7 +150,7 @@ void Gpu::renderScanline() {
                 goto trySpriteAgain;
             }
             int tileY = regs.ly - (oamEntry->y - 16);
-            assert(tileY >= 0 && tileX < 16);
+            assert(tileY >= 0 && tileY < 16); // XXX: this assert has fired as well!
             Byte palette = oamEntry->flags.palette ? regs.obp1 : regs.obp0;
 
             Byte spriteColor = drawTilePixel(&vram[16 * oamEntry->tile], tileX, tileY,

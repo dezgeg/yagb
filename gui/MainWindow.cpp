@@ -130,9 +130,9 @@ void MainWindow::timerTick() {
     }
     // TimingUtils::log() << "Frame over, audio sample: " << snd->getCurrentSampleNumber() << ", available: " << audioHandler.samplesAvailable();
 
-    ui->lcdWidget->updateGL();
-    ui->patternViewerLcdWidget->updateGL();
-    ui->tileMapViewerLcdWidget->updateGL();
+    ui->lcdWidget->repaint();
+    ui->patternViewerLcdWidget->repaint();
+    ui->tileMapViewerLcdWidget->repaint();
 
     if (gb.getGpu()->getCurrentFrame() % 60 == 0) {
         updateRegisters();
