@@ -22,6 +22,7 @@ class Rom {
 
     struct MapperRegs {
         bool ramEnabled;
+        bool rtcRegsEnabled;
         bool bankingMode;
         Byte romBankLowBits;
         Byte bankHighBits;      // if bankingMode == 1, selects RAM bank, else selects ROM bank

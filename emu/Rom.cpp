@@ -97,6 +97,7 @@ void Rom::cartRomAccess(Word address, Byte* pData, bool isWrite) {
                 break;
             case 2: // 4000-5FFF
                 mapperRegs.bankHighBits = *pData & 0x03;
+                mapperRegs.rtcRegsEnabled = *pData & 0x08;
                 break;
             case 3: // 6000-7FFF
                 mapperRegs.bankingMode = *pData & 0x01;
@@ -127,7 +128,22 @@ void Rom::cartRamAccess(Word address, Byte* pData, bool isWrite) {
         log->warn("Access to cart RAM (0x%04x) without mapper", address);
     }
 #endif
-    BusUtil::arrayMemAccess(saveRamData, address, pData, isWrite);
+    if (mapper && !mapperRegs.ramEnabled) {
+        log->warn("Access to cart RAM without enabling it");
+        return;
+    }
+
+    unsigned bank = 0;
+    if (mapper == Mapper_MBC1) {
+        bank = mapperRegs.bankingMode ? mapperRegs.bankHighBits : 0;
+    } else if (mapper == Mapper_MBC3) {
+        if (mapperRegs.rtcRegsEnabled) {
+            log->warn("RTC not implemented!");
+            return;
+        }
+        bank = mapperRegs.bankHighBits;
+    }
+    BusUtil::arrayMemAccess(saveRamData, address + bank * 0x4000, pData, isWrite);
 }
 
 Rom::~Rom() {
