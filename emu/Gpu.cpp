@@ -71,6 +71,17 @@ IrqSet Gpu::tick(long cycles) {
     return regs.lcdEnabled ? irqs : 0;
 }
 
+Byte Gpu::drawTilePixel(Byte* tile, unsigned x, unsigned y, bool large, OamEntry::OamFlags flags) {
+    Byte height = large ? 16 : 8;
+    unsigned base = 2 * (flags.yFlip ? height - y - 1 : y);
+
+    Byte lsbs = flags.xFlip ? reverseBits(tile[base + 0]) : tile[base + 0];
+    Byte msbs = flags.xFlip ? reverseBits(tile[base + 1]) : tile[base + 1];
+
+    return !!(lsbs & (0x80 >> x)) |
+            ((!!(msbs & (0x80 >> x))) << 1);
+}
+
 void Gpu::captureSpriteState() {
     int prevSpriteXPos = -1000;
     for (unsigned i = 0; i < 10; i++) {

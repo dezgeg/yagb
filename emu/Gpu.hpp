@@ -85,6 +85,9 @@ class Gpu {
     void renderScanline();
     void captureSpriteState();
 
+    Byte drawTilePixel(Byte* tile, unsigned x, unsigned y, bool large=false,
+            OamEntry::OamFlags flags=OamEntry::OamFlags());
+
 public:
     Gpu(Logger* log) :
             log(log),
@@ -100,20 +103,6 @@ public:
 
     static inline Byte applyPalette(Byte palette, Byte colorIndex) {
         return (palette >> colorIndex * 2) & 0x3;
-    }
-
-    /* Inline so GUI code can reuse this and be optimized. */
-    static inline Byte drawTilePixel(Byte* tile, unsigned x, unsigned y, bool large = false,
-            OamEntry::OamFlags flags = OamEntry::OamFlags(), Byte palette = 0xe4) {
-        Byte height = large ? 16 : 8;
-        unsigned base = 2 * (flags.yFlip ? height - y - 1 : y);
-
-        Byte lsbs = flags.xFlip ? reverseBits(tile[base + 0]) : tile[base + 0];
-        Byte msbs = flags.xFlip ? reverseBits(tile[base + 1]) : tile[base + 1];
-
-        unsigned colorIndex = !!(lsbs & (0x80 >> x)) |
-                ((!!(msbs & (0x80 >> x))) << 1);
-        return applyPalette(palette, colorIndex);
     }
 
     int getCurrentScanline() { return regs.ly; }
