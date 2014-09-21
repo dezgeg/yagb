@@ -73,7 +73,7 @@ class Gpu {
     long frame;
     int cycleResidue;
     Byte framebuffer[ScreenHeight][ScreenWidth];
-    SByte visibleSprites[10];
+    SByte visibleSprites[40];
 
     GpuRegs regs;
     Byte vram[8192];

@@ -1,4 +1,5 @@
 #include "Gpu.hpp"
+#include <algorithm>
 
 /*
  * Nocash GPU timings (160x144 display):
@@ -83,32 +84,35 @@ Byte Gpu::drawTilePixel(Byte* tile, unsigned x, unsigned y, bool large, OamEntry
 }
 
 void Gpu::captureSpriteState() {
-    int prevSpriteXPos = -1000;
-    for (unsigned i = 0; i < 10; i++) {
-        int bestSpriteNum = -1;
-        int bestXPos = 1000;
+    unsigned num = 0;
+    for (unsigned j = 0; j < 40; j++) {
+        int spriteTop = sprites[j].y - 16;
+        int spriteBottom = spriteTop + (regs.objSizeLarge ? 16 : 8);
 
-        for (unsigned j = 0; j < 40; j++) {
-            int spriteTop = sprites[j].y - 16;
-            int spriteBottom = spriteTop + (regs.objSizeLarge ? 16 : 8);
-
-            if (!(regs.ly >= spriteTop && regs.ly < spriteBottom)) {
-                continue;
-            } // not visible this scanline
-            if (sprites[j].x > prevSpriteXPos && sprites[j].x < bestXPos) {
-                bestSpriteNum = j;
-                bestXPos = sprites[j].x;
-            }
+        if (!(regs.ly >= spriteTop && regs.ly < spriteBottom)) {
+            // not visible this scanline
+            continue;
         }
-        visibleSprites[i] = bestSpriteNum;
-        prevSpriteXPos = bestXPos;
+        visibleSprites[num++] = j;
+    }
+    auto callback = [this](SByte i, SByte j) -> bool {
+        if (sprites[i].x < sprites[j].x) {
+            return true;
+        } else if (sprites[i].x == sprites[j].x) {
+            return i < j;
+        } else {
+            return false;
+        }
+    };
+    std::sort(visibleSprites, visibleSprites + num, callback);
+    for (int i = num; i < 10; ++i) {
+        visibleSprites[i] = -1;
     }
 }
 
 void Gpu::renderScanline() {
     Byte* bgPatternBase = regs.bgPatternBaseSelect ? &vram[0x0] : &vram[0x1000];  // Bit 4
 
-    unsigned spriteIndex = 0;
     for (unsigned i = 0; i < ScreenWidth; i++) {
         if (!regs.lcdEnabled || !regs.bgEnabled) {
             framebuffer[regs.ly][i] = 0;
@@ -147,18 +151,12 @@ void Gpu::renderScanline() {
             pixel = applyPalette(regs.bgp, bgColor);
         }
 
-        trySpriteAgain:
-        if (regs.objEnabled && spriteIndex < 10 && visibleSprites[spriteIndex] >= 0) {
-            OamEntry* oamEntry = &sprites[visibleSprites[spriteIndex]];
+        for (int j = 0; regs.objEnabled && j < 10 && visibleSprites[j] >= 0; ++j) {
+            OamEntry* oamEntry = &sprites[visibleSprites[j]];
 
             int tileX = i - (oamEntry->x - 8);
-            if (tileX < 0) {
-                goto noSprite;
-            }
-            assert(tileX <= 8); // XXX: this assert has fired!
-            if (tileX == 8) {
-                spriteIndex++;
-                goto trySpriteAgain;
+            if (tileX < 0 || tileX >= 8) {
+                continue;
             }
             int tileY = regs.ly - (oamEntry->y - 16);
             assert(tileY >= 0 && tileY < 16); // XXX: this assert has fired as well!
@@ -169,9 +167,9 @@ void Gpu::renderScanline() {
             Byte spritePixel = applyPalette(palette, spriteColor);
             if (spriteColor != 0 && (!oamEntry->flags.lowPriority || bgColor == 0)) {
                 pixel = spritePixel;
+                break;
             }
         }
-        noSprite:
 
         framebuffer[regs.ly][i] = pixel;
     }
