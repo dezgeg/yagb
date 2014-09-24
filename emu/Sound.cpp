@@ -3,7 +3,38 @@
 #include "Sound.hpp"
 #include "Utils.hpp"
 
+#include <bitset>
+
 static constexpr int MaxChanLevel = 0x2000;
+static std::bitset<(1 << 15) - 1> lfsr15Table;
+static std::bitset<(1 << 7) - 1> lfsr7Table;
+
+static bool stepLfsr(uint32_t& st, bool small) {
+    bool out = !(st & 1);
+    uint32_t xorOut = ((st & 1) ^ (st >> 1)) & 1;
+    st >>= 1;
+    st |= xorOut << 14;
+
+    if (small) {
+        st &= ~(1 << 6);
+        st |= xorOut << 6;
+    }
+
+    return out;
+}
+
+static struct InitLfsrTables {
+    InitLfsrTables() {
+        uint32_t st15 = (1 << 15) - 1;
+        uint32_t st7 = (1 << 15) - 1;
+        for (unsigned i = 0; i < bit(15); ++i) {
+            lfsr15Table[i] = stepLfsr(st15, false);
+            if (i < bit(7)) {
+                lfsr7Table[i] = stepLfsr(st7, true);
+            }
+        }
+    }
+} _initLfsrTables;
 
 void Sound::registerAccess(Word address, Byte* pData, bool isWrite) {
     if (address == 0xff15 || address == 0xff1f ||
@@ -33,12 +64,10 @@ void Sound::registerAccess(Word address, Byte* pData, bool isWrite) {
             break;
 
         case Snd_Ch3_FreqHi:
-            log->warn("Restart wave");
             restartTimer(timers.ch3);
             break;
 
-        case Snd_Ch4_Envelope:
-            // TODO: need control register here
+        case Snd_Ch4_Control:
             restartTimer(timers.ch4);
             break;
     }
@@ -51,6 +80,7 @@ void Sound::tick(int cycleDelta) {
     tickTimer(timers.ch1, regs.ch1.square.soundLength, 64, regs.ch1.square.freqCtrl.noRestart);
     tickTimer(timers.ch2, regs.ch2.square.soundLength, 64, regs.ch2.square.freqCtrl.noRestart);
     tickTimer(timers.ch3, regs.ch3.length, 256, regs.ch3.freqCtrl.noRestart);
+    tickTimer(timers.ch4, regs.ch4.length, 64, regs.ch4.noRestart);
 
     if (cycleResidue >= 32768) {
         cycleResidue -= 32768;
@@ -65,7 +95,7 @@ void Sound::generateSamples() {
             evalPulseChannel(regs.ch1.square, timers.ch1),
             evalPulseChannel(regs.ch2.square, timers.ch2),
             evalWaveChannel(),
-            0,
+            evalNoiseChannel(),
     };
 
     int leftDac = 0, rightDac = 0;
@@ -137,6 +167,22 @@ bool Sound::evalPulseWaveform(SquareChannelRegs& ch) {
     unsigned long stepInPulse = currentCycle % (pulseLen * 4 * 8);
 
     return stepInPulse / pulseLen < pulseWidthLookup[ch.waveDuty];
+}
+
+int Sound::evalNoiseChannel() {
+    if (!timers.ch4.lengthTimerRunning() || !regs.ch4.start) {
+        return 0;
+    }
+    unsigned pulseLength = regs.ch4.polyDivider ? 16 * regs.ch4.polyDivider : 8;
+    pulseLength *= bit(regs.ch4.frequency + 1) / 2; // TODO: why /2?
+    unsigned lfsrWidth = regs.ch4.counterShort ? bit(7) - 1 : bit(15) - 1;
+
+    unsigned long cycleDelta = currentCycle - timers.ch4.frequencyCounterStartCycle;
+    unsigned long stepInPulse = (cycleDelta / pulseLength) % lfsrWidth;
+    bool pulse = regs.ch4.counterShort ? lfsr7Table[stepInPulse] : lfsr15Table[stepInPulse];
+
+    unsigned volume = evalEnvelope(regs.ch4.envelope, timers.ch4);
+    return mixVolume(pulse ? MaxChanLevel : -MaxChanLevel, volume);
 }
 
 void Sound::tickTimer(TimerState& state, Byte curLength, int channelMaxLength, bool noRestart) {

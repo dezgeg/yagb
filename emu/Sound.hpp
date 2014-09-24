@@ -186,6 +186,7 @@ public:
 
     int evalPulseChannel(SquareChannelRegs& regs, TimerState& envelState);
     int evalWaveChannel();
+    int evalNoiseChannel();
 
     void restartTimer(TimerState& state);
     unsigned int evalEnvelope(EnvelopeRegs& regs, TimerState& state);
