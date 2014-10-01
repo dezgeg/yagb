@@ -180,12 +180,12 @@ void MainWindow::lcdKeyEvent(QKeyEvent* e) {
             if (e->type() == QEvent::KeyPress) {
                 saveGameState();
             }
-            break;
+            return;
         case Qt::Key_F3:
             if (e->type() == QEvent::KeyPress) {
                 loadGameState();
             }
-            break;
+            return;
 
         default:
             return;
