@@ -3,6 +3,7 @@
 #include "Bus.hpp"
 #include "Logger.hpp"
 #include "Platform.hpp"
+#include "Serializer.hpp"
 
 union Regs {
     struct {
@@ -67,4 +68,5 @@ public:
 
     void reset();
     long tick();
+    void serialize(Serializer& ser);
 };

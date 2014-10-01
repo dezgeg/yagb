@@ -1,6 +1,7 @@
 #include "BusUtil.hpp"
 #include "Timer.hpp"
 #include "Utils.hpp"
+#include "Serializer.hpp"
 
 // Frequency-to-divisor mapping:
 // 4096   Hz => 1024 (2^10)
@@ -56,4 +57,9 @@ void Timer::regAccess(Word offset, Byte* pData, bool isWrite) {
             return;
     }
     unreachable();
+}
+
+void Timer::serialize(Serializer& ser) {
+    ser.handleObject("Timer.currentCycles", currentCycles);
+    ser.handleObject("Timer.regs", regs);
 }

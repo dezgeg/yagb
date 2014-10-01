@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Platform.hpp"
+#include "Serializer.hpp"
 
 class Timer {
     long currentCycles;
@@ -25,4 +26,5 @@ public:
 
     bool tick(int cycles);
     void regAccess(Word offset, Byte* pData, bool isWrite);
+    void serialize(Serializer& ser);
 };

@@ -1,4 +1,5 @@
 #include "Cpu.hpp"
+#include "Serializer.hpp"
 
 #include <stdio.h>
 
@@ -611,4 +612,10 @@ long Cpu::executeTwoByteInsn() {
         return INSN_DONE(8 + 2 * ldst8ExtraCycles(operand), "%s %d, %s",
                 description, bitIndex, reg8Strings[operand]);
     }
+}
+
+void Cpu::serialize(Serializer& ser) {
+    ser.handleObject("Cpu.regs", regs);
+    ser.handleObject("Cpu.halted", halted);
+    ser.handleObject("Cpu.stopped", stopped);
 }

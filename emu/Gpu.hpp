@@ -4,6 +4,7 @@
 #include "Irq.hpp"
 #include "Logger.hpp"
 #include "Platform.hpp"
+#include "Serializer.hpp"
 
 #include <cstring>
 
@@ -117,4 +118,5 @@ public:
     void registerAccess(Word reg, Byte* pData, bool isWrite);
 
     IrqSet tick(long cycles);
+    void serialize(Serializer& ser);
 };

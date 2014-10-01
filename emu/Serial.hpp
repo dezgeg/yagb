@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Platform.hpp"
+#include "Serializer.hpp"
 
 // Doesn't actually communicate with anything, but
 // some games (Alleyway) use the serial for timing. UGH!
@@ -30,4 +31,5 @@ public:
 
     bool tick(int cycles);
     void regAccess(Word offset, Byte* pData, bool isWrite);
+    void serialize(Serializer& ser);
 };

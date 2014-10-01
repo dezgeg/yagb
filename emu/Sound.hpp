@@ -3,6 +3,7 @@
 #include "BusUtil.hpp"
 #include "Logger.hpp"
 #include "Platform.hpp"
+#include "Serializer.hpp"
 
 enum {
     Snd_Ch1_Sweep = 0x10,
@@ -198,4 +199,5 @@ public:
     long getCurrentSampleNumber() { return currentSampleNumber; }
     uint16_t getLeftSample() { return leftSample; }
     uint16_t getRightSample() { return rightSample; }
+    void serialize(Serializer& ser);
 };

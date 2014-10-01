@@ -1,4 +1,5 @@
 #include "Gpu.hpp"
+#include "Serializer.hpp"
 #include <algorithm>
 
 /*
@@ -253,4 +254,14 @@ void Gpu::registerAccess(Word reg, Byte* pData, bool isWrite) {
             return;
     }
     log->warn("Unhandled GPU register %s to register %04X", isWrite ? "write" : "read", reg);
+}
+
+void Gpu::serialize(Serializer& ser) {
+    ser.handleObject("Gpu.frame", frame);
+    ser.handleObject("Gpu.cycleResidue", cycleResidue);
+    ser.handleObject("Gpu.framebuffer", framebuffer);
+    ser.handleObject("Gpu.visibleSprites", visibleSprites);
+    ser.handleObject("Gpu.regs", regs);
+    ser.handleObject("Gpu.vram", vram);
+    ser.handleObject("Gpu.oam", oam);
 }

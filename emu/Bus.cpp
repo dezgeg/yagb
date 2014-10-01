@@ -159,3 +159,13 @@ IrqSet Bus::getPendingIrqs() {
 bool Bus::isBootromEnabled() {
     return bootromEnabled;
 }
+
+void Bus::serialize(Serializer& ser) {
+    ser.handleObject("Bus.dmaInProgress", dmaInProgress);
+    ser.handleObject("Bus.dmaCycles", dmaCycles);
+    ser.handleObject("Bus.dmaSourcePage", dmaSourcePage);
+    ser.handleObject("Bus.irqsEnabled", irqsEnabled);
+    ser.handleObject("Bus.irqsPending", irqsPending);
+    ser.handleObject("Bus.ram", ram);
+    ser.handleObject("Bus.hram", hram);
+}

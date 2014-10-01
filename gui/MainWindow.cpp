@@ -1,3 +1,4 @@
+#include <QtWidgets/qformlayout.h>
 #include "emu/Utils.hpp"
 #include "gui/HexTextField.hpp"
 #include "gui/MainWindow.hpp"
@@ -78,11 +79,11 @@ MainWindow::MainWindow(const char* romFile, bool insnTrace, QWidget* parent) :
     // FIXME(maybe): vram is copied to texture memory twice
     ui->patternViewerLcdWidget->init(gb.getGpu()->getVram(), QSize(8192, 1), "patternViewer.frag");
     ui->tileMapViewerLcdWidget->init(gb.getGpu()->getVram(), QSize(8192, 1), "tilemapViewer.frag",
-            [gpu](LcdWidget* tilemapViewer) {
+            [ gpu ](LcdWidget* tilemapViewer) {
                 QGLShaderProgram* tilemapShader = tilemapViewer->getShaderProgram();
                 tilemapShader->setUniformValue("bgPatternBaseSelect", (int)gpu->getRegs()->bgPatternBaseSelect);
                 tilemapShader->setUniformValue("bgTileBaseSelect", (int)gpu->getRegs()->bgTileBaseSelect);
-    });
+            });
     updateRegisters();
 
     log.insnLoggingEnabled = insnTrace;
@@ -174,6 +175,18 @@ void MainWindow::lcdKeyEvent(QKeyEvent* e) {
         case Qt::Key_Shift:
             keys = Pad_B;
             break;
+
+        case Qt::Key_F1:
+            if (e->type() == QEvent::KeyPress) {
+                saveGameState();
+            }
+            break;
+        case Qt::Key_F3:
+            if (e->type() == QEvent::KeyPress) {
+                loadGameState();
+            }
+            break;
+
         default:
             return;
     }
@@ -240,4 +253,24 @@ void GuiLogger::logImpl(const char* format, ...) {
     ui->logTextarea->insertPlainText("\n");
     ui->logTextarea->moveCursor(QTextCursor::End);
 #endif
+}
+
+void MainWindow::saveGameState() {
+    Serializer ser;
+
+    ser.beginSave();
+    gb.serialize(ser);
+    rom.serialize(ser);
+    ser.endSave();
+    ser.saveToFile("/tmp/foo");
+}
+
+void MainWindow::loadGameState() {
+    Serializer ser;
+
+    ser.loadFromFile("/tmp/foo");
+    ser.beginLoad();
+    gb.serialize(ser);
+    rom.serialize(ser);
+    ser.endLoad();
 }

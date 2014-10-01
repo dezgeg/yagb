@@ -2,6 +2,7 @@
 #include <QDebug>
 #include "Sound.hpp"
 #include "Utils.hpp"
+#include "Serializer.hpp"
 
 #include <bitset>
 
@@ -227,4 +228,14 @@ Sound::Sound(Logger* log) : log(log),
                             rightSample() {
     memset(&regs, 0, sizeof(regs));
     memset(&timers, 0, sizeof(timers));
+}
+
+void Sound::serialize(Serializer& ser) {
+    ser.handleObject("Sound.currentCycle", currentCycle);
+    ser.handleObject("Sound.cycleResidue", cycleResidue);
+    ser.handleObject("Sound.currentSampleNumber", currentSampleNumber);
+    ser.handleObject("Sound.leftSample", leftSample);
+    ser.handleObject("Sound.rightSample", rightSample);
+    ser.handleObject("Sound.regs", regs);
+    ser.handleObject("Sound.timers", timers);
 }

@@ -2,6 +2,7 @@
 #include "Logger.hpp"
 #include "Rom.hpp"
 #include "Utils.hpp"
+#include "Serializer.hpp"
 
 #include <fstream>
 #include <cstring>
@@ -144,6 +145,12 @@ void Rom::cartRamAccess(Word address, Byte* pData, bool isWrite) {
         bank = mapperRegs.bankHighBits;
     }
     BusUtil::arrayMemAccess(saveRamData, address + bank * 0x4000, pData, isWrite);
+}
+
+void Rom::serialize(Serializer& ser) {
+    ser.handleObject("Rom.mapper", mapper);
+    ser.handleObject("Rom.mapperRegs", mapperRegs);
+    ser.handleByteBuffer("Rom.saveRamData", saveRamData, MAX_SAVE_RAM_SIZE);
 }
 
 Rom::~Rom() {

@@ -8,6 +8,7 @@
 #include "Serial.hpp"
 #include "Sound.hpp"
 #include "Timer.hpp"
+#include "Serializer.hpp"
 
 class Gameboy {
     Logger* log;
@@ -33,12 +34,14 @@ public:
             currentCycle(0) {
     }
 
+
     Bus* getBus() { return &bus; }
     Cpu* getCpu() { return &cpu; }
     Gpu* getGpu() { return &gpu; }
-    Sound* getSound() { return &sound; }
     Timer* getTimer() { return &timer; }
     Joypad* getJoypad() { return &joypad; }
+    Sound* getSound() { return &sound; }
 
+    void serialize(Serializer& s);
     void runOneInstruction();
 };

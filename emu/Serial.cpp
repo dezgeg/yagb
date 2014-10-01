@@ -1,5 +1,6 @@
 #include "BusUtil.hpp"
 #include "Serial.hpp"
+#include "Serializer.hpp"
 
 bool Serial::tick(int cycles) {
     if (!isRunning()) {
@@ -27,4 +28,8 @@ void Serial::regAccess(Word address, Byte* pData, bool isWrite) {
             currentCycles = 0;
         }
     }
+}
+void Serial::serialize(Serializer& ser) {
+    ser.handleObject("Serial.currentCycles", currentCycles);
+    ser.handleObject("Serial.regs", regs);
 }

@@ -50,4 +50,6 @@ private slots:
 
     void lcdFocusChanged(bool);
     void lcdKeyEvent(QKeyEvent*);
+    void saveGameState();
+    void loadGameState();
 };

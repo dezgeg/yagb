@@ -2,6 +2,7 @@
 
 #include "Platform.hpp"
 #include "Logger.hpp"
+#include "Serializer.hpp"
 
 #include <vector>
 
@@ -28,13 +29,15 @@ class Rom {
         Byte bankHighBits;      // if bankingMode == 1, selects RAM bank, else selects ROM bank
     } mapperRegs;
 
+    void readRomFile(char const* fileName);
+    void setupSaveRam(char const* name);
+    void setupMapper();
+
 public:
     Rom(Logger* log, const char* fileName);
     ~Rom();
 
     void cartRomAccess(Word address, Byte* pData, bool isWrite);
     void cartRamAccess(Word address, Byte* pData, bool isWrite);
-    void readRomFile(char const* fileName);
-    void setupSaveRam(char const* name);
-    void setupMapper();
+    void serialize(Serializer& ser);
 };

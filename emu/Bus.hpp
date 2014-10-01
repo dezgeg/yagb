@@ -3,6 +3,7 @@
 #include "Irq.hpp"
 #include "Logger.hpp"
 #include "Platform.hpp"
+#include "Serializer.hpp"
 
 #include <cstring>
 
@@ -62,6 +63,7 @@ public:
         std::memset(hram, 0xAA, sizeof(ram));
     }
 
+    void serialize(Serializer& ser);
     void tickDma(int cycles);
 
     Byte memRead8(Word address, MemAccessType accessType = "CPU");

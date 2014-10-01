@@ -23,3 +23,14 @@ void Gameboy::runOneInstruction() {
     sound.tick(cycleDelta);
     currentCycle += cycleDelta;
 }
+
+void Gameboy::serialize(Serializer& ser) {
+    ser.handleObject("Gameboy.currentCycle", currentCycle);
+    bus.serialize(ser);
+    gpu.serialize(ser);
+    cpu.serialize(ser);
+    timer.serialize(ser);
+    joypad.serialize(ser);
+    serial.serialize(ser);
+    sound.serialize(ser);
+}
