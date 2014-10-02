@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstdint>
+#include <string>
 
 #define unreachable() assert(!"unreachable()")
 
@@ -23,4 +24,13 @@ inline uint8_t reverseBits(uint8_t b) {
 template<typename A, typename B, typename C>
 A clamp(A val, B min, C max) {
     return val < min ? min : val > max ? max : val;
+}
+
+inline std::string replaceExtension(std::string name, const char* extension) {
+    std::string tmp = name;
+    size_t dotIndex = tmp.find_last_of('.');
+    if (dotIndex != std::string::npos) {
+        tmp = tmp.substr(0, dotIndex);
+    }
+    return tmp + "." + extension;
 }

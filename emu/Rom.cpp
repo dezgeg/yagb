@@ -38,12 +38,7 @@ void Rom::readRomFile(char const* fileName) {
 }
 
 void Rom::setupSaveRam(char const* name) {
-    std::string saveRamFile = name;
-    size_t dotIndex = saveRamFile.find_last_of('.');
-    if (dotIndex != std::string::npos) {
-        saveRamFile = saveRamFile.substr(0, dotIndex);
-    }
-    saveRamFile += ".sav";
+    std::string saveRamFile = replaceExtension(name, "sav");
 
     saveRamFd = open(saveRamFile.c_str(), O_CREAT | O_RDWR, 0644);
     if (saveRamFd < 0) {
