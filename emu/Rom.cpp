@@ -16,6 +16,7 @@ static constexpr size_t MAX_SAVE_RAM_SIZE = 0x10000;
 
 Rom::Rom(Logger* log, const char* fileName) :
         log(log),
+        fileName(fileName),
         saveRamFd(-1),
         saveRamData((Byte*)MAP_FAILED) {
 

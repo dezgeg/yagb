@@ -14,6 +14,7 @@ enum Mapper {
 
 class Rom {
     Logger* log;
+    const char* fileName;
     std::vector<Byte> romData;
 
     int saveRamFd;
@@ -29,8 +30,8 @@ class Rom {
         Byte bankHighBits;      // if bankingMode == 1, selects RAM bank, else selects ROM bank
     } mapperRegs;
 
-    void readRomFile(char const* fileName);
-    void setupSaveRam(char const* name);
+    void readRomFile(const char* fileName);
+    void setupSaveRam(const char* name);
     void setupMapper();
 
 public:
@@ -40,4 +41,6 @@ public:
     void cartRomAccess(Word address, Byte* pData, bool isWrite);
     void cartRamAccess(Word address, Byte* pData, bool isWrite);
     void serialize(Serializer& ser);
+
+    const char* getFileName() { return fileName; }
 };

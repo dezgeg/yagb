@@ -262,13 +262,13 @@ void MainWindow::saveGameState() {
     gb.serialize(ser);
     rom.serialize(ser);
     ser.endSave();
-    ser.saveToFile("/tmp/foo");
+    ser.saveToFile(replaceExtension(rom.getFileName(), "st0"));
 }
 
 void MainWindow::loadGameState() {
     Serializer ser;
 
-    ser.loadFromFile("/tmp/foo");
+    ser.loadFromFile(replaceExtension(rom.getFileName(), "st0"));
     ser.beginLoad();
     gb.serialize(ser);
     rom.serialize(ser);
