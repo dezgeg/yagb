@@ -80,7 +80,7 @@ Byte Gpu::drawTilePixel(Byte* tile, unsigned x, unsigned y, bool large, OamEntry
     Byte lsbs = flags.xFlip ? reverseBits(tile[base + 0]) : tile[base + 0];
     Byte msbs = flags.xFlip ? reverseBits(tile[base + 1]) : tile[base + 1];
 
-    return !!(lsbs & (0x80 >> x)) |
+    return (!!(lsbs & (0x80 >> x))) |
             ((!!(msbs & (0x80 >> x))) << 1);
 }
 
