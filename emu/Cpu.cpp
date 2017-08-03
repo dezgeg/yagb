@@ -104,7 +104,6 @@ enum AddSubFlags {
     AS_UpdateZero = 1 << 3,
 };
 
-// TODO: not sane to have three bool parameters
 Byte Cpu::doAddSub(unsigned lhs, unsigned rhs, unsigned flags) {
     unsigned carry = (flags & AS_WithCarry) && regs.flags.c;
     unsigned result;
