@@ -31,8 +31,8 @@ void main(void) {
     int tile = (bgPatternBaseSelect != 0) ? rawTile : (rawTile < 128 ? rawTile : -(256 - rawTile));
     int offs = patternOff + 16 * tile;
 
-    int lsbs = int(round(texture2D(texture, vec2((offs + 2 * bitY) / 8191.0, 0.0)).r * 255.0));
-    int msbs = int(round(texture2D(texture, vec2((offs + 2 * bitY + 1) / 8191.0, 0.0)).r * 255.0));
+    int lsbs = int(texelFetch(texture, ivec2((offs + 2 * bitY), 0.0), 0).r * 255.0);
+    int msbs = int(texelFetch(texture, ivec2((offs + 2 * bitY + 1), 0.0), 0).r * 255.0);
 
     int b0 = (lsbs >> (7 - bitX)) & 1;
     int b1 = (msbs >> (7 - bitX)) & 1;
