@@ -1,4 +1,4 @@
-#version 120
+#version 130
 
 uniform sampler2D texture;
 uniform sampler2D xAxisGrid;
@@ -19,8 +19,8 @@ void main(void) {
     int lsbs = int(round(texture2D(texture, vec2((offs + 2 * bitY) / 8191.0, 0.0)).r * 255.0));
     int msbs = int(round(texture2D(texture, vec2((offs + 2 * bitY + 1) / 8191.0, 0.0)).r * 255.0));
 
-    int b0 = int(mod(int(lsbs / exp2(7 - bitX)), 2.0));
-    int b1 = int(mod(int(msbs / exp2(7 - bitX)), 2.0));
+    int b0 = (lsbs >> (7 - bitX)) & 1;
+    int b1 = (msbs >> (7 - bitX)) & 1;
 
     float grayScale = 1.0 - float(2 * b1 + b0)/3.0;
 
