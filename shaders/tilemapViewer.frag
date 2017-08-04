@@ -8,11 +8,11 @@ varying highp vec2 texc;
 uniform int bgPatternBaseSelect;
 uniform int bgTileBaseSelect;
 
-void main(void) {
-    float xc = texture2D(xAxisGrid, vec2(texc.x, 0)).r;
-    float yc = texture2D(yAxisGrid, vec2(texc.y, 0)).r;
+uniform int textureHeight;
+uniform int textureWidth;
 
-#if 0
+void main(void) {
+#if 1
     int patternOff = bgPatternBaseSelect != 0 ? 0x0 : 0x1000;
     int tileOff = bgTileBaseSelect != 0 ? 0x1c00 : 0x1800;
 #else
@@ -20,13 +20,12 @@ void main(void) {
     int tileOff = 0x1800 + (bgTileBaseSelect * 0x400);
 #endif
 
-    //int patternOff = true ? 0x0 : 0x1000;
-    //int tileOff = false ? 0x1c00 : 0x1800;
-
-    int tileX = int(texc.x * 32.0);
-    int tileY = int(texc.y * 32.0);
-    int bitX = int(round(xc * 7));
-    int bitY = int(round(yc * 7));
+    int x = int(round(texc.x * (textureWidth - 1)));
+    int y = int(round(texc.y * (textureHeight - 1)));
+    int tileX = x / 17;
+    int tileY = y / 17;
+    int bitX = (x % 17) / 2;
+    int bitY = (y % 17) / 2;
 
     int rawTile = int(round(texture2D(texture, vec2((tileOff + 32 * tileY + tileX) / 8191.0, 0.0)).r * 255.0));
     int tile = (bgPatternBaseSelect != 0) ? rawTile : (rawTile < 128 ? rawTile : -(256 - rawTile));
@@ -40,7 +39,7 @@ void main(void) {
 
     float grayScale = 1.0 - float(2 * b1 + b0)/3.0;
 
-    if (xc == 1.0 || yc == 1.0) {
+    if (x % 17 == 16 || y % 17 == 16) {
         gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
     } else {
         gl_FragColor = vec4(grayScale, grayScale, grayScale, 1.0);

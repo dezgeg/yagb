@@ -5,14 +5,16 @@ uniform sampler2D xAxisGrid;
 uniform sampler2D yAxisGrid;
 varying highp vec2 texc;
 
-void main(void) {
-    float xc = texture2D(xAxisGrid, vec2(texc.x, 0)).r;
-    float yc = texture2D(yAxisGrid, vec2(texc.y, 0)).r;
+uniform int textureHeight;
+uniform int textureWidth;
 
-    int tileX = int(texc.x * 16.0);
-    int tileY = int(texc.y * 24.0);
-    int bitX = int(round(xc * 7));
-    int bitY = int(round(yc * 7));
+void main(void) {
+    int x = int(round(texc.x * (textureWidth - 1)));
+    int y = int(round(texc.y * (textureHeight - 1)));
+    int tileX = x / 17;
+    int tileY = y / 17;
+    int bitX = (x % 17) / 2;
+    int bitY = (y % 17) / 2;
 
     int offs = 16 * (16 * tileY + tileX);
 
@@ -24,7 +26,7 @@ void main(void) {
 
     float grayScale = 1.0 - float(2 * b1 + b0)/3.0;
 
-    if (xc == 1.0 || yc == 1.0) {
+    if (x % 17 == 16 || y % 17 == 16) {
         gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
     } else {
         gl_FragColor = vec4(grayScale, grayScale, grayScale, 1.0);

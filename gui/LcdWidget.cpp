@@ -90,6 +90,9 @@ void LcdWidget::initializeGL() {
     shaderProgram->bindAttributeLocation("bgPatternBaseSelect", 1);
     shaderProgram->bindAttributeLocation("bgTileBaseSelect", 2);
 
+    shaderProgram->bindAttributeLocation("textureHeight", 3);
+    shaderProgram->bindAttributeLocation("textureWidth", 4);
+
     shaderProgram->link();
     if (!shaderProgram->isLinked()) {
         throw "Shader compiling/linking failed";
@@ -107,6 +110,9 @@ void LcdWidget::initializeGL() {
 
     glActiveTexture(GL_TEXTURE0);
     CHECK_GL();
+
+    shaderProgram->setUniformValue("textureWidth", size().width());
+    shaderProgram->setUniformValue("textureHeight", size().height());
 }
 
 void LcdWidget::resizeGL(int w, int h) {
