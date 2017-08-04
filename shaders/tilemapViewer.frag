@@ -12,16 +12,12 @@ uniform int textureHeight;
 uniform int textureWidth;
 
 void main(void) {
-#if 1
     int patternOff = bgPatternBaseSelect != 0 ? 0x0 : 0x1000;
     int tileOff = bgTileBaseSelect != 0 ? 0x1c00 : 0x1800;
-#else
-    int patternOff = (1 - bgPatternBaseSelect) * 0x1000;
-    int tileOff = 0x1800 + (bgTileBaseSelect * 0x400);
-#endif
 
     int x = int(round(texc.x * (textureWidth - 1)));
     int y = int(round(texc.y * (textureHeight - 1)));
+
     int tileX = x / 17;
     int tileY = y / 17;
     int bitX = (x % 17) / 2;
@@ -43,10 +39,5 @@ void main(void) {
         gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
     } else {
         gl_FragColor = vec4(grayScale, grayScale, grayScale, 1.0);
-
-        //gl_FragColor = vec4(float(bgPatternBaseSelect), 0.0, float(bgTileBaseSelect), 1.0);
-        //gl_FragColor = vec4(1.0, tileX / 31.0, tileY / 31.0, 1.0);
-        //gl_FragColor = vec4(tile / 64.0, 0.0, 0.0, 1.0);
-        //gl_FragColor = vec4(lsbs / 255.0, 0.0, 0.0, 1.0);
     }
 }

@@ -11,6 +11,7 @@ uniform int textureWidth;
 void main(void) {
     int x = int(round(texc.x * (textureWidth - 1)));
     int y = int(round(texc.y * (textureHeight - 1)));
+
     int tileX = x / 17;
     int tileY = y / 17;
     int bitX = (x % 17) / 2;
