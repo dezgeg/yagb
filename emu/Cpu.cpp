@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #ifndef CONFIG_NO_INSN_TRACE
-#define INSN_DBG(x) x
+#define INSN_DBG(x) (log->insnLoggingEnabled ? (void)(x) : (void)0)
 #define INSN_DBG_DECL() bool _branched = false; Word branchPc = 0; Regs _savedRegs = regs; _savedRegs.pc -= 1
 #define INSN_BRANCH(newPc) (_branched = true, branchPc = regs.pc, regs.pc = (newPc))
 #define INSN_DONE(cycles, ...) (log->logInsn(bus, &_savedRegs, cycles, _branched ? branchPc : regs.pc, __VA_ARGS__), cycles)
