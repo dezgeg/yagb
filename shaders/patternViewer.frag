@@ -1,6 +1,6 @@
 #version 130
 
-uniform sampler2D texture;
+uniform usampler2D texture;
 uniform sampler2D xAxisGrid;
 uniform sampler2D yAxisGrid;
 varying highp vec2 texc;
@@ -19,8 +19,8 @@ void main(void) {
 
     uint offs = 16u * (16u * tileY + tileX);
 
-    uint lsbs = uint(texelFetch(texture, ivec2((offs + 2u * bitY), 0.0), 0).r * 255.0);
-    uint msbs = uint(texelFetch(texture, ivec2((offs + 2u * bitY + 1u), 0.0), 0).r * 255.0);
+    uint lsbs = texelFetch(texture, ivec2((offs + 2u * bitY), 0.0), 0).r;
+    uint msbs = texelFetch(texture, ivec2((offs + 2u * bitY + 1u), 0.0), 0).r;
 
     uint b0 = (lsbs >> (7u - bitX)) & 1u;
     uint b1 = (msbs >> (7u - bitX)) & 1u;

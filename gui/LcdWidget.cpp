@@ -25,7 +25,7 @@ QGLFormat& LcdWidget::createGLFormat() {
 }
 
 void LcdWidget::setupTexture(QOpenGLTexture& glTexture) {
-    glTexture.setFormat(QOpenGLTexture::R8_UNorm);
+    glTexture.setFormat(QOpenGLTexture::R8U);
     glTexture.setMipLevels(1);
     glTexture.setMinMagFilters(QOpenGLTexture::Nearest, QOpenGLTexture::Nearest);
     glTexture.allocateStorage();
@@ -111,8 +111,10 @@ void LcdWidget::initializeGL() {
     glActiveTexture(GL_TEXTURE0);
     CHECK_GL();
 
-    shaderProgram->setUniformValue("textureWidth", size().width());
-    shaderProgram->setUniformValue("textureHeight", size().height());
+    shaderProgram->setUniformValue("textureWidth", (GLint)size().width());
+    CHECK_GL();
+    shaderProgram->setUniformValue("textureHeight", (GLint)size().height());
+    CHECK_GL();
 }
 
 void LcdWidget::resizeGL(int w, int h) {
@@ -123,7 +125,7 @@ void LcdWidget::paintGL() {
     if (drawCallback) {
         drawCallback(this);
     }
-    texture.setData(QOpenGLTexture::Red, QOpenGLTexture::UInt8, (void*)textureData);
+    texture.setData(QOpenGLTexture::Red_Integer, QOpenGLTexture::UInt8, (void*)textureData);
     CHECK_GL();
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
