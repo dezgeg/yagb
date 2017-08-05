@@ -1,8 +1,6 @@
 #version 130
 
 uniform usampler2D texture;
-uniform sampler2D xAxisGrid;
-uniform sampler2D yAxisGrid;
 varying highp vec2 texc;
 
 uniform int textureHeight;

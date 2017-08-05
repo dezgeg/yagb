@@ -22,7 +22,6 @@ Q_OBJECT
 
     static QGLFormat& createGLFormat();
     static void setupTexture(QOpenGLTexture& glTexture);
-    void makeGridTexture(QOpenGLTexture& gridTexture, int size);
 
 protected:
     virtual void initializeGL() override;

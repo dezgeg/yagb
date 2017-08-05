@@ -33,20 +33,6 @@ void LcdWidget::setupTexture(QOpenGLTexture& glTexture) {
     glTexture.bind();
 }
 
-void LcdWidget::makeGridTexture(QOpenGLTexture& gridTexture, int size) {
-    gridTexture.setSize(size);
-    setupTexture(gridTexture);
-    unsigned char buf[8192];
-    for (int i = 0; i < size; ++i) {
-        if (i % 17 == 16) {
-            buf[i] = 0xff;
-        } else {
-            buf[i] = std::min(int(round(0xff * (double((i % 17) / 2) / 7.0))), 0xfe);
-        }
-    }
-    gridTexture.setData(QOpenGLTexture::Red, QOpenGLTexture::UInt8, (void*)buf);
-}
-
 void LcdWidget::initializeGL() {
     if (textureSize.isEmpty()) {
         return;
@@ -59,11 +45,6 @@ void LcdWidget::initializeGL() {
     glActiveTexture(GL_TEXTURE0);
     texture.setSize(textureSize.width(), textureSize.height());
     setupTexture(texture);
-
-    glActiveTexture(GL_TEXTURE1);
-    makeGridTexture(xAxisGridTexture, size().width());
-    glActiveTexture(GL_TEXTURE2);
-    makeGridTexture(yAxisGridTexture, size().height());
 
     vertexShader = new QGLShader(QGLShader::Vertex, this);
     const char* vsrc =
