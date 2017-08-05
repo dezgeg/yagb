@@ -62,7 +62,7 @@ public:
             irqsEnabled(0),
             irqsPending(0) {
         std::memset(ram, 0xAA, sizeof(ram));
-        std::memset(hram, 0xAA, sizeof(ram));
+        std::memset(hram, 0xAA, sizeof(hram));
     }
 
     void serialize(Serializer& ser);
