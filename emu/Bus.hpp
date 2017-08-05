@@ -42,7 +42,6 @@ class Bus {
     Byte ram[32768];
     Byte hram[127];
 
-    void dummySerialAccess(Word address, Byte* pData, bool isWrite);
     void dmaRegAccess(Byte* pData, bool isWrite);
     void memAccess(Word address, Byte* pData, bool isWrite, MemAccessType accessType);
     void disableBootrom();
