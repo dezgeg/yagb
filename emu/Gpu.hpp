@@ -24,10 +24,15 @@ struct OamEntry {
         Byte byteVal;
         struct {
             Byte unused : 4;
-            Byte palette : 1;
+            Byte dmgPalette : 1;
             Byte xFlip : 1;
             Byte yFlip : 1;
             Byte lowPriority : 1;
+        };
+        struct {
+            Byte cgbPalette : 3;
+            Byte cgbTileVramBank : 1;
+            Byte unused2 : 4;
         };
     } flags;
 };
