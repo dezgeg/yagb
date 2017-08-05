@@ -9,25 +9,25 @@ uniform int textureHeight;
 uniform int textureWidth;
 
 void main(void) {
-    int x = int(round(texc.x * (textureWidth - 1)));
-    int y = int(round(texc.y * (textureHeight - 1)));
+    uint x = uint(round(texc.x * (uint(textureWidth) - 1u)));
+    uint y = uint(round(texc.y * (uint(textureHeight) - 1u)));
 
-    int tileX = x / 17;
-    int tileY = y / 17;
-    int bitX = (x % 17) / 2;
-    int bitY = (y % 17) / 2;
+    uint tileX = x / 17u;
+    uint tileY = y / 17u;
+    uint bitX = (x % 17u) / 2u;
+    uint bitY = (y % 17u) / 2u;
 
-    int offs = 16 * (16 * tileY + tileX);
+    uint offs = 16u * (16u * tileY + tileX);
 
-    int lsbs = int(texelFetch(texture, ivec2((offs + 2 * bitY), 0.0), 0).r * 255.0);
-    int msbs = int(texelFetch(texture, ivec2((offs + 2 * bitY + 1), 0.0), 0).r * 255.0);
+    uint lsbs = uint(texelFetch(texture, ivec2((offs + 2u * bitY), 0.0), 0).r * 255.0);
+    uint msbs = uint(texelFetch(texture, ivec2((offs + 2u * bitY + 1u), 0.0), 0).r * 255.0);
 
-    int b0 = (lsbs >> (7 - bitX)) & 1;
-    int b1 = (msbs >> (7 - bitX)) & 1;
+    uint b0 = (lsbs >> (7u - bitX)) & 1u;
+    uint b1 = (msbs >> (7u - bitX)) & 1u;
 
-    float grayScale = 1.0 - float(2 * b1 + b0)/3.0;
+    float grayScale = 1.0 - float(2u * b1 + b0)/3.0;
 
-    if (x % 17 == 16 || y % 17 == 16) {
+    if (x % 17u == 16u || y % 17u == 16u) {
         gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
     } else {
         gl_FragColor = vec4(grayScale, grayScale, grayScale, 1.0);
