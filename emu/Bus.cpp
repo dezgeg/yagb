@@ -299,6 +299,8 @@ bool Bus::isGbcMode() {
 }
 
 void Bus::serialize(Serializer& ser) {
+    ser.handleObject("Bus.isGbc", isGbc);
+    ser.handleObject("Bus.bootromEnabled", bootromEnabled);
     ser.handleObject("Bus.dmaInProgress", dmaInProgress);
     ser.handleObject("Bus.dmaCycles", dmaCycles);
     ser.handleObject("Bus.dmaSourcePage", dmaSourcePage);
