@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Bus.hpp"
 #include "BusUtil.hpp"
 #include "Irq.hpp"
 #include "Logger.hpp"
@@ -65,10 +66,13 @@ struct GpuRegs {
     Byte obp1;
     Byte wy;
     Byte wx;
+
+    Byte vramBank;
 };
 
 class Gpu {
     Logger* log;
+    Bus* bus;
 
     bool renderEnabled;
     long frame;
@@ -77,7 +81,7 @@ class Gpu {
     SByte visibleSprites[40];
 
     GpuRegs regs;
-    Byte vram[8192];
+    Byte vram[16384];
     union {
         Byte oam[0xa0];
         OamEntry sprites[40];
@@ -90,8 +94,9 @@ class Gpu {
             OamEntry::OamFlags flags=OamEntry::OamFlags());
 
 public:
-    Gpu(Logger* log) :
+    Gpu(Logger* log, Bus* bus) :
             log(log),
+            bus(bus),
             renderEnabled(true),
             frame(0),
             cycleResidue(0) {

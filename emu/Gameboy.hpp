@@ -25,7 +25,7 @@ public:
     Gameboy(Logger* log, Rom* rom, bool gbc) :
             log(log),
             bus(log, rom, &gpu, &timer, &joypad, &serial, &sound, gbc),
-            gpu(log),
+            gpu(log, &bus),
             cpu(log, &bus),
             timer(),
             joypad(),

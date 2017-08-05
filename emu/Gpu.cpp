@@ -181,7 +181,7 @@ void Gpu::vramAccess(Word offset, Byte* pData, bool isWrite) {
     if (isWrite)
         log->warn("GPU VRAM write [0x%0x] = 0x%02x", 0x8000 + offset, *pData);
 #endif
-    BusUtil::arrayMemAccess(vram, offset, pData, isWrite);
+    BusUtil::arrayMemAccess(&vram[bus->isGbcMode() && regs.vramBank ? 8192 : 0], offset, pData, isWrite);
 }
 
 void Gpu::oamAccess(Word offset, Byte* pData, bool isWrite) {
@@ -197,6 +197,13 @@ void Gpu::registerAccess(Word reg, Byte* pData, bool isWrite) {
     if (isWrite)
         log->warn("GPU reg write [0x%0x] = 0x%02x", reg, *pData);
 #endif
+    if (bus->isGbcMode()) {
+        switch (reg) {
+            case 0xff4f:
+                BusUtil::simpleRegAccess(&regs.vramBank, pData, isWrite, 0x01);
+                return;
+        }
+    }
 
     switch (reg) {
         case 0xff40:
@@ -236,7 +243,6 @@ void Gpu::registerAccess(Word reg, Byte* pData, bool isWrite) {
         case 0xff45:
             BusUtil::simpleRegAccess(&regs.lyc, pData, isWrite);
             return;
-            // case 0xff46: dma - TODO: must be handled by Bus!
         case 0xff47:
             BusUtil::simpleRegAccess(&regs.bgp, pData, isWrite);
             return;
