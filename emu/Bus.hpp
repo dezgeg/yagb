@@ -28,6 +28,7 @@ class Bus {
     Serial* serial;
     Sound* sound;
 
+    bool isGbc;
     bool bootromEnabled;
     bool dmaInProgress;
     int dmaCycles;
@@ -45,7 +46,7 @@ class Bus {
     void disableBootrom();
 
 public:
-    Bus(Logger* log, Rom* rom, Gpu* gpu, Timer* timer, Joypad* joypad, Serial* serial, Sound* sound) :
+    Bus(Logger* log, Rom* rom, Gpu* gpu, Timer* timer, Joypad* joypad, Serial* serial, Sound* sound, bool gbc) :
             log(log),
             rom(rom),
             gpu(gpu),
@@ -53,6 +54,7 @@ public:
             joypad(joypad),
             serial(serial),
             sound(sound),
+            isGbc(gbc),
             bootromEnabled(true),
             dmaInProgress(false),
             dmaCycles(0),
@@ -77,4 +79,5 @@ public:
     IrqSet getPendingIrqs();
 
     bool isBootromEnabled();
+    bool isGbcMode();
 };

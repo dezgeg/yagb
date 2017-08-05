@@ -22,9 +22,9 @@ class Gameboy {
     long currentCycle;
 
 public:
-    Gameboy(Logger* log, Rom* rom) :
+    Gameboy(Logger* log, Rom* rom, bool gbc) :
             log(log),
-            bus(log, rom, &gpu, &timer, &joypad, &serial, &sound),
+            bus(log, rom, &gpu, &timer, &joypad, &serial, &sound, gbc),
             gpu(log),
             cpu(log, &bus),
             timer(),

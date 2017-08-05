@@ -28,7 +28,7 @@ class MainWindow : public QMainWindow {
 Q_OBJECT
 
 public:
-    explicit MainWindow(const char* romFile, bool insnTrace, QWidget* parent = 0);
+    explicit MainWindow(const char* romFile, bool gbc, bool insnTrace, QWidget* parent = 0);
     ~MainWindow();
 
 private:

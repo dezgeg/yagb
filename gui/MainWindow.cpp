@@ -57,12 +57,12 @@ void MainWindow::fillDynamicRegisterTables() {
     }
 }
 
-MainWindow::MainWindow(const char* romFile, bool insnTrace, QWidget* parent) :
+MainWindow::MainWindow(const char* romFile, bool gbc, bool insnTrace, QWidget* parent) :
         QMainWindow(parent),
         ui(new Ui::MainWindow),
         log(ui.get()),
         rom(&log, romFile),
-        gb(&log, &rom),
+        gb(&log, &rom, gbc),
         frameTimer(new QTimer(this)) {
     setFocusPolicy(Qt::StrongFocus);
 
