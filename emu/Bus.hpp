@@ -34,10 +34,12 @@ class Bus {
     int dmaCycles;
     Byte dmaSourcePage;
 
+    Byte wramBank;
+
     IrqSet irqsEnabled;
     IrqSet irqsPending;
 
-    Byte ram[8192];
+    Byte ram[32768];
     Byte hram[127];
 
     void dummySerialAccess(Word address, Byte* pData, bool isWrite);
@@ -59,6 +61,7 @@ public:
             dmaInProgress(false),
             dmaCycles(0),
             dmaSourcePage(0),
+            wramBank(0),
             irqsEnabled(0),
             irqsPending(0) {
         std::memset(ram, 0xAA, sizeof(ram));

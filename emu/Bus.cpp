@@ -214,7 +214,19 @@ void Bus::memAccess(Word address, Byte* pData, bool isWrite, MemAccessType acces
     } else if (address <= 0xbfff) {
         rom->cartRamAccess(address & 0x1fff, pData, isWrite);
     } else if (address <= 0xfdff) {
-        BusUtil::arrayMemAccess(ram, address & 0x1fff, pData, isWrite);
+        Word offset = address & 0x0fff;
+        if (!(address & 0x1000)) {
+            // C000-CFFF, mirrored E000-EFFF: fixed RAM
+            BusUtil::arrayMemAccess(ram, offset, pData, isWrite);
+
+        } else {
+            // D000-DFFF, mirrored F000-FDFF: GBC bank-switchable RAM
+            unsigned bank = wramBank;
+            if (!isGbcMode() || !bank) {
+                bank = 1;
+            }
+            BusUtil::arrayMemAccess(&ram[bank * 4096], offset, pData, isWrite);
+        }
     } else if (address <= 0xfe9f) {
         gpu->oamAccess(address & 0xff, pData, isWrite);
     } else if (address == 0xff00) {
@@ -233,6 +245,8 @@ void Bus::memAccess(Word address, Byte* pData, bool isWrite, MemAccessType acces
         gpu->registerAccess(address, pData, isWrite);
     } else if (address == 0xff50) {
         disableBootrom();
+    } else if (isGbcMode() && address == 0xff70) {
+        BusUtil::simpleRegAccess(&wramBank, pData, isWrite, 0x07);
     } else if (address >= 0xff80 && address <= 0xfffe) {
         BusUtil::arrayMemAccess(hram, address - 0xff80, pData, isWrite);
     } else if (address == 0xffff) {
@@ -304,6 +318,7 @@ void Bus::serialize(Serializer& ser) {
     ser.handleObject("Bus.dmaInProgress", dmaInProgress);
     ser.handleObject("Bus.dmaCycles", dmaCycles);
     ser.handleObject("Bus.dmaSourcePage", dmaSourcePage);
+    ser.handleObject("Bus.wramBank", wramBank);
     ser.handleObject("Bus.irqsEnabled", irqsEnabled);
     ser.handleObject("Bus.irqsPending", irqsPending);
     ser.handleObject("Bus.ram", ram);
