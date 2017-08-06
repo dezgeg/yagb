@@ -72,7 +72,8 @@ MainWindow::MainWindow(const char* romFile, bool gbc, bool insnTrace, QWidget* p
     connect(ui->lcdWidget, SIGNAL(focusChanged(bool)), this, SLOT(lcdFocusChanged(bool)));
     connect(ui->lcdWidget, SIGNAL(keyEvent(QKeyEvent * )), this, SLOT(lcdKeyEvent(QKeyEvent * )));
 
-    ui->lcdWidget->init(gb.getGpu()->getFramebuffer(), QSize(ScreenWidth, ScreenHeight), "main.frag");
+    // XXX: this cast & * 2 is a HACK
+    ui->lcdWidget->init((Byte*)gb.getGpu()->getFramebuffer(), QSize(ScreenWidth * 2, ScreenHeight), "main.frag");
     ui->lcdWidget->setFocus();
 
     Gpu* gpu = gb.getGpu();

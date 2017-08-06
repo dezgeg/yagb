@@ -10,7 +10,8 @@ void main(void) {
     uint x = uint(round(texc.x / 2 * uint(textureWidth - 1)));
     uint y = uint(round(texc.y / 2 * uint(textureHeight - 1)));
 
-    uint index = texelFetch(texture, ivec2(x, y), 0).r;
+    // HACK for passing 16-bit RGB via a byte buffer...
+    uint index = texelFetch(texture, ivec2(2u * x, y), 0).r;
     float grayScale = 1.0 - index/3.0;
     gl_FragColor = vec4(grayScale, grayScale, grayScale, 1.0);
 }

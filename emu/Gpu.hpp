@@ -82,7 +82,7 @@ class Gpu {
     bool renderEnabled;
     long frame;
     int cycleResidue;
-    Byte framebuffer[ScreenHeight][ScreenWidth];
+    Word framebuffer[ScreenHeight][ScreenWidth];
     SByte visibleSprites[40];
 
     GpuRegs regs;
@@ -118,7 +118,7 @@ public:
 
     int getCurrentScanline() { return regs.ly; }
     int getCurrentFrame() { return frame; }
-    Byte* getFramebuffer() { return &framebuffer[0][0]; }
+    Word* getFramebuffer() { return &framebuffer[0][0]; }
     Byte* getVram() { return vram; }
     GpuRegs* getRegs() { return &regs; }
     void setRenderEnabled(bool renderEnabled) { this->renderEnabled = renderEnabled; }
