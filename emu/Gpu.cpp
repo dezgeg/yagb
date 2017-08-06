@@ -201,6 +201,17 @@ void Gpu::oamAccess(Word offset, Byte* pData, bool isWrite) {
     BusUtil::arrayMemAccess(oam, offset, pData, isWrite);
 }
 
+static void accessPaletteIndexReg(Byte* palette, PaletteIndexReg* paletteReg, Byte* pData, bool isWrite) {
+    if (isWrite) {
+        palette[paletteReg->index] = *pData;
+        if (paletteReg->autoincrement) {
+            paletteReg->index++;
+        }
+    } else {
+        *pData = palette[paletteReg->index];
+    }
+}
+
 void Gpu::registerAccess(Word reg, Byte* pData, bool isWrite) {
 #if 0
     if (isWrite)
@@ -210,6 +221,18 @@ void Gpu::registerAccess(Word reg, Byte* pData, bool isWrite) {
         switch (reg) {
             case 0xff4f:
                 BusUtil::simpleRegAccess(&regs.vramBank, pData, isWrite, 0x01);
+                return;
+            case 0xff68:
+                BusUtil::simpleRegAccess(&regs.cgbBackgroundPaletteIndex.raw, pData, isWrite, 0xbf);
+                return;
+            case 0xff69:
+                accessPaletteIndexReg(cgbBackgroundPalette, &regs.cgbBackgroundPaletteIndex, pData, isWrite);
+                return;
+            case 0xff6a:
+                BusUtil::simpleRegAccess(&regs.cgbSpritePaletteIndex.raw, pData, isWrite, 0xbf);
+                return;
+            case 0xff6b:
+                accessPaletteIndexReg(cgbSpritePalette, &regs.cgbSpritePaletteIndex, pData, isWrite);
                 return;
         }
     }
@@ -279,4 +302,6 @@ void Gpu::serialize(Serializer& ser) {
     ser.handleObject("Gpu.regs", regs);
     ser.handleObject("Gpu.vram", vram);
     ser.handleObject("Gpu.oam", oam);
+    ser.handleObject("Gpu.cgbBackgroundPalette", cgbBackgroundPalette);
+    ser.handleObject("Gpu.cgbSpritePalette", cgbSpritePalette);
 }

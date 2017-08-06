@@ -37,6 +37,15 @@ struct OamEntry {
     } flags;
 };
 
+union PaletteIndexReg {
+    Byte raw;
+    struct {
+        Byte index : 6;
+        Byte unused : 1;
+        Byte autoincrement : 1;
+    };
+};
+
 struct GpuRegs {
     union {
         Byte lcdc;
@@ -73,6 +82,8 @@ struct GpuRegs {
     Byte wx;
 
     Byte vramBank;
+    PaletteIndexReg cgbBackgroundPaletteIndex;
+    PaletteIndexReg cgbSpritePaletteIndex;
 };
 
 class Gpu {
@@ -91,6 +102,8 @@ class Gpu {
         Byte oam[0xa0];
         OamEntry sprites[40];
     };
+    Byte cgbBackgroundPalette[64];
+    Byte cgbSpritePalette[64];
 
     void renderScanline();
     void captureSpriteState();
@@ -108,6 +121,8 @@ public:
         std::memset(&framebuffer[0][0], 0, sizeof(framebuffer));
         std::memset(&vram[0], 0, sizeof(vram));
         std::memset(&oam[0], 0, sizeof(oam));
+        std::memset(&cgbBackgroundPalette[0], 0, sizeof(cgbBackgroundPalette));
+        std::memset(&cgbSpritePalette[0], 0, sizeof(cgbSpritePalette));
         std::memset(&regs, 0, sizeof(regs));
         std::memset(&visibleSprites[0], 0, sizeof(visibleSprites));
     }
