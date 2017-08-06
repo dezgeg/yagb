@@ -156,8 +156,9 @@ void Gpu::renderScanline() {
             unsigned int tileIndex = bgTileY * 32 + bgTileX;
             Byte tileNum = bgTileBase[tileIndex];
             long tileOff = regs.bgPatternBaseSelect ? (long)tileNum : (long)(SByte)tileNum;
-            Byte attrs = (!isWindow && bus->isGbcMode()) ? (bgTileBase + 8192)[tileIndex] : 0;
-            bgColor = drawTilePixel(bgPatternBase + 16 * tileOff, bgTileXBit, bgTileYBit, attrs);
+            OamEntry::OamFlags attrs;
+            attrs.byteVal = (!isWindow && bus->isGbcMode()) ? (bgTileBase + 8192)[tileIndex] : 0;
+            bgColor = drawTilePixel(bgPatternBase + 16 * tileOff, bgTileXBit, bgTileYBit, false, attrs);
             pixel = applyPalette(regs.bgp, bgColor);
         }
 
