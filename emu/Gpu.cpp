@@ -77,6 +77,11 @@ Byte Gpu::drawTilePixel(Byte* tile, unsigned x, unsigned y, bool large, OamEntry
     Byte height = large ? 16 : 8;
     unsigned base = 2 * (flags.yFlip ? height - y - 1 : y);
 
+    if (bus->isGbcMode() && flags.cgbTileVramBank) {
+        // Slight hack...
+        tile += 8192;
+    }
+
     Byte lsbs = flags.xFlip ? reverseBits(tile[base + 0]) : tile[base + 0];
     Byte msbs = flags.xFlip ? reverseBits(tile[base + 1]) : tile[base + 1];
 
@@ -123,10 +128,12 @@ void Gpu::renderScanline() {
         int scrollX, scrollY;
         bool bgOrWinEnabled;
         bool tileBaseSelector;
+        bool isWindow = false;
         if (regs.winEnabled && regs.ly >= regs.wy && (int)i >= regs.wx - 7) {
             scrollX = -regs.wx + 7;
             scrollY = -regs.wy;
             bgOrWinEnabled = true;
+            isWindow = true;
             tileBaseSelector = regs.winTileBaseSelect; // Bit 6
         } else {
             scrollX = regs.scx;
@@ -146,9 +153,11 @@ void Gpu::renderScanline() {
             unsigned bgTileX = (bgX / 8) % 32;
             unsigned bgTileXBit = bgX % 8;
 
-            Byte tileNum = bgTileBase[bgTileY * 32 + bgTileX];
+            unsigned int tileIndex = bgTileY * 32 + bgTileX;
+            Byte tileNum = bgTileBase[tileIndex];
             long tileOff = regs.bgPatternBaseSelect ? (long)tileNum : (long)(SByte)tileNum;
-            bgColor = drawTilePixel(bgPatternBase + 16 * tileOff, bgTileXBit, bgTileYBit);
+            Byte attrs = (!isWindow && bus->isGbcMode()) ? (bgTileBase + 8192)[tileIndex] : 0;
+            bgColor = drawTilePixel(bgPatternBase + 16 * tileOff, bgTileXBit, bgTileYBit, attrs);
             pixel = applyPalette(regs.bgp, bgColor);
         }
 
