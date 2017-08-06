@@ -7,8 +7,8 @@ uniform int textureHeight;
 uniform int textureWidth;
 
 void main(void) {
-    uint x = uint(round(texc.x / 2 * uint(textureWidth - 1)));
-    uint y = uint(round(texc.y / 2 * uint(textureHeight - 1)));
+    uint x = uint(texc.x * uint(textureWidth - 1)) / 2u;
+    uint y = uint(texc.y * uint(textureHeight - 1)) / 2u;
 
     // HACK for passing 16-bit RGB via a byte buffer...
     uint index = texelFetch(texture, ivec2(2u * x, y), 0).r;
