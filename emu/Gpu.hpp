@@ -16,6 +16,20 @@ enum {
     ScanlineCycles = 456,
 };
 
+union GbColor {
+    struct {
+        unsigned r : 5;
+        unsigned g : 5;
+        unsigned b : 5;
+        unsigned isGrayscale : 1;
+    }__attribute__((packed));
+    struct {
+        unsigned dmgGrayscale : 2;
+        unsigned pad : 14;
+    }__attribute__((packed));
+} __attribute__((packed));
+static_assert(sizeof(GbColor) == 2, "GbColor is wrong");
+
 struct OamEntry {
     Byte y;
     Byte x;
@@ -36,6 +50,7 @@ struct OamEntry {
         };
     } flags;
 };
+static_assert(sizeof(OamEntry) == 4, "OamEntry is wrong");
 
 union PaletteIndexReg {
     Byte raw;
@@ -45,6 +60,7 @@ union PaletteIndexReg {
         Byte autoincrement : 1;
     };
 };
+static_assert(sizeof(PaletteIndexReg) == 1, "PaletteIndexReg is wrong");
 
 struct GpuRegs {
     union {
@@ -93,7 +109,7 @@ class Gpu {
     bool renderEnabled;
     long frame;
     int cycleResidue;
-    Word framebuffer[ScreenHeight][ScreenWidth];
+    GbColor framebuffer[ScreenHeight][ScreenWidth];
     SByte visibleSprites[40];
 
     GpuRegs regs;
@@ -133,7 +149,7 @@ public:
 
     int getCurrentScanline() { return regs.ly; }
     int getCurrentFrame() { return frame; }
-    Word* getFramebuffer() { return &framebuffer[0][0]; }
+    Word* getFramebuffer() { return (Word*)&framebuffer[0][0]; }
     Byte* getVram() { return vram; }
     GpuRegs* getRegs() { return &regs; }
     void setRenderEnabled(bool renderEnabled) { this->renderEnabled = renderEnabled; }

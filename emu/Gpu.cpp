@@ -121,7 +121,10 @@ void Gpu::renderScanline() {
 
     for (unsigned i = 0; i < ScreenWidth; i++) {
         if (!regs.lcdEnabled || !regs.bgEnabled) {
-            framebuffer[regs.ly][i] = 0;
+            GbColor zero;
+            zero.isGrayscale = true;
+            zero.dmgGrayscale = 0;
+            framebuffer[regs.ly][i] = zero;
             continue;
         }
 
@@ -182,7 +185,10 @@ void Gpu::renderScanline() {
             }
         }
 
-        framebuffer[regs.ly][i] = pixel;
+        GbColor col;
+        col.dmgGrayscale = pixel;
+        col.isGrayscale = true;
+        framebuffer[regs.ly][i] = col;
     }
 }
 
