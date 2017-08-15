@@ -27,6 +27,21 @@ union GbColor {
         unsigned dmgGrayscale : 2;
         unsigned pad : 14;
     }__attribute__((packed));
+
+    explicit GbColor() {
+        this->isGrayscale = true;
+        this->dmgGrayscale = 0;
+    }
+    explicit GbColor(unsigned grayscale) {
+        this->isGrayscale = true;
+        this->dmgGrayscale = grayscale;
+    }
+    explicit GbColor(unsigned r, unsigned g, unsigned b) {
+        this->isGrayscale = false;
+        this->r = r;
+        this->g = g;
+        this->b = b;
+    }
 } __attribute__((packed));
 static_assert(sizeof(GbColor) == 2, "GbColor is wrong");
 
@@ -143,8 +158,8 @@ public:
         std::memset(&visibleSprites[0], 0, sizeof(visibleSprites));
     }
 
-    static inline Byte applyPalette(Byte palette, Byte colorIndex) {
-        return (palette >> colorIndex * 2) & 0x3;
+    static inline GbColor applyDmgPalette(Byte palette, Byte colorIndex) {
+        return GbColor((palette >> colorIndex * 2) & 0x3);
     }
 
     int getCurrentScanline() { return regs.ly; }

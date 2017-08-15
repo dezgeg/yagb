@@ -241,7 +241,7 @@ void Bus::memAccess(Word address, Byte* pData, bool isWrite, MemAccessType acces
         sound->registerAccess(address, pData, isWrite);
     } else if (address == 0xff46) {
         dmaRegAccess(pData, isWrite);
-    } else if (address >= 0xff40 && address <= 0xff4b) {
+    } else if ((address >= 0xff40 && address <= 0xff4b) || (address >= 0xff68 && address <= 0xff6b) || address == 0xff4f) {
         gpu->registerAccess(address, pData, isWrite);
     } else if (address == 0xff50) {
         disableBootrom();

@@ -121,9 +121,7 @@ void Gpu::renderScanline() {
 
     for (unsigned i = 0; i < ScreenWidth; i++) {
         if (!regs.lcdEnabled || !regs.bgEnabled) {
-            GbColor zero;
-            zero.isGrayscale = true;
-            zero.dmgGrayscale = 0;
+            GbColor zero {0};
             framebuffer[regs.ly][i] = zero;
             continue;
         }
@@ -150,7 +148,7 @@ void Gpu::renderScanline() {
         unsigned bgTileYBit = bgY % 8;
 
         Byte bgColor = 0;
-        Byte pixel = 0;
+        GbColor pixel {0};
         if (bgOrWinEnabled) {
             unsigned bgX = i + scrollX;
             unsigned bgTileX = (bgX / 8) % 32;
@@ -162,7 +160,12 @@ void Gpu::renderScanline() {
             OamEntry::OamFlags attrs;
             attrs.byteVal = (!isWindow && bus->isGbcMode()) ? (bgTileBase + 8192)[tileIndex] : 0;
             bgColor = drawTilePixel(bgPatternBase + 16 * tileOff, bgTileXBit, bgTileYBit, false, attrs);
-            pixel = applyPalette(regs.bgp, bgColor);
+            if (bus->isGbcMode()) {
+                pixel = ((GbColor*)&cgbBackgroundPalette[0])[attrs.cgbPalette * 4 + bgColor];
+                pixel.isGrayscale = false;
+            } else {
+                pixel = applyDmgPalette(regs.bgp, bgColor);
+            }
         }
 
         for (int j = 0; regs.objEnabled && j < 10 && visibleSprites[j] >= 0; ++j) {
@@ -174,21 +177,23 @@ void Gpu::renderScanline() {
             }
             int tileY = regs.ly - (oamEntry->y - 16);
             assert(tileY >= 0 && tileY < 16); // XXX: this assert has fired as well!
-            Byte palette = oamEntry->flags.dmgPalette ? regs.obp1 : regs.obp0;
 
             Byte spriteColor = drawTilePixel(&vram[16 * oamEntry->tile], tileX, tileY,
                     regs.objSizeLarge, oamEntry->flags);
-            Byte spritePixel = applyPalette(palette, spriteColor);
+            GbColor spritePixel;
+            if (bus->isGbcMode()) {
+                spritePixel = ((GbColor*)&cgbSpritePalette[0])[oamEntry->flags.cgbPalette * 4 + spriteColor];
+            } else {
+                Byte dmgPalette = oamEntry->flags.dmgPalette ? regs.obp1 : regs.obp0;
+                spritePixel = applyDmgPalette(dmgPalette, spriteColor);
+            }
             if (spriteColor != 0 && (!oamEntry->flags.lowPriority || bgColor == 0)) {
                 pixel = spritePixel;
                 break;
             }
         }
 
-        GbColor col;
-        col.dmgGrayscale = pixel;
-        col.isGrayscale = true;
-        framebuffer[regs.ly][i] = col;
+        framebuffer[regs.ly][i] = pixel;
     }
 }
 
